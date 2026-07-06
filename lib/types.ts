@@ -24,6 +24,7 @@ export interface Profile {
   maxDrawdown: number;
   volatility: number;
   winRate: number;
+  topHoldings?: Holding[];
 }
 
 export interface Holding {

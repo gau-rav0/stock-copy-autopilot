@@ -1,11 +1,5 @@
 import { notFound } from "next/navigation";
-import {
-  getProfile,
-  holdingsByProfile,
-  transactionsByProfile,
-  growthByProfile,
-  getAlertTransactions,
-} from "@/lib/demo-data";
+import { getProfileDetail } from "@/lib/investor-data";
 import VerificationBadge from "@/components/VerificationBadge";
 import FollowButton from "@/components/FollowButton";
 import PerformanceChart from "@/components/PerformanceChart";
@@ -27,13 +21,10 @@ export default async function InvestorProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const profile = getProfile(id);
-  if (!profile) notFound();
+  const detail = await getProfileDetail(id);
+  if (!detail) notFound();
 
-  const holdings = holdingsByProfile[id] ?? [];
-  const transactions = transactionsByProfile[id] ?? [];
-  const growth = growthByProfile[id] ?? [];
-  const alerts = getAlertTransactions(id);
+  const { profile, holdings, transactions, growth, alerts } = detail;
   const initials = profile.displayName
     .split(" ")
     .map((part) => part[0])

@@ -28,7 +28,7 @@ export default function InvestorCard({
     .map((part) => part[0])
     .join("")
     .slice(0, 2);
-  const topHoldings = getTopHoldings(profile.id);
+  const topHoldings = profile.topHoldings ?? getTopHoldings(profile.id);
 
   return (
     <article

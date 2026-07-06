@@ -3,11 +3,10 @@ import ConvictionTicker from "@/components/ConvictionTicker";
 import InvestorCard from "@/components/InvestorCard";
 import ReplayTimeline from "@/components/ReplayTimeline";
 import TrustNotice from "@/components/TrustNotice";
-import { profiles, transactionsByProfile } from "@/lib/demo-data";
+import { getHomeData } from "@/lib/investor-data";
 
-export default function Home() {
-  const featured = profiles.slice(0, 3);
-  const replaySample = transactionsByProfile["rahul-kapoor"].slice(0, 3);
+export default async function Home() {
+  const { featured, replaySample } = await getHomeData();
 
   return (
     <>

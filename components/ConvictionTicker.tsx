@@ -1,6 +1,7 @@
-import { tickerFeed } from "@/lib/demo-data";
+import { getTickerFeed } from "@/lib/investor-data";
 
-export default function ConvictionTicker() {
+export default async function ConvictionTicker() {
+  const tickerFeed = await getTickerFeed();
   const items = [...tickerFeed, ...tickerFeed]; // duplicated for seamless loop
 
   return (

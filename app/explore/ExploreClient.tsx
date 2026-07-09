@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import InvestorCard from "@/components/InvestorCard";
 import TrustNotice from "@/components/TrustNotice";
+import BeginnerModePanel from "@/components/BeginnerModePanel";
 import { InvestingStyle, Profile } from "@/lib/types";
 import { BellRing, LineChart, ShieldCheck } from "lucide-react";
+import { calculateTrustScore } from "@/lib/trust-score";
 
 const FILTERS: { key: InvestingStyle | "all"; label: string }[] = [
   { key: "all", label: "All" },
@@ -24,14 +26,19 @@ const FLOW_STEPS = [
 export default function ExploreClient({ profiles }: { profiles: Profile[] }) {
   const [filter, setFilter] = useState<InvestingStyle | "all">("all");
   const [fromRoast, setFromRoast] = useState(false);
+  const [focusTrust, setFocusTrust] = useState(false);
 
   useEffect(() => {
-    setFromRoast(new URLSearchParams(window.location.search).get("from") === "roast");
+    const params = new URLSearchParams(window.location.search);
+    setFromRoast(params.get("from") === "roast");
+    setFocusTrust(params.get("focus") === "trust");
   }, []);
 
   const rankedProfiles = [...profiles].sort((a, b) => {
-    const aScore = a.cagr + a.alpha + a.winRate * 0.16 - Math.abs(a.maxDrawdown) * 0.22;
-    const bScore = b.cagr + b.alpha + b.winRate * 0.16 - Math.abs(b.maxDrawdown) * 0.22;
+    const aTrust = calculateTrustScore(a, a.topHoldings ?? []).score;
+    const bTrust = calculateTrustScore(b, b.topHoldings ?? []).score;
+    const aScore = aTrust + a.cagr * 0.4 + a.alpha * 0.6 - Math.abs(a.maxDrawdown) * 0.18;
+    const bScore = bTrust + b.cagr * 0.4 + b.alpha * 0.6 - Math.abs(b.maxDrawdown) * 0.18;
     return bScore - aScore;
   });
   const source = fromRoast ? rankedProfiles : profiles;
@@ -76,17 +83,21 @@ export default function ExploreClient({ profiles }: { profiles: Profile[] }) {
         <TrustNotice compact />
       </div>
 
+      <div className="mt-6">
+        <BeginnerModePanel context="explore" />
+      </div>
+
       {fromRoast && (
         <div className="mt-6 rounded-lg border border-brass/30 bg-brass/10 p-5 shadow-[0_0_70px_rgba(0,157,85,.08)] backdrop-blur-xl">
           <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">
-            From your portfolio roast
+            {focusTrust ? "Trust Score matches" : "From your portfolio roast"}
           </p>
           <h2 className="mt-2 font-display text-xl text-paper">
             Start with the cleanest demo records.
           </h2>
           <p className="mt-2 text-sm text-paper-muted">
-            Ranked by a simple blend of CAGR, alpha, win rate, and drawdown control. Open the record
-            before following.
+            Ranked by Trust Score, CAGR, alpha, and drawdown control. Open the record before
+            following read-only updates.
           </p>
         </div>
       )}

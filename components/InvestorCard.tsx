@@ -4,6 +4,8 @@ import { getTopHoldings } from "@/lib/demo-data";
 import VerificationBadge from "./VerificationBadge";
 import FollowButton from "./FollowButton";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { calculateTrustScore } from "@/lib/trust-score";
+import TrustScoreBadge from "./TrustScoreBadge";
 
 const STYLE_LABEL: Record<string, string> = {
   value: "Value",
@@ -29,6 +31,7 @@ export default function InvestorCard({
     .join("")
     .slice(0, 2);
   const topHoldings = profile.topHoldings ?? getTopHoldings(profile.id);
+  const trust = calculateTrustScore(profile, topHoldings);
 
   return (
     <article
@@ -62,6 +65,10 @@ export default function InvestorCard({
       </div>
 
       <p className="mt-4 text-sm text-paper-muted">{profile.bio}</p>
+
+      <div className="mt-4">
+        <TrustScoreBadge trust={trust} compact />
+      </div>
 
       <div className="mt-4 flex min-h-7 flex-wrap gap-2">
         {topHoldings.map((holding) => (

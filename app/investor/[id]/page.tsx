@@ -5,6 +5,9 @@ import FollowButton from "@/components/FollowButton";
 import PerformanceChart from "@/components/PerformanceChart";
 import ReplayTimeline from "@/components/ReplayTimeline";
 import TrustNotice from "@/components/TrustNotice";
+import TrustScoreBadge from "@/components/TrustScoreBadge";
+import BeginnerModePanel from "@/components/BeginnerModePanel";
+import { calculateTrustScore, trustScoreTone } from "@/lib/trust-score";
 
 const METRICS = [
   ["CAGR", "cagr", "%", "gain"],
@@ -25,6 +28,7 @@ export default async function InvestorProfilePage({
   if (!detail) notFound();
 
   const { profile, holdings, transactions, growth, alerts } = detail;
+  const trust = calculateTrustScore(profile, holdings);
   const initials = profile.displayName
     .split(" ")
     .map((part) => part[0])
@@ -64,6 +68,44 @@ export default async function InvestorProfilePage({
             "No order execution.",
           ]}
         />
+      </div>
+
+      <div className="mt-6">
+        <BeginnerModePanel context="investor" />
+      </div>
+
+      <div className="mt-8 grid gap-4 lg:grid-cols-[280px_1fr]">
+        <TrustScoreBadge trust={trust} />
+        <div className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-4 shadow-[0_0_50px_rgba(0,157,85,.04)] backdrop-blur">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="font-mono text-xs uppercase tracking-[0.16em] text-paper-muted">
+                Evidence breakdown
+              </p>
+              <h2 className="mt-1 font-display text-xl text-paper">Why this score changed</h2>
+            </div>
+            <p className={`mono-num font-mono text-2xl ${trustScoreTone(trust.score)}`}>
+              {trust.score}/100
+            </p>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {trust.components.map((component) => (
+              <div key={component.label}>
+                <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+                  <span className="font-medium text-paper">{component.label}</span>
+                  <span className="mono-num font-mono text-paper-muted">{component.score}</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-brass shadow-[0_0_18px_rgba(97,222,142,.28)]"
+                    style={{ width: `${component.score}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs leading-5 text-paper-muted">{component.note}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {alerts.length > 0 && (

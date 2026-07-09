@@ -3,6 +3,7 @@ import ConvictionTicker from "@/components/ConvictionTicker";
 import InvestorCard from "@/components/InvestorCard";
 import ReplayTimeline from "@/components/ReplayTimeline";
 import TrustNotice from "@/components/TrustNotice";
+import BeginnerModePanel from "@/components/BeginnerModePanel";
 import { getHomeData } from "@/lib/investor-data";
 
 export default async function Home() {
@@ -50,6 +51,10 @@ export default async function Home() {
 
       <section className="mx-auto max-w-5xl px-6 pt-10">
         <TrustNotice compact />
+      </section>
+
+      <section className="mx-auto max-w-5xl px-6 pt-6">
+        <BeginnerModePanel context="home" />
       </section>
 
       <section className="mx-auto max-w-5xl px-6 py-20">

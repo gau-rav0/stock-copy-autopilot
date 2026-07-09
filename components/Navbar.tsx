@@ -14,6 +14,9 @@ export default function Navbar() {
           <Link href="/explore" className="transition hover:text-paper">
             Explore
           </Link>
+          <Link href="/learn" className="transition hover:text-paper">
+            Beginner Mode
+          </Link>
           <Link href="/connect" className="transition hover:text-paper">
             Become a creator
           </Link>

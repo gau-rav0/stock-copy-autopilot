@@ -10,6 +10,9 @@ The app runs on seeded demo data out of the box. When Supabase environment varia
 - Explore page with style filters and 10 fictional demo investors
 - Investor profile with metrics, holdings, growth chart, replay, conviction alerts, and compliance notice
 - Portfolio Roast page with score, roast copy, and share-card preview
+- Demo Trust Score for investors based on verification status, returns, drawdown, volatility, consistency, and holdings transparency
+- Portfolio Roast funnel that moves users from roast results into evidence-ranked investor comparison
+- Beginner Mode panels and learning page for explaining core investing terms in plain language
 - Creator connect flow for CAS upload or manual demo entry
 - Supabase schema migrations in `supabase/migrations`
 - Supabase-backed marketplace queries for the home, explore, investor, and conviction ticker views

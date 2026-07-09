@@ -1,6 +1,7 @@
 "use client";
 
 import { ScoreRing } from "@/components/ScoreRing";
+import BeginnerModePanel from "@/components/BeginnerModePanel";
 import { NSE_UNIVERSE } from "@/data/nse-universe";
 import type { HoldingInput, RoastResult } from "@/lib/roast-types";
 import { toPng } from "html-to-image";
@@ -132,6 +133,13 @@ const LOADING_SUBTITLES = [
   "Somewhere, a fixed deposit is laughing. We're calculating exactly how loud.",
   "Your mutual fund agent saw this portfolio and asked if you need to talk.",
   "The algorithm is doing math. The math is doing therapy.",
+];
+
+const FUNNEL_STEPS = [
+  ["01", "Roast", "Enter holdings and reveal concentration, drawdown, and return signals."],
+  ["02", "Learn", "Translate the score into beginner-friendly risk and diversification notes."],
+  ["03", "Compare", "Move into verified demo investor profiles ranked by evidence quality."],
+  ["04", "Follow", "Receive read-only allocation alerts without copy trading or order execution."],
 ];
 
 export default function Home() {
@@ -303,9 +311,20 @@ export default function Home() {
                 <HeroStat label="Input value" value={money.format(totalInputValue)} />
                 <HeroStat label="Mode" value={result?.generated_by === "openai" ? "AI" : "Math"} />
               </div>
+
+              <div className="mt-6 grid max-w-2xl gap-2 sm:grid-cols-2">
+                {FUNNEL_STEPS.map(([num, title, body]) => (
+                  <div key={num} className="rounded-lg border border-white/10 bg-white/[.045] p-3 backdrop-blur">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-brass-bright">{num}</p>
+                    <p className="mt-1 font-[var(--font-space-grotesk)] text-base font-black text-white">{title}</p>
+                    <p className="mt-1 text-xs leading-5 text-white/52">{body}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="grid gap-4">
+              <BeginnerModePanel context="roast" />
               <form onSubmit={submit} className="tool-panel">
                 <div className="mb-5 flex items-center justify-between gap-3">
                   <div>
@@ -479,8 +498,8 @@ export default function Home() {
                   <RotateCcw size={18} />
                   Again
                 </button>
-                <Link href="/explore?from=roast" className="secondary-button">
-                  Compare demo investors
+                <Link href="/explore?from=roast&focus=trust" className="secondary-button">
+                  Compare Trust Scores
                 </Link>
               </div>
             </div>
@@ -604,7 +623,7 @@ export default function Home() {
 
             <div className="trust-callout mt-5 p-4">
               <p className="font-[var(--font-space-grotesk)] text-lg font-black text-white">
-                Next: follow creators with visible drawdowns, holdings, and allocation changes.
+                Next: compare investors by Trust Score, drawdowns, holdings, and allocation changes.
               </p>
               <p className="mt-2 text-sm leading-6 text-white/58">
                 No copy trading, no orders, no advice. Just read-only track records so the next decision
@@ -613,8 +632,8 @@ export default function Home() {
             </div>
 
             <div className="mt-6 flex flex-wrap gap-2">
-              <Link href="/explore?from=roast" className="primary-button trust-button w-auto px-6">
-                Show matched investors
+              <Link href="/explore?from=roast&focus=trust" className="primary-button trust-button w-auto px-6">
+                Show Trust Score matches
                 <ArrowRight size={18} />
               </Link>
               <button type="button" onClick={shareCard} disabled={sharing} className="secondary-button">

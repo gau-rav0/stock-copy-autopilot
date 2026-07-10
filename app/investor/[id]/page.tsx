@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { getProfileDetail } from "@/lib/investor-data";
 import VerificationBadge from "@/components/VerificationBadge";
 import FollowButton from "@/components/FollowButton";
@@ -18,6 +19,26 @@ const METRICS = [
   ["Win rate", "winRate", "%", "muted"],
 ] as const;
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const detail = await getProfileDetail(id);
+
+  if (!detail) {
+    return {
+      title: "Investor not found",
+    };
+  }
+
+  return {
+    title: `${detail.profile.displayName} evidence profile`,
+    description: `Inspect ${detail.profile.displayName}'s verification tier, holdings, benchmark comparison, portfolio replay, and risk context.`,
+  };
+}
+
 export default async function InvestorProfilePage({
   params,
 }: {
@@ -36,25 +57,25 @@ export default async function InvestorProfilePage({
     .slice(0, 2);
 
   return (
-    <section className="mx-auto max-w-5xl px-6 py-16">
+    <section className="mobile-safe mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-6 border-b border-ink-hairline pb-8">
-        <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full border border-brass/30 bg-brass/10 font-mono text-sm text-brass">
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-brass/30 bg-brass/10 font-mono text-sm text-brass">
             {initials}
           </div>
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="font-display text-2xl text-paper">{profile.displayName}</h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-wrap-safe font-display text-2xl text-paper">{profile.displayName}</h1>
               <VerificationBadge tier={profile.verificationTier} isDemo={profile.isDemo} />
             </div>
-            <p className="mt-1 text-sm text-paper-muted">{profile.bio}</p>
+            <p className="text-wrap-safe mt-1 text-sm text-paper-muted">{profile.bio}</p>
             <p className="mt-1 font-mono text-xs text-paper-muted">
               {profile.followerCount.toLocaleString("en-IN")} followers
             </p>
           </div>
         </div>
-        <FollowButton investorName={profile.displayName} />
+        <FollowButton investorId={profile.id} investorName={profile.displayName} />
       </div>
 
       <div className="mt-6">
@@ -106,6 +127,20 @@ export default async function InvestorProfilePage({
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          ["Verified means", profile.verificationTier === "demo" ? "Demo-seeded record, not a verified live creator." : "Evidence reviewed from the stated source tier."],
+          ["Verification date", profile.verificationTier === "demo" ? "Demo seed" : "June 2026"],
+          ["Source type", profile.verificationTier === "broker" ? "Read-only broker evidence" : profile.verificationTier === "cas" ? "CAS statement evidence" : "Demo dataset"],
+          ["Last updated", alerts[0]?.transactionDate ?? transactions[0]?.transactionDate ?? "Pending"],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-4 shadow-[0_0_50px_rgba(0,157,85,.04)] backdrop-blur">
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-paper-muted">{label}</p>
+            <p className="text-wrap-safe mt-2 text-sm font-medium text-paper">{value}</p>
+          </div>
+        ))}
       </div>
 
       {alerts.length > 0 && (
@@ -181,9 +216,9 @@ export default async function InvestorProfilePage({
       <div className="mt-12 grid gap-8 lg:grid-cols-2">
         <div>
           <h2 className="font-display text-xl text-paper">Current holdings</h2>
-          <div className="mt-4 overflow-hidden rounded-lg border border-ink-hairline">
+          <div className="mt-4 overflow-x-auto rounded-lg border border-ink-hairline">
             {holdings.length > 0 ? (
-              <table className="w-full text-sm">
+              <table className="min-w-[560px] w-full text-sm">
                 <thead>
                   <tr className="border-b border-ink-hairline bg-ink-elevated/80 text-left text-xs text-paper-muted">
                     <th className="px-4 py-3 font-normal">Ticker</th>
@@ -229,6 +264,30 @@ export default async function InvestorProfilePage({
               </p>
             )}
           </div>
+        </div>
+      </div>
+
+      <div className="mt-12 grid gap-4 lg:grid-cols-3">
+        <div className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-5 backdrop-blur">
+          <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">Audit trail</p>
+          <p className="mt-2 text-sm leading-6 text-paper-muted">
+            Every published holding and replay event is tied to an evidence tier. Demo records are
+            explicitly labeled until a CAS or read-only source review is complete.
+          </p>
+        </div>
+        <div className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-5 backdrop-blur">
+          <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">Change log</p>
+          <p className="mt-2 text-sm leading-6 text-paper-muted">
+            Conviction alerts show major additions, reductions, exits, and top-holding changes so
+            users can see behavior over time.
+          </p>
+        </div>
+        <div className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-5 backdrop-blur">
+          <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">Risk explanation</p>
+          <p className="mt-2 text-sm leading-6 text-paper-muted">
+            Drawdown, volatility, concentration, and benchmark comparison are shown beside returns
+            because performance without risk context is incomplete.
+          </p>
         </div>
       </div>
     </section>

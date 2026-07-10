@@ -41,19 +41,19 @@ export default function InvestorCard({
           : "border-ink-hairline bg-ink-elevated/85 hover:border-brass/40 hover:shadow-[0_0_50px_rgba(0,157,85,.08)]"
       }`}
     >
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-full border border-brass/30 bg-brass/10 font-mono text-xs text-brass">
               {initials}
             </div>
             <div>
-              <p className="font-display text-base text-paper">{profile.displayName}</p>
+              <p className="text-wrap-safe font-display text-base text-paper">{profile.displayName}</p>
               <p className="text-xs text-paper-muted">{STYLE_LABEL[profile.investingStyle]}</p>
             </div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex flex-row flex-wrap items-center gap-2 sm:flex-col sm:items-end">
           {recommended && (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-brass/40 bg-brass/10 px-2.5 py-1 text-xs text-brass">
               <CheckCircle2 size={12} />
@@ -64,7 +64,7 @@ export default function InvestorCard({
         </div>
       </div>
 
-      <p className="mt-4 text-sm text-paper-muted">{profile.bio}</p>
+      <p className="text-wrap-safe mt-4 text-sm text-paper-muted">{profile.bio}</p>
 
       <div className="mt-4">
         <TrustScoreBadge trust={trust} compact />
@@ -81,7 +81,7 @@ export default function InvestorCard({
         ))}
       </div>
 
-      <div className="mt-6 grid grid-cols-3 gap-4 border-t border-ink-hairline pt-4 font-mono text-sm">
+      <div className="mt-6 grid grid-cols-3 gap-2 border-t border-ink-hairline pt-4 font-mono text-sm sm:gap-4">
         <div>
           <p className="text-paper-muted text-xs">CAGR</p>
           <p className="mono-num text-gain">+{profile.cagr}%</p>
@@ -95,11 +95,11 @@ export default function InvestorCard({
           <p className="mono-num text-paper">{profile.followerCount.toLocaleString("en-IN")}</p>
         </div>
       </div>
-      <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-ink-hairline pt-4">
-        <FollowButton investorName={profile.displayName} compact />
+      <div className="mt-5 grid gap-2 border-t border-ink-hairline pt-4 sm:flex sm:flex-wrap sm:items-center">
+        <FollowButton investorId={profile.id} investorName={profile.displayName} compact />
         <Link
           href={`/investor/${profile.id}`}
-          className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full border border-ink-hairline px-4 text-sm text-paper-muted transition hover:border-paper-muted hover:text-paper"
+          className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full border border-ink-hairline px-4 text-center text-sm text-paper-muted transition hover:border-paper-muted hover:text-paper"
         >
           Inspect record
           <ArrowRight size={15} />

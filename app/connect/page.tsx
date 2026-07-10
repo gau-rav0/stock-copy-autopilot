@@ -10,10 +10,41 @@ export default function ConnectPage() {
   const [step, setStep] = useState<Step>("method");
   const [method, setMethod] = useState<Method>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [creatorName, setCreatorName] = useState("");
+  const [email, setEmail] = useState("");
   const [holdingsText, setHoldingsText] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveNote, setSaveNote] = useState("");
+
+  const submitApplication = async () => {
+    setSaving(true);
+    setSaveNote("");
+
+    try {
+      const response = await fetch("/api/creator-applications", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          creatorName,
+          email,
+          method,
+          fileName,
+          holdingsText,
+        }),
+      });
+      const json = await response.json();
+      setSaveNote(json.stored ? "Application saved for review." : "Application captured locally for this demo. Add Supabase keys to store it.");
+      setStep("done");
+    } catch {
+      setSaveNote("Application captured in the UI. Storage is not available in this environment.");
+      setStep("done");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <section className="mx-auto max-w-2xl px-6 py-16">
+    <section className="mobile-safe mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16">
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">Creator onboarding</p>
       <h1 className="mt-3 font-display text-3xl text-paper">Verify your portfolio</h1>
       <p className="mt-3 text-paper-muted">
@@ -99,6 +130,21 @@ export default function ConnectPage() {
 
       {step === "details" && method === "cas" && (
         <div className="mt-8">
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+            <input
+              value={creatorName}
+              onChange={(e) => setCreatorName(e.target.value)}
+              placeholder="Creator name"
+              className="input-field"
+            />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Review email"
+              className="input-field"
+            />
+          </div>
           <label className="block rounded-lg border border-dashed border-ink-hairline bg-ink-elevated/75 p-10 text-center shadow-[0_0_60px_rgba(0,157,85,.05)] backdrop-blur transition hover:border-brass/40">
             <input
               type="file"
@@ -108,21 +154,37 @@ export default function ConnectPage() {
             />
             <p className="text-paper">{fileName ?? "Click to upload your CAS PDF"}</p>
             <p className="mt-1 text-xs text-paper-muted">
-              Parsing is not wired up in this build. Plug your CAS parser into this step.
+              Parsing is pending. This submits a review application and keeps the profile marked
+              pending until evidence is checked.
             </p>
           </label>
           <button
-            disabled={!fileName}
-            onClick={() => setStep("done")}
+            disabled={!fileName || !email || saving}
+            onClick={submitApplication}
             className="mt-6 w-full rounded-lg bg-brass px-6 py-3 text-sm font-semibold text-white shadow-[0_0_38px_rgba(0,157,85,.18)] transition hover:bg-brass-bright disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Continue
+            {saving ? "Saving..." : "Submit for review"}
           </button>
         </div>
       )}
 
       {step === "details" && method === "manual" && (
         <div className="mt-8">
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+            <input
+              value={creatorName}
+              onChange={(e) => setCreatorName(e.target.value)}
+              placeholder="Creator name"
+              className="input-field"
+            />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Review email"
+              className="input-field"
+            />
+          </div>
           <label className="text-sm text-paper-muted">
             Paste holdings, one per line, e.g. <span className="font-mono">INFY, 14%</span>
           </label>
@@ -134,23 +196,24 @@ export default function ConnectPage() {
             className="mt-2 w-full rounded-lg border border-ink-hairline bg-ink-elevated/75 p-4 font-mono text-sm text-paper outline-none backdrop-blur focus:border-brass/40"
           />
           <button
-            disabled={holdingsText.trim().length === 0}
-            onClick={() => setStep("done")}
+            disabled={holdingsText.trim().length === 0 || !email || saving}
+            onClick={submitApplication}
             className="mt-6 w-full rounded-lg bg-brass px-6 py-3 text-sm font-semibold text-white shadow-[0_0_38px_rgba(0,157,85,.18)] transition hover:bg-brass-bright disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Create profile
+            {saving ? "Saving..." : "Submit application"}
           </button>
         </div>
       )}
 
       {step === "done" && (
         <div className="mt-10 rounded-lg border border-brass/30 bg-ink-elevated/75 p-8 text-center shadow-[0_0_70px_rgba(0,157,85,.08)] backdrop-blur-xl">
-          <p className="font-display text-xl text-paper">Profile created</p>
+          <p className="font-display text-xl text-paper">Application received</p>
           <p className="mt-2 text-sm text-paper-muted">
             {method === "cas"
-              ? "Marked as pending CAS verification. Wire your parser to the /api/profiles endpoint to complete this automatically."
-              : "Marked as a demo profile until CAS or broker verification is added."}
+              ? "Marked as pending CAS verification until statement evidence is reviewed."
+              : "Marked as pending manual review until CAS or broker verification is added."}
           </p>
+          {saveNote ? <p className="mt-3 text-sm text-brass">{saveNote}</p> : null}
           <p className="mt-4 text-xs text-paper-muted">
             We can never trade or place orders on your behalf. Read access only, and only what you
             choose to publish.

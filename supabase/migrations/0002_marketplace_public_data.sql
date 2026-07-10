@@ -51,17 +51,17 @@ create policy "System can insert notifications" on notifications for insert with
 create policy "Users can view own subscriptions" on subscriptions for select using (auth.uid() = follower_user_id);
 
 insert into users (id, email, role) values
-  ('00000000-0000-0000-0000-000000000001', 'arjun-mehta@ledger.demo', 'creator'),
-  ('00000000-0000-0000-0000-000000000002', 'priya-shah@ledger.demo', 'creator'),
-  ('00000000-0000-0000-0000-000000000003', 'rahul-kapoor@ledger.demo', 'creator'),
-  ('00000000-0000-0000-0000-000000000004', 'neha-iyer@ledger.demo', 'creator'),
-  ('00000000-0000-0000-0000-000000000005', 'vikram-rao@ledger.demo', 'creator'),
-  ('00000000-0000-0000-0000-000000000006', 'ananya-sen@ledger.demo', 'creator'),
-  ('00000000-0000-0000-0000-000000000007', 'kabir-malhotra@ledger.demo', 'creator'),
-  ('00000000-0000-0000-0000-000000000008', 'mira-dsouza@ledger.demo', 'creator'),
-  ('00000000-0000-0000-0000-000000000009', 'dev-narang@ledger.demo', 'creator'),
-  ('00000000-0000-0000-0000-000000000010', 'tara-gupta@ledger.demo', 'creator')
-on conflict (email) do update set role = excluded.role;
+  ('00000000-0000-0000-0000-000000000001', 'arjun-mehta@fvi.demo', 'creator'),
+  ('00000000-0000-0000-0000-000000000002', 'priya-shah@fvi.demo', 'creator'),
+  ('00000000-0000-0000-0000-000000000003', 'rahul-kapoor@fvi.demo', 'creator'),
+  ('00000000-0000-0000-0000-000000000004', 'neha-iyer@fvi.demo', 'creator'),
+  ('00000000-0000-0000-0000-000000000005', 'vikram-rao@fvi.demo', 'creator'),
+  ('00000000-0000-0000-0000-000000000006', 'ananya-sen@fvi.demo', 'creator'),
+  ('00000000-0000-0000-0000-000000000007', 'kabir-malhotra@fvi.demo', 'creator'),
+  ('00000000-0000-0000-0000-000000000008', 'mira-dsouza@fvi.demo', 'creator'),
+  ('00000000-0000-0000-0000-000000000009', 'dev-narang@fvi.demo', 'creator'),
+  ('00000000-0000-0000-0000-000000000010', 'tara-gupta@fvi.demo', 'creator')
+on conflict (id) do update set email = excluded.email, role = excluded.role;
 
 insert into profiles (id, user_id, slug, display_name, bio, photo_url, investing_style, verified, verification_tier, follower_count, cagr, xirr, alpha, max_drawdown, volatility, win_rate, sort_order) values
   ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000001', 'arjun-mehta', 'Arjun Mehta', 'Concentrated value investor. 12 years, 3 drawdowns, 0 diworsification.', '', 'value', true, 'cas', 4210, 21.4, 23.1, 6.8, -31.2, 18.9, 64, 1),

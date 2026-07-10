@@ -129,7 +129,7 @@ const LOADING_HEADLINES = [
 ];
 
 const LOADING_SUBTITLES = [
-  "We are benchmarking your portfolio against a $20/month index plan and several better life choices.",
+  "We are benchmarking your portfolio against a ₹500/month index plan and several better life choices.",
   "Somewhere, a fixed deposit is laughing. We're calculating exactly how loud.",
   "Your mutual fund agent saw this portfolio and asked if you need to talk.",
   "The algorithm is doing math. The math is doing therapy.",
@@ -298,7 +298,7 @@ export default function Home() {
                 <Sparkles size={16} className="text-brass-bright" />
                 Paste holdings. Get an educational roast.
               </div>
-              <h1 className="max-w-3xl font-[var(--font-space-grotesk)] text-[clamp(3.2rem,7vw,6.9rem)] font-black leading-[.86] tracking-normal">
+              <h1 className="text-wrap-safe max-w-3xl font-[var(--font-space-grotesk)] text-[clamp(2.7rem,15vw,6.9rem)] font-black leading-[.9] tracking-normal sm:leading-[.86]">
                 Your portfolio, but with consequences.
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-8 text-white/62">
@@ -306,7 +306,7 @@ export default function Home() {
                 Fictional flow only; not investment advice.
               </p>
 
-              <div className="mt-8 grid max-w-2xl grid-cols-3 gap-2 sm:gap-3">
+              <div className="mt-8 grid max-w-2xl gap-2 sm:grid-cols-3 sm:gap-3">
                 <HeroStat label="Rows" value={`${rows.length}/10`} />
                 <HeroStat label="Input value" value={money.format(totalInputValue)} />
                 <HeroStat label="Mode" value={result?.generated_by === "openai" ? "AI" : "Math"} />
@@ -451,7 +451,7 @@ export default function Home() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="text-xs font-black uppercase tracking-[0.22em] text-white/36">Portfolio verdict</div>
-                  <h2 className="mt-3 max-w-3xl font-[var(--font-space-grotesk)] text-[clamp(2.1rem,5vw,5rem)] font-black leading-[.9]">
+                  <h2 className="text-wrap-safe mt-3 max-w-3xl font-[var(--font-space-grotesk)] text-[clamp(1.9rem,13vw,5rem)] font-black leading-[.95] sm:leading-[.9]">
                     {result.verdict}
                   </h2>
                 </div>
@@ -498,7 +498,7 @@ export default function Home() {
                   <RotateCcw size={18} />
                   Again
                 </button>
-                <Link href="/explore?from=roast&focus=trust" className="secondary-button">
+                <Link href="/explore?from=roast&focus=trust" className="secondary-button px-4">
                   Compare Trust Scores
                 </Link>
               </div>
@@ -508,16 +508,16 @@ export default function Home() {
               <div ref={cardRef} className="share-card">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <div className="font-[var(--font-space-grotesk)] text-xl font-black uppercase tracking-[0.18em]">Portfolio Roast</div>
+                    <div className="font-[var(--font-space-grotesk)] text-base font-black uppercase tracking-[0.14em] sm:text-xl sm:tracking-[0.18em]">Portfolio Roast</div>
                     <div className="mt-1 text-sm font-bold text-white/50">{displayName ? `${displayName}'s Portfolio` : "Anonymous Portfolio"}</div>
                   </div>
                   <div className="rounded-full bg-white px-4 py-2 text-sm font-black text-black">{result.generated_by === "openai" ? "AI" : "MATH"}</div>
                 </div>
 
                 <div className="my-9">
-                  <div className={`font-[var(--font-space-grotesk)] text-[128px] font-black leading-none ${scoreTone(result.score)}`}>{result.score}</div>
-                  <div className="max-w-xl font-[var(--font-space-grotesk)] text-5xl font-black leading-[.96]">{meme?.headline ?? result.verdict}</div>
-                  <div className="mt-4 max-w-xl text-2xl font-black leading-tight text-white/76">{meme?.punchline}</div>
+                  <div className={`font-[var(--font-space-grotesk)] text-[clamp(4.5rem,28vw,8rem)] font-black leading-none ${scoreTone(result.score)}`}>{result.score}</div>
+                  <div className="text-wrap-safe max-w-xl font-[var(--font-space-grotesk)] text-[clamp(2rem,10vw,3rem)] font-black leading-[.98]">{meme?.headline ?? result.verdict}</div>
+                  <div className="text-wrap-safe mt-4 max-w-xl text-xl font-black leading-tight text-white/76 sm:text-2xl">{meme?.punchline}</div>
                 </div>
 
                 <div className="grid gap-3">
@@ -530,7 +530,7 @@ export default function Home() {
 
                 <div className="mt-8 flex items-center justify-between border-t border-white/12 pt-4 text-sm font-black uppercase tracking-[0.16em] text-white/55">
                   <span>Educational only</span>
-                  <span>ledger demo</span>
+                  <span>FVI demo</span>
                 </div>
               </div>
 
@@ -601,7 +601,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <h2 className="mt-5 max-w-3xl font-[var(--font-space-grotesk)] text-[clamp(2.2rem,5.2vw,4.8rem)] font-black leading-[.88]">
+                <h2 className="text-wrap-safe mt-5 max-w-3xl font-[var(--font-space-grotesk)] text-[clamp(2rem,13vw,4.8rem)] font-black leading-[.92] sm:leading-[.88]">
                   {meme?.headline}
                 </h2>
                 <p className="mt-4 max-w-2xl text-xl font-black leading-snug text-white/76 sm:text-2xl">
@@ -631,7 +631,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="mt-6 grid gap-2 sm:flex sm:flex-wrap">
               <Link href="/explore?from=roast&focus=trust" className="primary-button trust-button w-auto px-6">
                 Show Trust Score matches
                 <ArrowRight size={18} />

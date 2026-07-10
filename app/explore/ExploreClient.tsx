@@ -47,13 +47,13 @@ export default function ExploreClient({ profiles }: { profiles: Profile[] }) {
   const shown = fromRoast ? baseShown.filter((p) => !featured.some((item) => item.id === p.id)) : baseShown;
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-12">
-      <div className="grid gap-8 border-b border-ink-hairline pb-10 lg:grid-cols-[1fr_360px]">
+    <section className="mobile-safe mx-auto max-w-6xl px-4 py-12 sm:px-6">
+      <div className="grid gap-8 border-b border-ink-hairline pb-10 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">
             {fromRoast ? "Matched after your roast" : "Creator marketplace"}
           </p>
-          <h1 className="mt-4 max-w-3xl font-display text-4xl leading-tight text-paper sm:text-5xl">
+          <h1 className="text-wrap-safe mt-4 max-w-3xl font-display text-4xl leading-tight text-paper sm:text-5xl">
             Follow investors with receipts, not screenshots.
           </h1>
           <p className="mt-4 max-w-2xl text-paper-muted">
@@ -110,12 +110,12 @@ export default function ExploreClient({ profiles }: { profiles: Profile[] }) {
         </div>
       )}
 
-      <div className="mt-8 flex flex-wrap gap-2">
+      <div className="mt-8 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
         {FILTERS.map((f) => (
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`rounded-full border px-4 py-1.5 text-sm transition ${
+            className={`rounded-full border px-4 py-2 text-sm transition ${
               filter === f.key
                 ? "border-brass bg-brass/10 text-brass"
                 : "border-ink-hairline text-paper-muted hover:border-paper-muted"

@@ -1,67 +1,65 @@
-# Stock Copy (Autopilot)
+# Follow Verified Investors
 
-Next.js 16 V0 for the "GitHub for investing" idea: users discover fictional demo investors, inspect historical portfolio examples, replay allocation changes, follow read-only conviction updates, and enter through a Portfolio Roast funnel.
+Investor discovery for people who want evidence before they follow anyone's market updates.
 
-The app runs on seeded demo data out of the box. When Supabase environment variables are present, the marketplace pages read from Supabase and fall back to demo data if the database is empty or unavailable.
+The app is a Next.js 16 demo for a read-only investor marketplace: users can roast a portfolio, compare fictional seeded investor profiles, inspect holdings and replay history, and submit creator verification applications. It is intentionally educational and evidence-first. It does not provide investment advice, copy trades, execute orders, manage funds, or request trading permissions.
 
-## Built
+## What Is Built
 
-- Landing page with Portfolio Roast, Explore, creator, and replay CTAs
+- Home page with Portfolio Roast, Explore, creator onboarding, and replay paths
 - Explore page with style filters and 10 fictional demo investors
-- Investor profile with metrics, holdings, growth chart, replay, conviction alerts, and compliance notice
-- Portfolio Roast page with score, roast copy, and share-card preview
-- Demo Trust Score for investors based on verification status, returns, drawdown, volatility, consistency, and holdings transparency
-- Portfolio Roast funnel that moves users from roast results into evidence-ranked investor comparison
-- Beginner Mode panels and learning page for explaining core investing terms in plain language
-- Creator connect flow for CAS upload or manual demo entry
-- Supabase schema migrations in `supabase/migrations`
-- Supabase-backed marketplace queries for the home, explore, investor, and conviction ticker views
-- AI helper in `lib/ai.ts` that reads `KMICHI_API_*` env vars first
+- Investor profile pages with metrics, holdings, growth chart, replay timeline, conviction alerts, trust score, and compliance notices
+- Portfolio Roast funnel that scores holdings and routes users into evidence-ranked investor comparison
+- Beginner Mode panels and a learning page for plain-language investing terms
+- Creator verification flow with CAS PDF/text upload or manual holdings entry
+- Server-side CAS text extraction and conservative holdings parsing for reviewer checks
+- Supabase schema migrations for marketplace seed data, lead capture, creator review, parsed holdings, deletion requests, and outbound delivery audit rows
+- Supabase-backed marketplace queries for home, explore, investor, and conviction ticker views
+- Optional CRM webhook and operations email notifications for roast leads, follow intents, and creator applications
+- AI helper in `lib/ai.ts` that reads `KMICHI_API_*` env vars first, with generic OpenAI-compatible aliases as fallbacks
 
-## Stubbed
+## Current Boundaries
 
-- CAS upload accepts a file but does not parse it yet.
-- Razorpay subscriptions are not wired yet.
-- Broker sync is intentionally not built. Validate read-only broker access, broker ToS, and SEBI implications before starting it.
+- Seeded investor profiles and holdings are fictional demo data.
+- CAS parsing extracts recognizable equity rows and keeps every application in pending human review.
+- Broker sync is not available. Validate broker terms, read-only access constraints, privacy obligations, and SEBI implications before starting it.
+- Paid creator/follower features are not launch-ready until legal and SEBI review is complete.
+- Payments and Razorpay subscriptions are not wired yet.
 
-## Compliance posture
+## Local Setup
 
-- All seeded profiles and holdings are fictional demo data.
-- The app does not provide investment advice.
-- The app does not copy trades, execute orders, manage funds, or request trading permissions.
-- Follow means read-only portfolio-update notifications in this demo.
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
+```
 
-## Installation & Setup
+Open `http://localhost:3000`.
 
-Follow these steps to run the project locally:
+## Environment Variables
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/stock-copy-autopilot.git
-   cd stock-copy-autopilot
-   ```
+Supabase:
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+```
 
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env.local
-   ```
+CRM and operations notifications:
 
-4. **Run the development server**
-   ```bash
-   npm run dev
-   ```
+```bash
+CRM_WEBHOOK_URL=
+CRM_WEBHOOK_SECRET=
+CRM_EMAIL_TO=
+OPERATIONS_EMAIL_TO=
+OPERATIONS_EMAIL_FROM=
+RESEND_API_KEY=
+```
 
-5. **Open the app**
-   Visit `http://localhost:3000` in your browser.
+`CRM_WEBHOOK_URL` receives JSON events for `roast_lead`, `follow_intent`, and `creator_application`. `RESEND_API_KEY` plus an operations email destination sends a plain-text alert for the same events.
 
-## kmichi API
-
-Set these in `.env.local` when you wire live AI summaries:
+AI summaries:
 
 ```bash
 KMICHI_API_URL=
@@ -69,9 +67,17 @@ KMICHI_API_KEY=
 KMICHI_MODEL=
 ```
 
-Generic aliases also work: `AI_API_URL`, `AI_API_KEY`, and `AI_MODEL`.
+Generic aliases also work: `AI_API_URL`, `AI_API_KEY`, `AI_MODEL`, `OPENAI_API_KEY`, `OPENAI_MODEL`, and `OPENAI_BASE_URL`.
 
-## Supabase deploy
+Payments placeholder:
+
+```bash
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+RAZORPAY_WEBHOOK_SECRET=
+```
+
+## Supabase Deploy
 
 Create a Supabase project, then run:
 
@@ -89,20 +95,29 @@ SUPABASE_PROJECT_REF=
 SUPABASE_DB_PASSWORD=
 ```
 
-Then run the `Deploy Supabase migrations` workflow from GitHub Actions, or push changes under `supabase/`.
+The `Deploy Supabase migrations` workflow runs on pushes that change `supabase/**` and can also be triggered manually.
 
-For the hosted app, set these Vercel environment variables from Supabase Project Settings > API:
+## Hosted App Verification
 
-```bash
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-```
+Before treating production as ready:
+
+1. Confirm Vercel has the Supabase, CRM/email, and AI variables needed for the selected features.
+2. Run the Supabase migration workflow or `npx supabase db push` against the production project.
+3. Verify GitHub Actions completed successfully for the migration commit.
+4. Open the deployed Vercel URL and test home, roast, explore, creator onboarding, and an investor profile on mobile and desktop.
+5. Submit one test creator application and confirm the Supabase row, parsed holdings, CRM webhook, and operations email destinations.
+
+## Compliance Posture
+
+- Follow means read-only portfolio-update notifications in this demo.
+- Verification labels must show whether a profile is demo, CAS-reviewed, or broker-reviewed.
+- User-facing copy should avoid advice, recommendations, guaranteed outcomes, or automatic trade language.
+- Paid creator/follow features and India/NSE positioning require qualified legal review, including SEBI implications, before launch.
 
 ## Next Build Steps
 
-1. Create the Supabase project and run the migrations.
-2. Add production Supabase environment variables to Vercel.
-3. Wire CAS parsing for V1 verification.
-4. Add Razorpay subscription creation and webhooks.
-5. Validate SEBI and broker ToS before any broker integration.
+1. Apply migrations to the production Supabase project and verify tables in the dashboard.
+2. Configure production CRM/email destinations and test delivery failure handling.
+3. Expand CAS parsing with real sample statements from supported providers.
+4. Add authenticated reviewer tooling for approving parsed creator applications.
+5. Add payments only after SEBI/legal review approves the product model.

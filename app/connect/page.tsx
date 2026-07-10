@@ -10,6 +10,7 @@ export default function ConnectPage() {
   const [step, setStep] = useState<Step>("method");
   const [method, setMethod] = useState<Method>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [casFile, setCasFile] = useState<File | null>(null);
   const [creatorName, setCreatorName] = useState("");
   const [email, setEmail] = useState("");
   const [holdingsText, setHoldingsText] = useState("");
@@ -21,19 +22,24 @@ export default function ConnectPage() {
     setSaveNote("");
 
     try {
+      const formData = new FormData();
+      formData.set("creatorName", creatorName);
+      formData.set("email", email);
+      formData.set("method", method ?? "");
+      formData.set("holdingsText", holdingsText);
+      if (casFile) {
+        formData.set("casFile", casFile);
+      }
+
       const response = await fetch("/api/creator-applications", {
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          creatorName,
-          email,
-          method,
-          fileName,
-          holdingsText,
-        }),
+        body: formData,
       });
       const json = await response.json();
-      setSaveNote(json.stored ? "Application saved for review." : "Application captured locally for this demo. Add Supabase keys to store it.");
+      const parseNote = json.parsedCount
+        ? `${json.parsedCount} holding${json.parsedCount === 1 ? "" : "s"} parsed for reviewer checks.`
+        : "No holdings were parsed automatically; reviewer checks are required.";
+      setSaveNote(json.stored ? `Application saved for review. ${parseNote}` : `Application captured locally for this demo. ${parseNote}`);
       setStep("done");
     } catch {
       setSaveNote("Application captured in the UI. Storage is not available in this environment.");
@@ -148,14 +154,18 @@ export default function ConnectPage() {
           <label className="block rounded-lg border border-dashed border-ink-hairline bg-ink-elevated/75 p-10 text-center shadow-[0_0_60px_rgba(0,157,85,.05)] backdrop-blur transition hover:border-brass/40">
             <input
               type="file"
-              accept="application/pdf"
+              accept="application/pdf,text/plain,.pdf,.txt"
               className="hidden"
-              onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                setCasFile(file);
+                setFileName(file?.name ?? null);
+              }}
             />
             <p className="text-paper">{fileName ?? "Click to upload your CAS PDF"}</p>
             <p className="mt-1 text-xs text-paper-muted">
-              Parsing is pending. This submits a review application and keeps the profile marked
-              pending until evidence is checked.
+              We parse recognizable equity rows for reviewer checks. The profile stays pending
+              until evidence is manually approved.
             </p>
           </label>
           <button

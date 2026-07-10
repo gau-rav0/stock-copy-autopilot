@@ -1,4 +1,5 @@
 import { calculatePortfolio, generateRoast } from "@/lib/portfolio";
+import { dispatchOutboundEvent } from "@/lib/outbound";
 import type { RoastRequest, RoastResult } from "@/lib/roast-types";
 import { createWriteClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
@@ -15,6 +16,17 @@ export async function POST(request: Request) {
     };
 
     if (payload.email) {
+      const outboundPayload = {
+        email: payload.email,
+        displayName: payload.displayName || null,
+        score: result.score,
+        riskScore: result.risk_score,
+        holdingsCount: result.metrics.holdings_count,
+        investedValue: result.metrics.invested_value,
+        currentValue: result.metrics.current_value,
+        generatedBy: result.generated_by,
+        source: "portfolio_roast",
+      };
       const supabase = createWriteClient();
       if (supabase) {
         await supabase.from("roast_leads").insert({
@@ -28,6 +40,13 @@ export async function POST(request: Request) {
           generated_by: result.generated_by,
           source: "portfolio_roast",
         });
+        const outbound = await dispatchOutboundEvent("roast_lead", outboundPayload);
+        await supabase.from("outbound_deliveries").insert([
+          { event_type: "roast_lead", destination: "crm", status: outbound.crm, payload: outboundPayload },
+          { event_type: "roast_lead", destination: "email", status: outbound.email, payload: outboundPayload },
+        ]);
+      } else {
+        await dispatchOutboundEvent("roast_lead", outboundPayload);
       }
     }
 

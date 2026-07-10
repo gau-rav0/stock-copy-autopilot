@@ -294,11 +294,11 @@ export default function Home() {
 
           <div className="grid flex-1 items-center gap-8 py-8 lg:grid-cols-[minmax(0,.9fr)_minmax(520px,1.1fr)]">
             <div className="max-w-3xl">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[.06] px-3 py-2 text-sm font-bold text-white/78 backdrop-blur">
-                <Sparkles size={16} className="text-brass-bright" />
-                Paste holdings. Get an educational roast.
+              <div className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[.06] px-3 py-2 text-xs font-bold leading-5 text-white/78 backdrop-blur sm:text-sm">
+                <Sparkles size={16} className="shrink-0 text-brass-bright" />
+                <span className="min-w-0">Paste holdings. Get an educational roast.</span>
               </div>
-              <h1 className="text-wrap-safe max-w-3xl font-[var(--font-space-grotesk)] text-[clamp(2.7rem,15vw,6.9rem)] font-black leading-[.9] tracking-normal sm:leading-[.86]">
+              <h1 className="max-w-3xl font-[var(--font-space-grotesk)] text-[clamp(2.2rem,9.6vw,6.9rem)] font-black leading-[.98] tracking-normal sm:leading-[.86]">
                 Your portfolio, but with consequences.
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-8 text-white/62">

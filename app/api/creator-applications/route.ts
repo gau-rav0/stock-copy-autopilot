@@ -1,6 +1,7 @@
 import { createWriteClient, hasSupabaseWriteConfig } from "@/lib/supabase/server";
 import { dispatchOutboundEvent } from "@/lib/outbound";
 import { extractPdfText, parseCasText, type ParsedCasHolding } from "@/lib/cas-parser";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { CreatorApplicationSchema } from "@/lib/validation";
 import { NextResponse } from "next/server";
 
@@ -48,6 +49,12 @@ const parsedStatus = (method: CreatorPayload["method"], holdings: ParsedCasHoldi
 };
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const limiter = rateLimit(`creator:${ip}`, { maxRequests: 5 });
+  if (!limiter.success) {
+    return NextResponse.json({ error: "Too many requests. Try again in a minute." }, { status: 429 });
+  }
+
   const raw = await getPayload(request);
   const validated = CreatorApplicationSchema.safeParse(raw);
 

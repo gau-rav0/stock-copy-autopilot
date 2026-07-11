@@ -13,6 +13,18 @@ type OutboundEvent = {
 const operationEmailTo = () => process.env.OPERATIONS_EMAIL_TO ?? process.env.CRM_EMAIL_TO;
 const operationEmailFrom = () => process.env.OPERATIONS_EMAIL_FROM ?? "Follow Verified Investors <onboarding@resend.dev>";
 
+async function fetchWithTimeout(resource: string, options: RequestInit & { timeout?: number } = {}) {
+  const { timeout = 4000 } = options;
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  const response = await fetch(resource, {
+    ...options,
+    signal: controller.signal
+  });
+  clearTimeout(id);
+  return response;
+}
+
 async function sendCrmWebhook(event: OutboundEvent) {
   const webhookUrl = process.env.CRM_WEBHOOK_URL;
   if (!webhookUrl) {
@@ -20,7 +32,7 @@ async function sendCrmWebhook(event: OutboundEvent) {
   }
 
   try {
-    const response = await fetch(webhookUrl, {
+    const response = await fetchWithTimeout(webhookUrl, {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -48,7 +60,7 @@ async function sendOperationsEmail(event: OutboundEvent) {
   }
 
   try {
-    const response = await fetch("https://api.resend.com/emails", {
+    const response = await fetchWithTimeout("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "content-type": "application/json",

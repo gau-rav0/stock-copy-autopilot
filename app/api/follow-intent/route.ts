@@ -1,9 +1,16 @@
 import { createWriteClient } from "@/lib/supabase/server";
 import { dispatchOutboundEvent } from "@/lib/outbound";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { FollowIntentSchema } from "@/lib/validation";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const limiter = rateLimit(`follow:${ip}`, { maxRequests: 20 });
+  if (!limiter.success) {
+    return NextResponse.json({ error: "Too many requests. Try again in a minute." }, { status: 429 });
+  }
+
   const raw = await request.json().catch(() => ({}));
   const parsed = FollowIntentSchema.safeParse(raw);
 

@@ -1,6 +1,11 @@
+"use client";
+
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 
 export default function Navbar() {
+  const { user, signOut } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 border-b border-white/[.06] bg-ink/70 backdrop-blur-xl">
       <nav className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
@@ -23,12 +28,31 @@ export default function Navbar() {
             Become a creator
           </Link>
         </div>
-        <Link
-          href="/explore"
-          className="shrink-0 rounded-lg border border-brass/40 bg-brass/10 px-3 py-1.5 text-xs text-brass transition hover:border-brass hover:bg-brass/15 sm:px-4 sm:text-sm"
-        >
-          Explore investors
-        </Link>
+        
+        <div className="flex items-center gap-4">
+          <Link
+            href="/explore"
+            className="shrink-0 rounded-lg border border-brass/40 bg-brass/10 px-3 py-1.5 text-xs text-brass transition hover:border-brass hover:bg-brass/15 sm:px-4 sm:text-sm"
+          >
+            Explore investors
+          </Link>
+          
+          {user ? (
+            <button
+              onClick={() => signOut()}
+              className="text-xs text-paper-muted hover:text-paper transition"
+            >
+              Sign out
+            </button>
+          ) : (
+            <Link
+              href="/auth"
+              className="text-xs text-paper-muted hover:text-paper transition"
+            >
+              Sign in
+            </Link>
+          )}
+        </div>
       </nav>
     </header>
   );

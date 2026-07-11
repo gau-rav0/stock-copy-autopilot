@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/auth-context";
 
 export default function FollowButton({
   investorId,
@@ -11,28 +12,58 @@ export default function FollowButton({
   investorName: string;
   compact?: boolean;
 }) {
+  const { user } = useAuth();
   const [following, setFollowing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user || !investorId) {
+      setFollowing(false);
+      setLoading(false);
+      return;
+    }
+
+    const checkFollowState = async () => {
+      try {
+        const res = await fetch(`/api/follow?profileId=${investorId}`);
+        const data = await res.json();
+        setFollowing(!!data.following);
+      } catch {
+        // Fallback silently
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkFollowState();
+  }, [user, investorId]);
 
   const toggleFollow = async () => {
+    if (!user) {
+      window.location.href = "/auth";
+      return;
+    }
+
     const next = !following;
     setFollowing(next);
-
-    if (!next) return;
-
     setSaving(true);
+
     try {
-      await fetch("/api/follow-intent", {
-        method: "POST",
+      await fetch("/api/follow", {
+        method: next ? "POST" : "DELETE",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ investorId, investorName, source: "follow_button" }),
+        body: JSON.stringify({ profileId: investorId }),
       });
     } catch {
-      // Keep the UI responsive even when capture is unavailable locally.
+      // Revert if API fails
+      setFollowing(!next);
     } finally {
       setSaving(false);
     }
   };
+
+  if (loading) return <div className="h-9 w-24 rounded-lg bg-ink-elevated animate-pulse"></div>;
 
   return (
     <div className={compact ? "w-full sm:w-auto" : "w-full max-w-xs sm:w-auto"}>

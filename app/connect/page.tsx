@@ -149,6 +149,9 @@ export default function ConnectPage() {
         <div className="mt-8">
           <div className="mb-4 grid gap-3 sm:grid-cols-2">
             <input
+              id="creatorName"
+              name="creatorName"
+              autoComplete="name"
               value={creatorName}
               onChange={(e) => setCreatorName(e.target.value)}
               placeholder="Creator name"
@@ -156,9 +159,12 @@ export default function ConnectPage() {
             />
             <input
               type="email"
+              id="email"
+              name="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Review email"
+              placeholder="Email ID"
               className="input-field"
             />
           </div>
@@ -193,6 +199,9 @@ export default function ConnectPage() {
         <div className="mt-8">
           <div className="mb-4 grid gap-3 sm:grid-cols-2">
             <input
+              id="creatorNameManual"
+              name="creatorName"
+              autoComplete="name"
               value={creatorName}
               onChange={(e) => setCreatorName(e.target.value)}
               placeholder="Creator name"
@@ -200,9 +209,12 @@ export default function ConnectPage() {
             />
             <input
               type="email"
+              id="emailManual"
+              name="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Review email"
+              placeholder="Email ID"
               className="input-field"
             />
           </div>

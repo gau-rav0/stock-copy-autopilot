@@ -127,7 +127,7 @@ function toGrowth(row: GrowthRow): GrowthPoint {
 }
 
 export async function getProfiles(): Promise<Profile[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   if (!supabase) {
     return demoProfiles.map((profile) => ({ ...profile, topHoldings: getDemoTopHoldings(profile.id) }));
   }
@@ -152,7 +152,7 @@ export async function getProfiles(): Promise<Profile[]> {
 }
 
 export async function getProfileDetail(slug: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   if (!supabase) {
     const profile = getDemoProfile(slug);
     return profile
@@ -230,7 +230,7 @@ export async function getHomeData() {
 }
 
 export async function getTickerFeed() {
-  const supabase = createClient();
+  const supabase = await createClient();
   if (!supabase) return demoTickerFeed;
 
   const { data, error } = await supabase
@@ -246,7 +246,7 @@ export async function getTickerFeed() {
 }
 
 async function getPortfolioMap(profileIds: string[]) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const portfolioByProfile = new Map<string, PortfolioRow>();
   if (!supabase || profileIds.length === 0) return portfolioByProfile;
 
@@ -261,7 +261,7 @@ async function getPortfolioMap(profileIds: string[]) {
 }
 
 async function getHoldingsMap(portfolioIds: string[]) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const holdingsByPortfolio = new Map<string, Holding[]>();
   if (!supabase || portfolioIds.length === 0) return holdingsByPortfolio;
 

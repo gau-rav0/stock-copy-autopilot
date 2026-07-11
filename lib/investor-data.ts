@@ -28,6 +28,7 @@ type ProfileRow = {
   volatility: number;
   win_rate: number;
   sort_order: number;
+  subscription_fee_inr: number;
 };
 
 type PortfolioRow = {
@@ -86,6 +87,7 @@ function toProfile(row: ProfileRow, topHoldings: Holding[] = []): Profile {
     maxDrawdown: toNumber(row.max_drawdown),
     volatility: toNumber(row.volatility),
     winRate: toNumber(row.win_rate),
+    subscriptionFeeInr: toNumber(row.subscription_fee_inr),
     topHoldings,
   };
 }

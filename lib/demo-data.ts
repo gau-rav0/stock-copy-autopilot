@@ -19,6 +19,7 @@ export const profiles: Profile[] = [
     maxDrawdown: -31.2,
     volatility: 18.9,
     winRate: 64,
+    subscriptionFeeInr: 999,
   },
   {
     id: "priya-shah",
@@ -36,6 +37,7 @@ export const profiles: Profile[] = [
     maxDrawdown: -42.6,
     volatility: 27.3,
     winRate: 57,
+    subscriptionFeeInr: 0,
   },
   {
     id: "rahul-kapoor",
@@ -53,6 +55,7 @@ export const profiles: Profile[] = [
     maxDrawdown: -26.8,
     volatility: 16.4,
     winRate: 61,
+    subscriptionFeeInr: 499,
   },
   {
     id: "neha-iyer",
@@ -155,6 +158,7 @@ export const profiles: Profile[] = [
     maxDrawdown: -12.2,
     volatility: 8.8,
     winRate: 72,
+    subscriptionFeeInr: 499,
   },
   {
     id: "tara-gupta",

@@ -75,7 +75,11 @@ export default async function InvestorProfilePage({
             </p>
           </div>
         </div>
-        <FollowButton investorId={profile.id} investorName={profile.displayName} />
+        <FollowButton
+          investorId={profile.id}
+          investorName={profile.displayName}
+          subscriptionFeeInr={profile.subscriptionFeeInr}
+        />
       </div>
 
       <div className="mt-6">

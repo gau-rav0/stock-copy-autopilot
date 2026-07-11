@@ -25,6 +25,7 @@ export interface Profile {
   volatility: number;
   winRate: number;
   topHoldings?: Holding[];
+  subscriptionFeeInr: number;
 }
 
 export interface Holding {

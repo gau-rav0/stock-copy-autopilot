@@ -171,7 +171,7 @@ export const calculatePortfolio = async (holdingsInput: HoldingInput[]): Promise
   const absoluteReturn = investedValue > 0 ? ((currentValue - investedValue) / investedValue) * 100 : 0;
   const cagrInputs = holdings.filter((holding) => holding.cagr_pct !== null);
   const weightedCagr =
-    cagrInputs.length > 0
+    cagrInputs.length > 0 && currentValue > 0
       ? cagrInputs.reduce((sum, holding) => sum + (holding.cagr_pct ?? 0) * (holding.current_value / currentValue), 0)
       : null;
 

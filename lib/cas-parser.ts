@@ -40,18 +40,33 @@ const normalizeLine = (line: string) =>
     .trim();
 
 const matchKnownStock = (line: string) => {
-  const compact = line.toUpperCase().replace(/[^A-Z0-9&]/g, "");
-  const symbol = [...knownSymbols].find((candidate) => compact.includes(candidate.replace(/[^A-Z0-9&]/g, "")));
+  const upperLine = line.toUpperCase();
+  // Split by non-alphanumeric chars, keeping '&' for symbols like M&M
+  const tokens = upperLine.split(/[^A-Z0-9&]+/);
+
+  // 1. Match symbol exactly as a distinct token
+  const symbol = [...knownSymbols].find((candidate) => tokens.includes(candidate));
   if (symbol) {
     return { symbol, name: NSE_UNIVERSE.find((stock) => stock.symbol === symbol)?.name ?? symbol };
   }
 
-  const nameMatch = knownNames.find((stock) => compact.includes(stock.normalizedName));
-  if (!nameMatch) {
-    return null;
+  // 2. Match by normalized name — short names must be standalone tokens
+  const compact = upperLine.replace(/[^A-Z0-9]/g, "");
+  const nameMatch = knownNames.find((stock) => {
+    if (stock.normalizedName.length <= 4) {
+      return tokens.includes(stock.normalizedName);
+    }
+    return compact.includes(stock.normalizedName);
+  });
+
+  if (nameMatch) {
+    return {
+      symbol: nameMatch.symbol,
+      name: NSE_UNIVERSE.find((stock) => stock.symbol === nameMatch.symbol)?.name ?? nameMatch.symbol,
+    };
   }
 
-  return { symbol: nameMatch.symbol, name: NSE_UNIVERSE.find((stock) => stock.symbol === nameMatch.symbol)?.name ?? nameMatch.symbol };
+  return null;
 };
 
 const inferName = (line: string, symbol: string | null) => {
@@ -85,8 +100,17 @@ export function parseCasText(rawText: string): CasParseResult {
 
     const stock = matchKnownStock(line);
     const percentMatch = line.match(/(-?\d+(?:\.\d+)?)\s*%/);
-    const currencyMatches = [...line.matchAll(/(?:INR|Rs\.?|₹)?\s*(-?\d[\d,]*(?:\.\d{1,2})?)/gi)].map((match) => match[1]);
-    const values = currencyMatches.map(parseNumber).filter((value): value is number => value !== null);
+    // Parse standalone numbers — ignore ISINs, dates, and alphanumeric codes
+    const numTokens = line.split(/\s+/);
+    const values = numTokens
+      .map((t) => {
+        const clean = t.replace(/^(?:INR|Rs\.?|₹)/i, "").replace(/[:;]$/, "");
+        if (!/^[-+]?[\d,]+(?:\.\d+)?%?$/.test(clean)) {
+          return null;
+        }
+        return parseNumber(clean.replace(/%/g, ""));
+      })
+      .filter((value): value is number => value !== null);
 
     if (!stock && values.length < 2 && !percentMatch) {
       continue;

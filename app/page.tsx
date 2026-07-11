@@ -44,6 +44,12 @@ export default async function Home() {
               Verify as creator
             </Link>
           </div>
+          {/* Stats bar */}
+          <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-paper-muted">
+            <span><strong className="font-mono text-paper">10</strong> verified profiles</span>
+            <span><strong className="font-mono text-paper">4,210+</strong> portfolios roasted</span>
+            <span><strong className="font-mono text-brass">Free</strong> to browse, always</span>
+          </div>
         </div>
 
         <div className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-4 shadow-[0_0_80px_rgba(0,157,85,.08)] backdrop-blur-xl sm:p-5">
@@ -109,6 +115,55 @@ export default async function Home() {
       </section>
 
       <ConvictionTicker />
+
+      {/* Before/After comparison */}
+      <section className="mx-auto max-w-5xl px-6 py-12">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass text-center">The problem we solve</p>
+        <h2 className="mt-3 font-display text-2xl text-paper text-center">
+          Before you follow that Finance Twitter guy — check the receipts.
+        </h2>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-lg border border-loss/30 bg-loss/[.06] p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-lg">❌</span>
+              <p className="font-mono text-xs uppercase tracking-[0.16em] text-loss">Screenshot (unverifiable)</p>
+            </div>
+            <div className="rounded-lg border border-ink-hairline bg-white/[.03] p-4 space-y-2">
+              <p className="font-display text-paper text-sm">&ldquo;My 3X return on RELIANCE this year 🚀&rdquo;</p>
+              <div className="h-12 rounded bg-white/[.04] flex items-center justify-center">
+                <p className="font-mono text-[10px] text-paper-muted">[ blurry WhatsApp screenshot ]</p>
+              </div>
+            </div>
+            <div className="mt-4 space-y-1.5">
+              {["No date. No context.", "No exit shown.", "Cannot be verified.", "Loss tweets deleted."].map(item => (
+                <div key={item} className="flex items-center gap-2 text-xs text-paper-muted">
+                  <span className="text-loss">✗</span> {item}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-lg border border-brass/30 bg-brass/[.06] p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-lg">✅</span>
+              <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">FVI Profile (CAS verified)</p>
+            </div>
+            <div className="rounded-lg border border-ink-hairline bg-white/[.03] p-4 space-y-2">
+              <p className="font-display text-paper text-sm">Arjun Mehta — COALINDIA</p>
+              <div className="grid grid-cols-2 gap-2 font-mono text-xs">
+                <div><p className="text-paper-muted">Entered</p><p className="text-paper">Jan 2022 · ₹165</p></div>
+                <div><p className="text-paper-muted">Current</p><p className="text-gain">₹421 (+155%)</p></div>
+              </div>
+            </div>
+            <div className="mt-4 space-y-1.5">
+              {["CDSL CAS verified.", "Every transaction timestamped.", "Full history including exits.", "Max drawdown shown."].map(item => (
+                <div key={item} className="flex items-center gap-2 text-xs text-paper-muted">
+                  <span className="text-gain">✓</span> {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="mx-auto max-w-5xl px-6 pt-10">
         <TrustNotice compact />
@@ -204,6 +259,146 @@ export default async function Home() {
         <div className="mt-8 grid gap-5 sm:grid-cols-3">
           {featured.map((p) => (
             <InvestorCard key={p.id} profile={p} />
+          ))}
+        </div>
+      </section>
+
+      {/* Pricing section */}
+      <section id="pricing" className="border-y border-ink-hairline bg-ink-elevated/35 py-24 backdrop-blur">
+        <div className="mx-auto max-w-5xl px-6">
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass text-center">Simple, honest pricing</p>
+          <h2 className="mt-3 font-display text-2xl text-paper text-center">Free to explore. Forever.</h2>
+          <div className="mt-10 grid gap-5 sm:grid-cols-3">
+            {[
+              {
+                name: "Browse",
+                price: "₹0",
+                period: "/always",
+                badge: null,
+                items: [
+                  "Explore all investor profiles",
+                  "View top 3 holdings per investor",
+                  "Portfolio Roast (5 free/month)",
+                  "Full conviction history (demo)",
+                ],
+                cta: "Start browsing",
+                href: "/explore",
+                highlight: false,
+              },
+              {
+                name: "Creator",
+                price: "Apply",
+                period: "/free",
+                badge: "Invite only",
+                items: [
+                  "Verified profile badge",
+                  "Conviction alert feed",
+                  "Full holdings history (3+ yrs)",
+                  "Monthly performance report",
+                ],
+                cta: "Apply to join",
+                href: "/connect",
+                highlight: true,
+              },
+              {
+                name: "Pro",
+                price: "₹199",
+                period: "/month",
+                badge: "Coming soon",
+                items: [
+                  "Unlimited portfolio roasts",
+                  "Full history for all investors",
+                  "Email alerts on conviction changes",
+                  "Nifty 50 / Midcap 150 benchmarks",
+                ],
+                cta: "Get notified",
+                href: "/connect",
+                highlight: false,
+              },
+            ].map((plan) => (
+              <div
+                key={plan.name}
+                className={`relative rounded-lg border p-6 flex flex-col ${
+                  plan.highlight
+                    ? "border-brass/40 bg-brass/[.06] shadow-[0_0_60px_rgba(0,157,85,.1)]"
+                    : "border-ink-hairline bg-ink-elevated/75"
+                }`}
+              >
+                {plan.badge && (
+                  <span className="absolute -top-3 right-5 rounded-full border border-brass/40 bg-ink px-3 py-0.5 font-mono text-[10px] uppercase text-brass">
+                    {plan.badge}
+                  </span>
+                )}
+                <p className="font-mono text-xs uppercase tracking-[0.16em] text-paper-muted">{plan.name}</p>
+                <div className="mt-2 flex items-baseline gap-1">
+                  <span className="font-display text-3xl text-paper">{plan.price}</span>
+                  <span className="text-sm text-paper-muted">{plan.period}</span>
+                </div>
+                <ul className="mt-5 flex-1 space-y-2.5">
+                  {plan.items.map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-sm text-paper-muted">
+                      <span className="mt-0.5 text-brass">✓</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href={plan.href}
+                  className={`mt-6 block rounded-lg py-2.5 text-center text-sm font-semibold transition ${
+                    plan.highlight
+                      ? "bg-brass text-white hover:opacity-90"
+                      : "border border-ink-hairline text-paper-muted hover:border-paper-muted hover:text-paper"
+                  }`}
+                >
+                  {plan.cta}
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ section */}
+      <section className="mx-auto max-w-3xl px-6 py-24">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass text-center">Questions</p>
+        <h2 className="mt-3 font-display text-2xl text-paper text-center">Frequently asked</h2>
+        <div className="mt-8 space-y-3">
+          {[
+            {
+              q: "How do I verify an investor&#39;s track record in India?",
+              a: "FVI requires investors to link their CDSL CAS statement or broker account. This shows actual holdings, not just screenshots. The verification tier (CAS / broker / demo) is clearly shown on every profile.",
+            },
+            {
+              q: "Is Follow Verified Investors free to use?",
+              a: "Yes. Exploring investor profiles, viewing track records, and using the Portfolio Roast are completely free. No signup required to browse.",
+            },
+            {
+              q: "What is the Portfolio Roast?",
+              a: "An AI tool that analyses your NSE/BSE stock holdings and scores your portfolio on diversification, concentration risk, absolute return, and sector balance. It gives a blunt, honest assessment.",
+            },
+            {
+              q: "Can verified investors on FVI give investment advice?",
+              a: "No. FVI is an educational platform. Creators share read-only updates on portfolio conviction changes. No advice, copy trading, or order execution of any kind.",
+            },
+            {
+              q: "What is a CAS statement and how does it verify an investor?",
+              a: "A Consolidated Account Statement (CAS) is issued by CDSL/NSDL and shows all demat holdings linked to your PAN. It cannot be faked or cherry-picked, making it the gold standard for portfolio verification in India.",
+            },
+            {
+              q: "What does the Trust Score mean?",
+              a: "The Trust Score (0\u2013100) is calculated from verification tier, holding history length, number of transactions, drawdown data, and benchmark comparisons. Higher scores mean more evidence is available to inspect.",
+            },
+          ].map(({ q, a }) => (
+            <details
+              key={q}
+              className="group rounded-lg border border-ink-hairline bg-ink-elevated/75 p-5 backdrop-blur"
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-paper">
+                {q}
+                <span className="shrink-0 text-paper-muted transition group-open:rotate-180">▾</span>
+              </summary>
+              <p className="mt-3 text-sm leading-6 text-paper-muted">{a}</p>
+            </details>
           ))}
         </div>
       </section>

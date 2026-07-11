@@ -11,12 +11,16 @@ export const metadata: Metadata = {
   description:
     "Inspect verified investor track records, holdings history, benchmark comparisons, and read-only conviction updates. No advice, copy trading, or order execution.",
   keywords: [
-    "verified investors",
-    "portfolio evidence",
-    "NSE portfolio tracking",
-    "investor marketplace",
-    "portfolio roast",
-    "investment education",
+    "verified investor track record India",
+    "NSE portfolio verification",
+    "CAS statement investor",
+    "portfolio roast tool India",
+    "best investors to follow India",
+    "stock portfolio tracker NSE",
+    "investment evidence India",
+    "CDSL CAS portfolio history",
+    "check investor credentials India",
+    "investor transparency platform India",
   ],
   icons: {
     icon: "/favicon.svg",
@@ -51,6 +55,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              "name": "Follow Verified Investors",
+              "url": "https://fvi-ochre.vercel.app",
+              "applicationCategory": "FinanceApplication",
+              "operatingSystem": "Web",
+              "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
+              "description": "Inspect verified investor track records, holdings history, and benchmark comparisons. No copy trading or investment advice.",
+            }),
+          }}
+        />
         <Navbar />
         <main>{children}</main>
       </body>

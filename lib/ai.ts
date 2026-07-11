@@ -1,4 +1,16 @@
 /**
+ * @reserved — NOT WIRED
+ *
+ * This file is intentionally kept for future conviction-alert generation
+ * (see /api/internal/conviction-check in the PRD). It is NOT imported
+ * anywhere in the current codebase.
+ *
+ * The active AI roast generation lives in lib/portfolio.ts → generateRoast(),
+ * which uses the same KMICHI_API_KEY / KMICHI_MODEL env vars.
+ *
+ * Do not delete — wire this in when the real-time conviction alert pipeline
+ * is built (requires live broker data + webhook triggers).
+ *
  * Provider-agnostic AI call, configured for your kmichi API first.
  *
  * For kmichi, set:

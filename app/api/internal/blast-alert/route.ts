@@ -4,13 +4,13 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "dummy");
 
-// Ensure we have the service role key to bypass RLS and fetch users
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(req: Request) {
+  // Ensure we have the service role key to bypass RLS and fetch users
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+  );
+
   try {
     // 1. Verify the request securely
     const authHeader = req.headers.get("Authorization");

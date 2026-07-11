@@ -1,13 +1,24 @@
 import { calculatePortfolio, generateRoast } from "@/lib/portfolio";
 import { dispatchOutboundEvent } from "@/lib/outbound";
-import type { RoastRequest, RoastResult } from "@/lib/roast-types";
+import type { RoastResult } from "@/lib/roast-types";
 import { createWriteClient } from "@/lib/supabase/server";
+import { RoastRequestSchema } from "@/lib/validation";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const payload = (await request.json()) as RoastRequest;
-    const computed = await calculatePortfolio(payload.holdings ?? []);
+    const raw = await request.json().catch(() => ({}));
+    const parsed = RoastRequestSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues.map((i) => i.message).join("; ") },
+        { status: 400 }
+      );
+    }
+
+    const payload = parsed.data;
+    const computed = await calculatePortfolio(payload.holdings);
     const roast = await generateRoast(computed);
 
     const result: RoastResult = {
@@ -39,6 +50,11 @@ export async function POST(request: Request) {
           current_value: result.metrics.current_value,
           generated_by: result.generated_by,
           source: "portfolio_roast",
+        });
+        // Also capture in waitlist
+        await supabase.from("waitlist_signups").insert({
+          email: payload.email,
+          source: "roast_page",
         });
         const outbound = await dispatchOutboundEvent("roast_lead", outboundPayload);
         await supabase.from("outbound_deliveries").insert([

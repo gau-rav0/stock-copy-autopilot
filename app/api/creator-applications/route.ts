@@ -1,6 +1,7 @@
 import { createWriteClient, hasSupabaseWriteConfig } from "@/lib/supabase/server";
 import { dispatchOutboundEvent } from "@/lib/outbound";
 import { extractPdfText, parseCasText, type ParsedCasHolding } from "@/lib/cas-parser";
+import { CreatorApplicationSchema } from "@/lib/validation";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -47,11 +48,17 @@ const parsedStatus = (method: CreatorPayload["method"], holdings: ParsedCasHoldi
 };
 
 export async function POST(request: Request) {
-  const payload = await getPayload(request);
+  const raw = await getPayload(request);
+  const validated = CreatorApplicationSchema.safeParse(raw);
 
-  if (!payload.email || !payload.method) {
-    return NextResponse.json({ error: "Email and verification method are required." }, { status: 400 });
+  if (!validated.success) {
+    return NextResponse.json(
+      { error: validated.error.issues.map((i) => i.message).join("; ") },
+      { status: 400 }
+    );
   }
+
+  const payload = { ...raw, ...validated.data };
 
   let sourceText = payload.holdingsText ?? "";
   let parseError: string | null = null;

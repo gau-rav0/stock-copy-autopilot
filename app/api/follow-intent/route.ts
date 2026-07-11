@@ -1,24 +1,26 @@
 import { createWriteClient } from "@/lib/supabase/server";
 import { dispatchOutboundEvent } from "@/lib/outbound";
+import { FollowIntentSchema } from "@/lib/validation";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-  const payload = (await request.json().catch(() => ({}))) as {
-    investorId?: string;
-    investorName?: string;
-    email?: string;
-    source?: string;
-  };
+  const raw = await request.json().catch(() => ({}));
+  const parsed = FollowIntentSchema.safeParse(raw);
 
-  if (!payload.investorName && !payload.investorId) {
-    return NextResponse.json({ error: "Investor is required." }, { status: 400 });
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues.map((i) => i.message).join("; ") },
+      { status: 400 }
+    );
   }
+
+  const payload = parsed.data;
 
   const outboundPayload = {
     investorId: payload.investorId ?? null,
     investorName: payload.investorName ?? null,
     email: payload.email ?? null,
-    source: payload.source ?? "follow_button",
+    source: payload.source,
   };
 
   const supabase = createWriteClient();

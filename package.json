@@ -1,0 +1,21 @@
+{
+  "name": "fvi-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Follow Verified Investors — exposes investor profiles, holdings, and track record data as MCP tools",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch"
+  },
+  "keywords": ["mcp", "investor", "portfolio", "india", "nse", "finance"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

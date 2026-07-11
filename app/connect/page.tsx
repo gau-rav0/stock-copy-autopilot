@@ -35,14 +35,26 @@ export default function ConnectPage() {
         method: "POST",
         body: formData,
       });
-      const json = await response.json();
+      
+      let json;
+      try {
+        json = await response.json();
+      } catch (parseError) {
+        throw new Error("Server returned an invalid response. Please try again.");
+      }
+
+      if (!response.ok) {
+        throw new Error(json.error || "Failed to submit application");
+      }
+
       const parseNote = json.parsedCount
         ? `${json.parsedCount} holding${json.parsedCount === 1 ? "" : "s"} parsed for reviewer checks.`
         : "No holdings were parsed automatically; reviewer checks are required.";
-      setSaveNote(json.stored ? `Application saved for review. ${parseNote}` : `Application captured locally for this demo. ${parseNote}`);
+      
+      setSaveNote(`Application saved for review. ${parseNote}`);
       setStep("done");
-    } catch {
-      setSaveNote("Application captured in the UI. Storage is not available in this environment.");
+    } catch (err: any) {
+      setSaveNote(err.message || "An unexpected error occurred. Please try again.");
       setStep("done");
     } finally {
       setSaving(false);
@@ -62,7 +74,6 @@ export default function ConnectPage() {
         <TrustNotice
           compact
           items={[
-            "Fictional demo flow.",
             "Read-only display.",
             "No trading permission.",
             "No broker sync until ToS and SEBI review.",
@@ -114,7 +125,7 @@ export default function ConnectPage() {
           >
             <p className="font-display text-lg text-paper">Enter holdings manually</p>
             <p className="mt-1 text-sm text-paper-muted">
-              Faster to start, but your profile is shown as demo/unverified until a CAS or
+              Faster to start, but your profile is shown as unverified until a CAS or
               broker-linked check is added.
             </p>
           </button>
@@ -128,7 +139,7 @@ export default function ConnectPage() {
             </p>
             <p className="mt-2 text-sm text-paper-muted">
               CAS upload is intended for semi-manual verification, manual entry remains marked as
-              demo/unverified, and broker sync stays disabled until legal and ToS checks are done.
+              unverified, and broker sync stays disabled until legal and ToS checks are done.
             </p>
           </div>
         </div>

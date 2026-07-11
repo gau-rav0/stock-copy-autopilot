@@ -4,7 +4,11 @@ import Razorpay from "razorpay";
 
 export async function POST(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
+    if (!supabase) {
+      return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {

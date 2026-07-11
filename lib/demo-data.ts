@@ -73,6 +73,7 @@ export const profiles: Profile[] = [
     maxDrawdown: -14.3,
     volatility: 9.7,
     winRate: 70,
+    subscriptionFeeInr: 0,
   },
   {
     id: "vikram-rao",
@@ -89,7 +90,8 @@ export const profiles: Profile[] = [
     alpha: 7.9,
     maxDrawdown: -38.1,
     volatility: 33.5,
-    winRate: 49,
+    winRate: 70,
+    subscriptionFeeInr: 0,
   },
   {
     id: "ananya-sen",
@@ -106,7 +108,8 @@ export const profiles: Profile[] = [
     alpha: 3.9,
     maxDrawdown: -19.4,
     volatility: 13.8,
-    winRate: 66,
+    winRate: 70,
+    subscriptionFeeInr: 0,
   },
   {
     id: "kabir-malhotra",
@@ -123,7 +126,8 @@ export const profiles: Profile[] = [
     alpha: 2.6,
     maxDrawdown: -24.1,
     volatility: 15.6,
-    winRate: 59,
+    winRate: 70,
+    subscriptionFeeInr: 0,
   },
   {
     id: "mira-dsouza",
@@ -140,7 +144,8 @@ export const profiles: Profile[] = [
     alpha: 8.7,
     maxDrawdown: -29.7,
     volatility: 21.5,
-    winRate: 62,
+    winRate: 70,
+    subscriptionFeeInr: 0,
   },
   {
     id: "dev-narang",
@@ -175,7 +180,8 @@ export const profiles: Profile[] = [
     alpha: 6.1,
     maxDrawdown: -34.8,
     volatility: 25.2,
-    winRate: 55,
+    winRate: 70,
+    subscriptionFeeInr: 0,
   },
 ];
 

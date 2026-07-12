@@ -5,10 +5,31 @@ import ReplayTimeline from "@/components/ReplayTimeline";
 import TrustNotice from "@/components/TrustNotice";
 import BeginnerModePanel from "@/components/BeginnerModePanel";
 import { getHomeData } from "@/lib/investor-data";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function Home() {
   const { featured, replaySample } = await getHomeData();
   const comparison = featured.slice(0, 2);
+
+  // Fetch live stats from Supabase with hardcoded fallbacks
+  let profileCount = 10;
+  let roastCount = "4,210+";
+  try {
+    const supabase = await createClient();
+    if (supabase) {
+      const { count: pc } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("verified", true);
+      const { count: rc } = await supabase
+        .from("roast_leads")
+        .select("*", { count: "exact", head: true });
+      if (pc) profileCount = pc;
+      if (rc) roastCount = rc > 1000 ? `${Math.floor(rc / 100) * 100}+` : String(rc);
+    }
+  } catch {
+    // Silently use fallbacks
+  }
 
   return (
     <>
@@ -46,8 +67,8 @@ export default async function Home() {
           </div>
           {/* Stats bar */}
           <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-paper-muted">
-            <span><strong className="font-mono text-paper">10</strong> verified profiles</span>
-            <span><strong className="font-mono text-paper">4,210+</strong> portfolios roasted</span>
+            <span><strong className="font-mono text-paper">{profileCount}</strong> verified profiles</span>
+            <span><strong className="font-mono text-paper">{roastCount}</strong> portfolios roasted</span>
             <span><strong className="font-mono text-brass">Free</strong> to browse, always</span>
           </div>
         </div>
@@ -312,7 +333,7 @@ export default async function Home() {
                   "Nifty 50 / Midcap 150 benchmarks",
                 ],
                 cta: "Get notified",
-                href: "/connect",
+                href: "/waitlist",
                 highlight: false,
               },
             ].map((plan) => (

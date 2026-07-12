@@ -20,6 +20,7 @@ export default function FollowButton({
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || !investorId) {
@@ -44,8 +45,12 @@ export default function FollowButton({
   }, [user, investorId]);
 
   const toggleFollow = async () => {
+    setError(null);
+
     if (!user) {
-      window.location.href = "/auth";
+      // Remember the current page so we can return after sign-in
+      const next = encodeURIComponent(window.location.pathname);
+      window.location.href = `/auth?next=${next}`;
       return;
     }
 
@@ -61,6 +66,7 @@ export default function FollowButton({
         });
       } catch {
         setFollowing(true);
+        setError("Failed to unfollow. Please try again.");
       } finally {
         setSaving(false);
       }
@@ -71,37 +77,52 @@ export default function FollowButton({
     setSaving(true);
 
     if (subscriptionFeeInr > 0) {
+      const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      if (!razorpayKey) {
+        setError("Payment is temporarily unavailable. Please try again later.");
+        setSaving(false);
+        return;
+      }
+
       try {
         const orderRes = await fetch("/api/checkout", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ profileId: investorId }),
         });
-        
+
         const orderData = await orderRes.json();
-        
+
         if (!orderRes.ok) {
           throw new Error(orderData.error || "Failed to create order");
         }
 
         const options = {
-          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "", // Enter the Key ID generated from the Dashboard
-          amount: orderData.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+          key: razorpayKey,
+          amount: orderData.amount,
           currency: "INR",
           name: "Follow Verified Investors",
           description: `Subscription to follow ${investorName}`,
           order_id: orderData.id,
-          handler: function (response: any) {
-            // Payment success. The webhook will handle the database insertion, 
-            // but we can proactively set state here for better UX.
+          handler: async function () {
+            // Payment success — proactively confirm on server side too
             setFollowing(true);
             setSaving(false);
+            try {
+              await fetch("/api/follow", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ profileId: investorId, subscribed: true }),
+              });
+            } catch {
+              // Webhook will handle DB insertion; this is best-effort
+            }
           },
           prefill: {
             email: user.email,
           },
           theme: {
-            color: "#009D55", // brass color
+            color: "#009D55",
           },
           modal: {
             ondismiss: function () {
@@ -112,12 +133,12 @@ export default function FollowButton({
 
         const rzp = new (window as any).Razorpay(options);
         rzp.on("payment.failed", function (response: any) {
-          alert("Payment failed. " + response.error.description);
+          setError("Payment failed: " + (response.error?.description || "Unknown error"));
           setSaving(false);
         });
         rzp.open();
       } catch (err: any) {
-        alert(err.message || "Failed to initiate payment");
+        setError(err.message || "Failed to initiate payment. Please try again.");
         setSaving(false);
       }
       return;
@@ -126,19 +147,24 @@ export default function FollowButton({
     // Free follow logic
     setFollowing(true);
     try {
-      await fetch("/api/follow", {
+      const res = await fetch("/api/follow", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ profileId: investorId }),
       });
-    } catch {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to follow");
+      }
+    } catch (err: any) {
       setFollowing(false);
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) return <div className="h-9 w-24 rounded-lg bg-ink-elevated animate-pulse"></div>;
+  if (loading) return <div className="h-9 w-24 rounded-lg bg-ink-elevated animate-pulse" />;
 
   return (
     <>
@@ -164,7 +190,10 @@ export default function FollowButton({
             ? "Following"
             : `Follow ${investorName.split(" ")[0]}${subscriptionFeeInr > 0 ? ` (₹${subscriptionFeeInr})` : ""}`}
         </button>
-        {!compact && !following && (
+        {error && (
+          <p className="mt-2 text-xs text-loss">{error}</p>
+        )}
+        {!compact && !following && !error && (
           <p className="mt-2 text-xs text-paper-muted">
             Follow means read-only portfolio-update notifications. No advice, copying, or execution.
           </p>

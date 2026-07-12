@@ -33,28 +33,38 @@ export async function POST(request: Request) {
       const notes = payload?.notes;
 
       if (notes && notes.userId && notes.profileId) {
-        const supabase = createWriteClient();
-        if (supabase) {
-          // Insert into subscriptions
-          await supabase.from("subscriptions").insert({
-            follower_user_id: notes.userId,
-            profile_id: notes.profileId,
-            amount_inr: (payload.amount ?? 0) / 100, // convert paise to INR
-            razorpay_subscription_id: payload.order_id || payload.id,
-            status: "active",
-          });
+          const supabase = createWriteClient();
+          if (supabase) {
+            const razorpayId = payload.order_id || payload.id;
 
-          // Insert or update follower
-          await supabase.from("followers").upsert(
-            {
-              follower_user_id: notes.userId,
-              profile_id: notes.profileId,
-              subscribed: true,
-              subscription_id: payload.order_id || payload.id,
-            },
-            { onConflict: "follower_user_id, profile_id" }
-          );
-        }
+            // Idempotency: skip if this Razorpay order was already processed
+            const { data: existing } = await supabase
+              .from("subscriptions")
+              .select("id")
+              .eq("razorpay_subscription_id", razorpayId)
+              .maybeSingle();
+
+            if (!existing) {
+              await supabase.from("subscriptions").insert({
+                follower_user_id: notes.userId,
+                profile_id: notes.profileId,
+                amount_inr: (payload.amount ?? 0) / 100,
+                razorpay_subscription_id: razorpayId,
+                status: "active",
+              });
+            }
+
+            // Upsert is safe to repeat
+            await supabase.from("followers").upsert(
+              {
+                follower_user_id: notes.userId,
+                profile_id: notes.profileId,
+                subscribed: true,
+                subscription_id: razorpayId,
+              },
+              { onConflict: "follower_user_id, profile_id" }
+            );
+          }
       }
     }
 

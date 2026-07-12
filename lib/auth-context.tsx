@@ -7,7 +7,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  signInWithEmail: (email: string) => Promise<{ error: string | null }>;
+  signInWithEmail: (email: string, next?: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 };
 
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase]);
 
   const signInWithEmail = useCallback(
-    async (email: string) => {
+    async (email: string, next?: string) => {
       if (!supabase) {
         return { error: "Authentication is not configured." };
       }
@@ -54,10 +54,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         process.env.NEXT_PUBLIC_SITE_URL ||
         "https://fvi-ochre.vercel.app";
 
+      // Thread the ?next= param through the callback URL so the user lands on the right page
+      const callbackUrl = next
+        ? `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`
+        : `${siteUrl}/auth/callback`;
+
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${siteUrl}/auth/callback`,
+          emailRedirectTo: callbackUrl,
         },
       });
       return { error: error?.message ?? null };

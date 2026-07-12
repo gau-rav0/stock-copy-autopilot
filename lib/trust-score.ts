@@ -44,8 +44,10 @@ export function calculateTrustScore(profile: Profile, holdings: Holding[] = []):
       score: round(verifiedScore),
       weight: 0.28,
       note: profile.verified
-        ? `${profile.verificationTier.toUpperCase()} evidence is shown in this demo.`
-        : "Unverified demo profile; inspect carefully.",
+        ? `${profile.verificationTier.toUpperCase()} evidence is published on this profile.`
+        : profile.isDemo
+          ? "Demo profile — not a verified live creator."
+          : "Unverified profile; inspect evidence carefully.",
     },
     {
       label: "Performance",
@@ -89,7 +91,9 @@ export function calculateTrustScore(profile: Profile, holdings: Holding[] = []):
     score,
     band,
     summary:
-      "Demo score based on verification status, returns, drawdown, volatility, consistency, and published holdings.",
+      profile.isDemo
+        ? "Demo score based on verification status, returns, drawdown, volatility, consistency, and published holdings."
+        : "Trust score based on verified evidence: returns, drawdown, volatility, consistency, and published holdings.",
     components,
   };
 }

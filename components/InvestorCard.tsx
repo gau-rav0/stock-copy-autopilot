@@ -84,7 +84,7 @@ export default function InvestorCard({
       <div className="mt-6 grid grid-cols-3 gap-2 border-t border-ink-hairline pt-4 font-mono text-sm sm:gap-4">
         <div>
           <p className="text-paper-muted text-xs">CAGR</p>
-          <p className="mono-num text-gain">+{profile.cagr}%</p>
+          <p className="mono-num text-gain">{profile.cagr >= 0 ? "+" : ""}{profile.cagr}%</p>
         </div>
         <div>
           <p className="text-paper-muted text-xs">Max DD</p>

@@ -71,13 +71,15 @@ function toNumber(value: number | string | null | undefined) {
 }
 
 function toProfile(row: ProfileRow, topHoldings: Holding[] = []): Profile {
+  // A profile is only demo when its tier is "demo" and it isn't a verified real creator.
+  const isDemo = row.verification_tier === "demo" && !row.verified;
   return {
     id: row.slug,
     displayName: row.display_name,
     bio: row.bio ?? "",
     photoUrl: row.photo_url ?? "",
     investingStyle: row.investing_style,
-    isDemo: true,
+    isDemo,
     verified: row.verified,
     verificationTier: row.verification_tier,
     followerCount: toNumber(row.follower_count),

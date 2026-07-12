@@ -7,7 +7,7 @@ export default async function CreatorDashboardPage() {
   if (!supabase) return redirect("/");
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return redirect("/api/auth/login"); // or another login route
+  if (!user) return redirect("/auth");
 
   // Check if user has a verified creator profile
   const { data: profile, error: profileError } = await supabase

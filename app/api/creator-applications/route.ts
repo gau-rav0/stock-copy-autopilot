@@ -48,7 +48,7 @@ const parsedStatus = (method: CreatorPayload["method"], holdings: ParsedCasHoldi
   return method === "cas" ? "needs_manual_review" : "manual_pending_review";
 };
 
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   const ip = getClientIp(request);
   const limiter = rateLimit(`creator:${ip}`, { maxRequests: 5 });
   if (!limiter.success) {
@@ -162,4 +162,19 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ stored: true, parseStatus: parse_status, parsedCount: parsed.holdings.length, outbound });
+}
+
+export async function POST(request: Request) {
+  try {
+    return await handlePost(request);
+  } catch (error) {
+    console.error("Creator application submission failed:", error);
+    return NextResponse.json(
+      {
+        stored: false,
+        error: "Could not submit this application. Please try again.",
+      },
+      { status: 500 }
+    );
+  }
 }

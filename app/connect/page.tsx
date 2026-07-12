@@ -5,6 +5,7 @@ import TrustNotice from "@/components/TrustNotice";
 
 type Step = "method" | "details" | "done";
 type Method = "cas" | "manual" | null;
+type SubmitStatus = "idle" | "success" | "error";
 
 export default function ConnectPage() {
   const [step, setStep] = useState<Step>("method");
@@ -16,10 +17,12 @@ export default function ConnectPage() {
   const [holdingsText, setHoldingsText] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveNote, setSaveNote] = useState("");
+  const [submitStatus, setSubmitStatus] = useState<SubmitStatus>("idle");
 
   const submitApplication = async () => {
     setSaving(true);
     setSaveNote("");
+    setSubmitStatus("idle");
 
     try {
       const formData = new FormData();
@@ -36,11 +39,12 @@ export default function ConnectPage() {
         body: formData,
       });
       
-      let json;
+      const responseText = await response.text();
+      let json: { error?: string; parsedCount?: number } = {};
       try {
-        json = await response.json();
+        json = responseText ? JSON.parse(responseText) : {};
       } catch (parseError) {
-        throw new Error("Server returned an invalid response. Please try again.");
+        throw new Error("Server could not process this application. Please try again.");
       }
 
       if (!response.ok) {
@@ -52,9 +56,11 @@ export default function ConnectPage() {
         : "No holdings were parsed automatically; reviewer checks are required.";
       
       setSaveNote(`Application saved for review. ${parseNote}`);
+      setSubmitStatus("success");
       setStep("done");
     } catch (err: any) {
       setSaveNote(err.message || "An unexpected error occurred. Please try again.");
+      setSubmitStatus("error");
       setStep("done");
     } finally {
       setSaving(false);
@@ -240,13 +246,29 @@ export default function ConnectPage() {
 
       {step === "done" && (
         <div className="mt-10 rounded-lg border border-brass/30 bg-ink-elevated/75 p-8 text-center shadow-[0_0_70px_rgba(0,157,85,.08)] backdrop-blur-xl">
-          <p className="font-display text-xl text-paper">Application received</p>
-          <p className="mt-2 text-sm text-paper-muted">
-            {method === "cas"
-              ? "Marked as pending CAS verification until statement evidence is reviewed."
-              : "Marked as pending manual review until CAS or broker verification is added."}
+          <p className="font-display text-xl text-paper">
+            {submitStatus === "success" ? "Application received" : "Submission failed"}
           </p>
-          {saveNote ? <p className="mt-3 text-sm text-brass">{saveNote}</p> : null}
+          {submitStatus === "success" ? (
+            <p className="mt-2 text-sm text-paper-muted">
+              {method === "cas"
+                ? "Marked as pending CAS verification until statement evidence is reviewed."
+                : "Marked as pending manual review until CAS or broker verification is added."}
+            </p>
+          ) : null}
+          {saveNote ? (
+            <p className={`mt-3 text-sm ${submitStatus === "success" ? "text-brass" : "text-red-300"}`}>
+              {saveNote}
+            </p>
+          ) : null}
+          {submitStatus === "error" ? (
+            <button
+              onClick={() => setStep("details")}
+              className="mt-5 rounded-lg border border-brass/40 px-5 py-2 text-sm font-semibold text-brass transition hover:border-brass hover:text-brass-bright"
+            >
+              Try again
+            </button>
+          ) : null}
           <p className="mt-4 text-xs text-paper-muted">
             We can never trade or place orders on your behalf. Read access only, and only what you
             choose to publish.

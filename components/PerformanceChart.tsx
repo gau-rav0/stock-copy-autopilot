@@ -48,8 +48,8 @@ export default function PerformanceChart({ data }: { data: GrowthPoint[] }) {
             Indexed to 100
           </p>
           <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <span className="font-display text-3xl text-paper">+{delta.toFixed(0)}%</span>
-            <span className="text-sm text-paper-muted">vs. Nifty +{benchmarkDelta.toFixed(0)}%</span>
+            <span className="font-display text-3xl text-paper">{delta >= 0 ? "+" : ""}{delta.toFixed(0)}%</span>
+            <span className="text-sm text-paper-muted">vs. Nifty {benchmarkDelta >= 0 ? "+" : ""}{benchmarkDelta.toFixed(0)}%</span>
           </div>
         </div>
         <div className="flex flex-wrap gap-3 text-xs">

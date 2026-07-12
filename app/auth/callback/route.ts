@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  // Honour the ?next= param forwarded from the sign-in page so users land
+  // on the page they were trying to reach before being asked to sign in.
   const next = searchParams.get("next") ?? "/explore";
 
   if (code) {
@@ -11,11 +13,15 @@ export async function GET(request: Request) {
     if (supabase) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (!error) {
-        return NextResponse.redirect(`${origin}${next}`);
+        // Use the production URL as the base so the redirect always goes to
+        // the live site even if this callback is somehow triggered locally.
+        const siteUrl =
+          process.env.NEXT_PUBLIC_SITE_URL || origin;
+        return NextResponse.redirect(`${siteUrl}${next}`);
       }
     }
   }
 
-  // return the user to an error page with instructions
+  // Return the user to an error page with instructions
   return NextResponse.redirect(`${origin}/?error=auth_failed`);
 }

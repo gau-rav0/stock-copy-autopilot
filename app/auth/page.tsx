@@ -1,20 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { useSearchParams } from "next/navigation";
 
 export default function AuthPage() {
-  const { signInWithEmail } = useAuth();
+  const { signInWithEmail, user } = useAuth();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
+
+  // Redirect signed-in users to ?next= or /explore
+  useEffect(() => {
+    if (user) {
+      const next = searchParams.get("next") || "/explore";
+      window.location.replace(decodeURIComponent(next));
+    }
+  }, [user, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
 
-    const { error } = await signInWithEmail(email);
+    const next = searchParams.get("next");
+    const { error } = await signInWithEmail(email, next ?? undefined);
 
     if (error) {
       setMessage({ text: error, type: "error" });

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY || "dummy");
+// Resend is initialised lazily inside the handler so we can return a proper error
+// if RESEND_API_KEY is missing rather than silently failing with a "dummy" key.
 
 export async function POST(req: Request) {
   // Ensure we have the service role key to bypass RLS and fetch users
@@ -12,10 +13,22 @@ export async function POST(req: Request) {
   );
 
   try {
+    // 0. Guard: ensure required env vars are present
+    if (!process.env.RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not set — cannot send emails.");
+      return new NextResponse("Email service not configured", { status: 500 });
+    }
+    if (!process.env.WEBHOOK_SECRET) {
+      console.error("WEBHOOK_SECRET is not set — refusing all blast-alert requests.");
+      return new NextResponse("Webhook secret not configured", { status: 500 });
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
     // 1. Verify the request securely
     const authHeader = req.headers.get("Authorization");
-    const secretKey = process.env.WEBHOOK_SECRET || "development_secret_key";
-    
+    const secretKey = process.env.WEBHOOK_SECRET;
+
     if (authHeader !== `Bearer ${secretKey}`) {
       return new NextResponse("Unauthorized", { status: 401 });
     }

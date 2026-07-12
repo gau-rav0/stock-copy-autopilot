@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import InvestorCard from "@/components/InvestorCard";
 import TrustNotice from "@/components/TrustNotice";
 import BeginnerModePanel from "@/components/BeginnerModePanel";
 import { InvestingStyle, Profile } from "@/lib/types";
-import { BellRing, LineChart, ShieldCheck } from "lucide-react";
+import { BellRing, LineChart, ShieldCheck, Search } from "lucide-react";
 import { calculateTrustScore } from "@/lib/trust-score";
 
 const FILTERS: { key: InvestingStyle | "all"; label: string }[] = [
@@ -17,6 +18,16 @@ const FILTERS: { key: InvestingStyle | "all"; label: string }[] = [
   { key: "smallcap", label: "Small-cap" },
 ];
 
+type SortKey = "default" | "cagr" | "trust" | "alpha" | "drawdown";
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "default", label: "Default" },
+  { key: "trust", label: "Trust Score" },
+  { key: "cagr", label: "CAGR" },
+  { key: "alpha", label: "Alpha" },
+  { key: "drawdown", label: "Lowest DD" },
+];
+
 const FLOW_STEPS = [
   { Icon: ShieldCheck, title: "Inspect", body: "Open holdings, drawdowns, and history." },
   { Icon: BellRing, title: "Follow", body: "Get read-only allocation-change alerts." },
@@ -24,27 +35,58 @@ const FLOW_STEPS = [
 ];
 
 export default function ExploreClient({ profiles }: { profiles: Profile[] }) {
+  // Use useSearchParams() instead of window.location.search to avoid hydration mismatch
+  const searchParams = useSearchParams();
+  const fromRoast = searchParams.get("from") === "roast";
+  const focusTrust = searchParams.get("focus") === "trust";
+
   const [filter, setFilter] = useState<InvestingStyle | "all">("all");
-  const [fromRoast, setFromRoast] = useState(false);
-  const [focusTrust, setFocusTrust] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>(fromRoast || focusTrust ? "trust" : "default");
+  const [query, setQuery] = useState("");
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setFromRoast(params.get("from") === "roast");
-    setFocusTrust(params.get("focus") === "trust");
-  }, []);
+  const withScores = useMemo(
+    () =>
+      profiles.map((p) => ({
+        profile: p,
+        trustScore: calculateTrustScore(p, p.topHoldings ?? []).score,
+      })),
+    [profiles]
+  );
 
-  const rankedProfiles = [...profiles].sort((a, b) => {
-    const aTrust = calculateTrustScore(a, a.topHoldings ?? []).score;
-    const bTrust = calculateTrustScore(b, b.topHoldings ?? []).score;
-    const aScore = aTrust + a.cagr * 0.4 + a.alpha * 0.6 - Math.abs(a.maxDrawdown) * 0.18;
-    const bScore = bTrust + b.cagr * 0.4 + b.alpha * 0.6 - Math.abs(b.maxDrawdown) * 0.18;
-    return bScore - aScore;
-  });
-  const source = fromRoast ? rankedProfiles : profiles;
-  const featured = rankedProfiles.slice(0, 3);
-  const baseShown = filter === "all" ? source : source.filter((p) => p.investingStyle === filter);
-  const shown = fromRoast ? baseShown.filter((p) => !featured.some((item) => item.id === p.id)) : baseShown;
+  const ranked = useMemo(() => {
+    return [...withScores].sort((a, b) => {
+      const aT = a.trustScore, bT = b.trustScore;
+      const aScore = aT + a.profile.cagr * 0.4 + a.profile.alpha * 0.6 - Math.abs(a.profile.maxDrawdown) * 0.18;
+      const bScore = bT + b.profile.cagr * 0.4 + b.profile.alpha * 0.6 - Math.abs(b.profile.maxDrawdown) * 0.18;
+      return bScore - aScore;
+    });
+  }, [withScores]);
+
+  const featured = ranked.slice(0, 3).map((r) => r.profile);
+
+  const sorted = useMemo(() => {
+    const arr = [...withScores];
+    switch (sortKey) {
+      case "trust": return arr.sort((a, b) => b.trustScore - a.trustScore);
+      case "cagr": return arr.sort((a, b) => b.profile.cagr - a.profile.cagr);
+      case "alpha": return arr.sort((a, b) => b.profile.alpha - a.profile.alpha);
+      case "drawdown": return arr.sort((a, b) => Math.abs(a.profile.maxDrawdown) - Math.abs(b.profile.maxDrawdown));
+      default: return fromRoast ? ranked : arr;
+    }
+  }, [withScores, sortKey, fromRoast, ranked]);
+
+  const shown = useMemo(() => {
+    let list = sorted.map((r) => r.profile);
+    if (filter !== "all") list = list.filter((p) => p.investingStyle === filter);
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      list = list.filter(
+        (p) => p.displayName.toLowerCase().includes(q) || p.bio?.toLowerCase().includes(q)
+      );
+    }
+    if (fromRoast) list = list.filter((p) => !featured.some((f) => f.id === p.id));
+    return list;
+  }, [sorted, filter, query, fromRoast, featured]);
 
   return (
     <section className="mobile-safe mx-auto max-w-6xl px-4 py-12 sm:px-6">
@@ -57,7 +99,7 @@ export default function ExploreClient({ profiles }: { profiles: Profile[] }) {
             Follow investors with receipts, not screenshots.
           </h1>
           <p className="mt-4 max-w-2xl text-paper-muted">
-            Compare fictional demo track records by drawdown, holdings, replay history, and conviction
+            Compare track records by drawdown, holdings, replay history, and conviction
             changes. Follow only means read-only notifications.
           </p>
         </div>
@@ -110,44 +152,90 @@ export default function ExploreClient({ profiles }: { profiles: Profile[] }) {
         </div>
       )}
 
-      <div className="mt-8 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className={`rounded-full border px-4 py-2 text-sm transition ${
-              filter === f.key
-                ? "border-brass bg-brass/10 text-brass"
-                : "border-ink-hairline text-paper-muted hover:border-paper-muted"
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
+      {/* Search + filters + sort */}
+      <div className="mt-8 space-y-4">
+        {/* Search bar */}
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-paper-muted" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name or style…"
+            className="w-full rounded-lg border border-ink-hairline bg-ink-elevated/75 py-2.5 pl-9 pr-4 text-sm text-paper placeholder:text-paper-muted focus:border-brass/40 focus:outline-none"
+          />
+        </div>
+
+        {/* Style filters */}
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              className={`rounded-full border px-4 py-1.5 text-sm transition ${
+                filter === f.key
+                  ? "border-brass bg-brass/10 text-brass"
+                  : "border-ink-hairline text-paper-muted hover:border-paper-muted"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Sort row */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-paper-muted">Sort by:</span>
+          {SORT_OPTIONS.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => setSortKey(s.key)}
+              className={`rounded-full border px-3 py-1 text-xs transition ${
+                sortKey === s.key
+                  ? "border-brass/60 bg-brass/10 text-brass"
+                  : "border-ink-hairline text-paper-muted hover:border-paper-muted"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="mt-8 flex items-end justify-between gap-4">
+      <div className="mt-6 flex items-end justify-between gap-4">
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.16em] text-paper-muted">
             {fromRoast ? "More creators" : "Directory"}
           </p>
-          <h2 className="mt-2 font-display text-2xl text-paper">Browse demo investors</h2>
+          <h2 className="mt-2 font-display text-2xl text-paper">
+            {query ? `Results for "${query}"` : "Browse investors"}
+          </h2>
         </div>
-        <p className="hidden max-w-xs text-right text-xs leading-5 text-paper-muted sm:block">
-          Filter by style, then inspect the full record before following updates.
+        <p className="text-right text-xs text-paper-muted">
+          {shown.length} result{shown.length !== 1 ? "s" : ""}
         </p>
       </div>
 
       <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {shown.map((p) => (
-          <InvestorCard key={p.id} profile={p} recommended={fromRoast && featured.some((item) => item.id === p.id)} />
+          <InvestorCard
+            key={p.id}
+            profile={p}
+            recommended={fromRoast && featured.some((item) => item.id === p.id)}
+          />
         ))}
       </div>
 
       {shown.length === 0 && (
-        <p className="mt-12 text-center text-paper-muted">
-          No investors match this style yet. Try another filter.
-        </p>
+        <div className="mt-12 text-center">
+          <p className="text-paper-muted">No investors match this search.</p>
+          <button
+            onClick={() => { setQuery(""); setFilter("all"); }}
+            className="mt-3 text-sm text-brass hover:underline"
+          >
+            Clear filters
+          </button>
+        </div>
       )}
     </section>
   );

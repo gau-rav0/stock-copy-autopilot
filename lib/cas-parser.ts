@@ -1,5 +1,4 @@
 import { NSE_UNIVERSE } from "@/data/nse-universe";
-import { PDFParse } from "pdf-parse";
 
 export type ParsedCasHolding = {
   symbol: string | null;
@@ -152,6 +151,7 @@ export function parseCasText(rawText: string): CasParseResult {
 }
 
 export async function extractPdfText(file: File) {
+  const { PDFParse } = await import("pdf-parse");
   const buffer = await file.arrayBuffer();
   const parser = new PDFParse({ data: new Uint8Array(buffer) });
 

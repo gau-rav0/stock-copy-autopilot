@@ -1,5 +1,6 @@
 import ExploreClient from "@/app/explore/ExploreClient";
 import { getProfiles } from "@/lib/investor-data";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -11,5 +12,9 @@ export const metadata: Metadata = {
 export default async function ExplorePage() {
   const profiles = await getProfiles();
 
-  return <ExploreClient profiles={profiles} />;
+  return (
+    <Suspense fallback={<div className="flex justify-center py-20 text-paper-muted">Loading investors...</div>}>
+      <ExploreClient profiles={profiles} />
+    </Suspense>
+  );
 }

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useSearchParams } from "next/navigation";
 
-export default function AuthPage() {
+function AuthContent() {
   const { signInWithEmail, user } = useAuth();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -91,5 +91,13 @@ export default function AuthPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-[calc(100vh-80px)] items-center justify-center">Loading...</div>}>
+      <AuthContent />
+    </Suspense>
   );
 }

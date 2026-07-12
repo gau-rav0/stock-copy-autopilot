@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import { AuthProvider } from "@/lib/auth-context";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://fvi-ochre.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://fvi-ochre.vercel.app"),
   title: {
     default: "Follow Verified Investors - Investor track records with evidence",
     template: "%s | Follow Verified Investors",

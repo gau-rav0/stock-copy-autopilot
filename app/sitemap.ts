@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 import { profiles } from '@/lib/demo-data'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://fvi-ochre.vercel.app'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://fvi-ochre.vercel.app'
   
   const investorPages = profiles.map((p) => ({
     url: `${baseUrl}/investor/${p.id}`,

@@ -64,7 +64,7 @@ export async function POST(req: Request) {
       .eq("profile_id", profileId);
 
     if (followersError || !followers || followers.length === 0) {
-      console.log("No followers found or error:", followersError);
+      console.warn("No followers found or error:", followersError);
       return NextResponse.json({ message: "No followers to notify" });
     }
 

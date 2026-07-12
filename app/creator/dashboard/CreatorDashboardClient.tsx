@@ -6,6 +6,8 @@ import { Send, AlertCircle, CheckCircle } from "lucide-react";
 export default function CreatorDashboardClient() {
   const [ticker, setTicker] = useState("");
   const [action, setAction] = useState("buy");
+  const [allocationBefore, setAllocationBefore] = useState<string>("0");
+  const [allocationAfter, setAllocationAfter] = useState<string>("0");
   const [alertText, setAlertText] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -21,7 +23,13 @@ export default function CreatorDashboardClient() {
       const res = await fetch("/api/creator/broadcast-alert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ticker: ticker.toUpperCase(), action, alertText }),
+        body: JSON.stringify({
+          ticker: ticker.toUpperCase(),
+          action,
+          alertText,
+          allocationBefore: parseFloat(allocationBefore) || 0,
+          allocationAfter: parseFloat(allocationAfter) || 0,
+        }),
       });
 
       const data = await res.json();
@@ -88,6 +96,38 @@ export default function CreatorDashboardClient() {
             <option value="reduce">Reduce (Trim Position)</option>
             <option value="exit">Exit (Full Sell)</option>
           </select>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="allocationBefore" className="text-sm font-medium text-ink">
+            Allocation Before (%)
+          </label>
+          <input
+            id="allocationBefore"
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            value={allocationBefore}
+            onChange={(e) => setAllocationBefore(e.target.value)}
+            className="w-full rounded-lg border border-white/10 bg-base p-3 text-paper focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="allocationAfter" className="text-sm font-medium text-ink">
+            Allocation After (%)
+          </label>
+          <input
+            id="allocationAfter"
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            value={allocationAfter}
+            onChange={(e) => setAllocationAfter(e.target.value)}
+            className="w-full rounded-lg border border-white/10 bg-base p-3 text-paper focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass"
+          />
         </div>
       </div>
 

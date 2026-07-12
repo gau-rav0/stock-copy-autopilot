@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { ticker, action, alertText } = body;
+    const { ticker, action, alertText, allocationBefore, allocationAfter } = body;
 
     if (!ticker || !action || !alertText) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -44,22 +44,44 @@ export async function POST(req: Request) {
     }
 
     // Insert conviction alert transaction
-    const { error: insertError } = await supabase
+    const { data: newAlert, error: insertError } = await supabase
       .from("transactions")
       .insert({
         portfolio_id: portfolio.id,
         ticker,
         action,
-        allocation_before: 0, // In a real system, you'd calculate this based on current holdings
-        allocation_after: 0,  // Or allow the user to input the new allocation
+        allocation_before: allocationBefore || 0,
+        allocation_after: allocationAfter || 0,
         price: 0,             // Can be fetched from a market API or left 0
         transaction_date: new Date().toISOString().split("T")[0],
         is_conviction_alert: true,
         alert_text: alertText
-      });
+      })
+      .select()
+      .single();
 
     if (insertError) {
       throw new Error("Failed to insert conviction alert: " + insertError.message);
+    }
+
+    // Trigger the email blast
+    try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://fvi-ochre.vercel.app";
+      const webhookSecret = process.env.WEBHOOK_SECRET;
+      if (webhookSecret) {
+        fetch(`${siteUrl}/api/internal/blast-alert`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${webhookSecret}`,
+          },
+          body: JSON.stringify({ record: newAlert }),
+        }).catch(err => console.error("Failed to trigger email blast fetch", err));
+      } else {
+        console.warn("WEBHOOK_SECRET is not set, skipping email blast");
+      }
+    } catch (e) {
+      console.error("Error setting up email blast trigger", e);
     }
 
     return NextResponse.json({ success: true });

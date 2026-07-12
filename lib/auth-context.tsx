@@ -48,10 +48,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: "Authentication is not configured." };
       }
 
+      // Always redirect to the production URL so the magic link works from any environment.
+      // NEXT_PUBLIC_SITE_URL should be set to https://fvi-ochre.vercel.app in Vercel env vars.
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        "https://fvi-ochre.vercel.app";
+
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${siteUrl}/auth/callback`,
         },
       });
       return { error: error?.message ?? null };

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
@@ -21,9 +21,14 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createBrowserSupabaseClient();
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
       setLoading(false);
@@ -35,10 +40,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => listener.subscription.unsubscribe();
-  }, [supabase.auth]);
+  }, [supabase]);
 
   const signInWithEmail = useCallback(
     async (email: string) => {
+      if (!supabase) {
+        return { error: "Authentication is not configured." };
+      }
+
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
@@ -47,13 +56,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       return { error: error?.message ?? null };
     },
-    [supabase.auth]
+    [supabase]
   );
 
   const signOut = useCallback(async () => {
+    if (!supabase) return;
+
     await supabase.auth.signOut();
     setUser(null);
-  }, [supabase.auth]);
+  }, [supabase]);
 
   return (
     <AuthContext.Provider value={{ user, loading, signInWithEmail, signOut }}>

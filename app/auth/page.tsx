@@ -39,8 +39,8 @@ function AuthContent() {
 
     if (error) {
       if (error.toLowerCase().includes("rate limit")) {
-        setMessage({ text: "You've sent too many requests. Please wait a minute before trying again.", type: "error" });
-        setCooldown(60);
+        setMessage({ text: "You've sent too many requests. Please wait a few minutes before trying again.", type: "error" });
+        setCooldown(300);
       } else {
         setMessage({ text: error, type: "error" });
       }
@@ -50,7 +50,7 @@ function AuthContent() {
         type: "success",
       });
       setEmail("");
-      setCooldown(60);
+      setCooldown(300);
     }
     setLoading(false);
   };
@@ -102,7 +102,7 @@ function AuthContent() {
             disabled={loading || cooldown > 0}
             className="group relative flex w-full justify-center rounded-lg bg-brass px-3 py-3 text-sm font-semibold text-white transition hover:bg-brass-bright focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass disabled:opacity-50"
           >
-            {loading ? "Sending magic link..." : cooldown > 0 ? `Wait ${cooldown}s to send again` : "Send magic link"}
+            {loading ? "Sending magic link..." : cooldown > 0 ? `Wait ${Math.floor(cooldown / 60)}:${(cooldown % 60).toString().padStart(2, '0')} to send again` : "Send magic link"}
           </button>
         </form>
       </div>

@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createWriteClient } from "@/lib/supabase/server";
+import { createWriteClient, hasSupabaseWriteConfig } from "@/lib/supabase/server";
 
 const TradeWebhookSchema = z.object({
   creatorUserId: z.string().uuid(),
@@ -44,6 +44,9 @@ export async function POST(request: Request) {
   }
 
   const trade = parsed.data;
+  if (!hasSupabaseWriteConfig()) {
+    return NextResponse.json({ error: "Supabase service-role access is not configured" }, { status: 503 });
+  }
   const supabase = createWriteClient();
   if (!supabase) return NextResponse.json({ error: "Supabase write access is not configured" }, { status: 503 });
 

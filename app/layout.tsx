@@ -12,16 +12,16 @@ export const metadata: Metadata = {
   description:
     "Inspect verified investor track records, holdings history, benchmark comparisons, and read-only conviction updates. No advice, copy trading, or order execution.",
   keywords: [
+    "How to check if a fintwit portfolio is real",
+    "Free NSE portfolio roast tool",
+    "CDSL CAS portfolio tracker",
+    "Best verified investors to follow in India",
     "verified investor track record India",
     "NSE portfolio verification",
     "CAS statement investor",
-    "portfolio roast tool India",
-    "best investors to follow India",
     "stock portfolio tracker NSE",
     "investment evidence India",
-    "CDSL CAS portfolio history",
     "check investor credentials India",
-    "investor transparency platform India",
   ],
   icons: {
     icon: "/favicon.svg",

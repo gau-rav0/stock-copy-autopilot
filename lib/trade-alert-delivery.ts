@@ -169,7 +169,7 @@ export async function deliverTradeAlert(supabase: AdminClient, transaction: Tran
     sent += group.length;
     await Promise.all(group.map(({ follower }, index) => setDeliveryStatus(supabase, transaction.id, follower.follower_user_id, {
       status: "sent",
-      provider_message_id: (data as any[])[index]?.id ?? null,
+      provider_message_id: (data as any).data?.[index]?.id ?? null,
       error_message: null,
       delivered_at: new Date().toISOString(),
     })));

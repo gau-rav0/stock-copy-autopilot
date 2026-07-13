@@ -876,6 +876,77 @@ function handleGetTrustScore(args: Record<string, unknown>): string {
   );
 }
 
+function handleGetCreatorConnectionGuide(): string {
+  return JSON.stringify(
+    {
+      title: "Creator Connection Guide — Follow Verified Investors",
+      summary:
+        "As a creator you share your real, verified portfolio moves with followers. Here is the complete connection flow.",
+      steps: [
+        {
+          step: 1,
+          title: "Apply to become a creator",
+          url: "https://follow-verified-investors.vercel.app/connect",
+          description:
+            "Visit /connect and choose one of two verification methods:\n" +
+            "  • Upload CAS statement — Your Consolidated Account Statement from NSDL, CDSL, or your broker. FVI parses equity rows for a reviewer check. Profile status: pending-cas-verification until approved.\n" +
+            "  • Enter holdings manually — Faster to start, but profile shows as unverified until CAS or broker verification is later added.",
+          note: "FVI never requests trading permissions and can never place orders on your behalf. This is strictly read-only.",
+        },
+        {
+          step: 2,
+          title: "Wait for review and verification",
+          description:
+            "The FVI admin team reviews your submitted evidence. Once approved your profile is marked 'verified' with the appropriate tier:\n" +
+            "  • CAS tier — uploaded and reviewed CAS statement\n" +
+            "  • Broker tier — broker read-only connection (when available)\n" +
+            "  • Demo tier — demo/test profile",
+          note: "Broker read-only sync is pending SEBI and broker ToS review and is not yet available in this build.",
+        },
+        {
+          step: 3,
+          title: "Access your creator dashboard",
+          url: "https://follow-verified-investors.vercel.app/creator/dashboard",
+          description:
+            "Once verified, log in and go to /creator/dashboard. From here you can:\n" +
+            "  • Broadcast a conviction alert — share a BUY / SELL / ADD / TRIM with a note\n" +
+            "  • View past alerts you have broadcasted\n" +
+            "  • See your follower count",
+        },
+        {
+          step: 4,
+          title: "(Optional) Connect a read-only broker feed",
+          description:
+            "On the dashboard you can register a broker connection (Zerodha, Upstox, Angel One, Groww, or Other). " +
+            "This saves the intent and puts the connection in 'awaiting_authorization' status until the broker's OAuth or API authorization is completed. " +
+            "When active, completed trades can automatically become conviction alerts sent to followers.",
+          brokers: ["zerodha", "upstox", "angelone", "groww", "other"],
+        },
+        {
+          step: 5,
+          title: "Connect this MCP server to Claude Desktop (for AI queries)",
+          description:
+            "Add the following to your claude_desktop_config.json (usually at %APPDATA%\\Claude\\claude_desktop_config.json on Windows):",
+          config: {
+            mcpServers: {
+              fvi: {
+                command: "node",
+                args: ["C:\\path\\to\\fvi-mcp-server\\dist\\index.js"],
+              },
+            },
+          },
+          note: "After adding the config, restart Claude Desktop. You and your followers can then ask Claude questions like 'Show me my portfolio', 'Who are the top investors?', or 'Compare Arjun Mehta and Priya Shah'.",
+        },
+      ],
+      platformUrl: "https://follow-verified-investors.vercel.app",
+      privacyModel:
+        "Read-only display only. No trading permissions ever requested. No broker passwords or API keys stored. You choose exactly what to publish.",
+    },
+    null,
+    2
+  );
+}
+
 // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // SERVER SETUP & ENTRY POINT
 // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ

@@ -141,7 +141,7 @@ export default async function Home() {
       <section className="mx-auto max-w-5xl px-6 py-12">
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass text-center">The problem we solve</p>
         <h2 className="mt-3 font-display text-2xl text-paper text-center">
-          Before you follow that Finance Twitter guy — check the receipts.
+          How to check if a fintwit portfolio is real.
         </h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <div className="rounded-lg border border-loss/30 bg-loss/[.06] p-5">

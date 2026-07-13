@@ -31,8 +31,52 @@ export default async function Home() {
     // Silently use fallbacks
   }
 
+  const faqs = [
+    {
+      q: "How do I verify an investor's track record in India?",
+      a: "FVI requires investors to link their CDSL CAS statement or broker account. This shows actual holdings, not just screenshots. The verification tier (CAS / broker / demo) is clearly shown on every profile.",
+    },
+    {
+      q: "Is Follow Verified Investors free to use?",
+      a: "Yes. Exploring investor profiles, viewing track records, and using the Portfolio Roast are completely free. No signup required to browse.",
+    },
+    {
+      q: "What is the Portfolio Roast?",
+      a: "An AI tool that analyses your NSE/BSE stock holdings and scores your portfolio on diversification, concentration risk, absolute return, and sector balance. It gives a blunt, honest assessment.",
+    },
+    {
+      q: "Can verified investors on FVI give investment advice?",
+      a: "No. FVI is an educational platform. Creators share read-only updates on portfolio conviction changes. No advice, copy trading, or order execution of any kind.",
+    },
+    {
+      q: "What is a CAS statement and how does it verify an investor?",
+      a: "A Consolidated Account Statement (CAS) is issued by CDSL/NSDL and shows all demat holdings linked to your PAN. Our built-in CDSL CAS portfolio tracker parses this statement to verify holdings, meaning it cannot be faked or cherry-picked, making it the gold standard for portfolio verification in India.",
+    },
+    {
+      q: "What does the Trust Score mean?",
+      a: "The Trust Score (0\u2013100) is calculated from verification tier, holding history length, number of transactions, drawdown data, and benchmark comparisons. Higher scores mean more evidence is available to inspect.",
+    },
+  ];
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((faq) => ({
+      "@type": "Question",
+      "name": faq.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.a
+      }
+    }))
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       <section className="relative mx-auto grid max-w-6xl gap-8 px-4 pb-12 pt-14 sm:px-6 sm:pt-20 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center">
         <div>
           <p className="mb-5 font-mono text-xs uppercase tracking-[0.18em] text-brass sm:tracking-[0.2em]">
@@ -383,32 +427,7 @@ export default async function Home() {
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass text-center">Questions</p>
         <h2 className="mt-3 font-display text-2xl text-paper text-center">Frequently asked</h2>
         <div className="mt-8 space-y-3">
-          {[
-            {
-              q: "How do I verify an investor&#39;s track record in India?",
-              a: "FVI requires investors to link their CDSL CAS statement or broker account. This shows actual holdings, not just screenshots. The verification tier (CAS / broker / demo) is clearly shown on every profile.",
-            },
-            {
-              q: "Is Follow Verified Investors free to use?",
-              a: "Yes. Exploring investor profiles, viewing track records, and using the Portfolio Roast are completely free. No signup required to browse.",
-            },
-            {
-              q: "What is the Portfolio Roast?",
-              a: "An AI tool that analyses your NSE/BSE stock holdings and scores your portfolio on diversification, concentration risk, absolute return, and sector balance. It gives a blunt, honest assessment.",
-            },
-            {
-              q: "Can verified investors on FVI give investment advice?",
-              a: "No. FVI is an educational platform. Creators share read-only updates on portfolio conviction changes. No advice, copy trading, or order execution of any kind.",
-            },
-            {
-              q: "What is a CAS statement and how does it verify an investor?",
-              a: "A Consolidated Account Statement (CAS) is issued by CDSL/NSDL and shows all demat holdings linked to your PAN. Our built-in CDSL CAS portfolio tracker parses this statement to verify holdings, meaning it cannot be faked or cherry-picked, making it the gold standard for portfolio verification in India.",
-            },
-            {
-              q: "What does the Trust Score mean?",
-              a: "The Trust Score (0\u2013100) is calculated from verification tier, holding history length, number of transactions, drawdown data, and benchmark comparisons. Higher scores mean more evidence is available to inspect.",
-            },
-          ].map(({ q, a }) => (
+          {faqs.map(({ q, a }) => (
             <details
               key={q}
               className="group rounded-lg border border-ink-hairline bg-ink-elevated/75 p-5 backdrop-blur"

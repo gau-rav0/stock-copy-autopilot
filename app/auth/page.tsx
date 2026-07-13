@@ -39,8 +39,8 @@ function AuthContent() {
 
     if (error) {
       if (error.toLowerCase().includes("rate limit")) {
-        setMessage({ text: "You've sent too many requests. Please wait a few minutes before trying again.", type: "error" });
-        setCooldown(300);
+        setMessage({ text: "You've sent too many requests. Please wait a minute before trying again.", type: "error" });
+        setCooldown(60);
       } else {
         setMessage({ text: error, type: "error" });
       }
@@ -50,44 +50,58 @@ function AuthContent() {
         type: "success",
       });
       setEmail("");
-      setCooldown(300);
+      setCooldown(60);
     }
     setLoading(false);
   };
 
+  // Cooldown timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (cooldown > 0) {
+      timer = setInterval(() => {
+        setCooldown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [cooldown]);
+
   return (
-    <div className="flex min-h-[calc(100vh-80px)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8 rounded-2xl border border-ink-hairline bg-ink-elevated p-8 shadow-2xl backdrop-blur-xl">
-        <div>
-          <h2 className="mt-2 text-center font-display text-3xl font-bold tracking-tight text-paper">
-            Sign in to FVI
-          </h2>
-          <p className="mt-2 text-center text-sm text-paper-muted">
-            Enter your email to receive a secure magic link. No passwords required.
+    <div className="flex min-h-[calc(100vh-80px)] items-center justify-center p-4">
+      <div className="w-full max-w-md rounded-lg border border-ink-hairline bg-ink-elevated/75 p-6 shadow-[0_0_80px_rgba(0,157,85,.08)] backdrop-blur-xl sm:p-10">
+        <div className="text-center">
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">
+            Welcome back
+          </p>
+          <h1 className="mt-3 font-display text-2xl text-paper">
+            Sign in to your account
+          </h1>
+          <p className="mt-3 text-sm text-paper-muted">
+            Enter your email to receive a magic link. No passwords required.
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div>
+        <form onSubmit={handleSubmit} className="mt-10">
+          <div className="mb-6">
             <label htmlFor="email" className="sr-only">
               Email address
             </label>
             <input
               id="email"
-              name="email"
               type="email"
-              autoComplete="email"
-              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="relative block w-full rounded-lg border-0 bg-ink py-3 text-paper shadow-sm ring-1 ring-inset ring-ink-hairline placeholder:text-paper-muted focus:z-10 focus:ring-2 focus:ring-inset focus:ring-brass sm:text-sm sm:leading-6"
-              placeholder="Email address"
+              required
+              placeholder="name@example.com"
+              className="block w-full rounded-lg border border-ink-hairline bg-ink/50 p-3 text-paper focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass sm:text-sm"
             />
           </div>
 
           {message && (
             <div
-              className={`rounded-md p-4 text-sm ${
+              className={`mb-6 rounded-md p-4 text-sm ${
                 message.type === "error"
                   ? "bg-loss/10 text-loss border border-loss/20"
                   : "bg-brass/10 text-brass border border-brass/20"
@@ -102,7 +116,7 @@ function AuthContent() {
             disabled={loading || cooldown > 0}
             className="group relative flex w-full justify-center rounded-lg bg-brass px-3 py-3 text-sm font-semibold text-white transition hover:bg-brass-bright focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass disabled:opacity-50"
           >
-            {loading ? "Sending magic link..." : cooldown > 0 ? `Wait ${Math.floor(cooldown / 60)}:${(cooldown % 60).toString().padStart(2, '0')} to send again` : "Send magic link"}
+            {loading ? "Sending magic link..." : cooldown > 0 ? `Wait ${cooldown}s to send again` : "Send magic link"}
           </button>
         </form>
       </div>

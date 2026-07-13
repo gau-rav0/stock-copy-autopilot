@@ -192,7 +192,7 @@ export default function ConnectPage() {
             </p>
           </label>
           <button
-            disabled={!fileName || !email || saving}
+            disabled={!fileName || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || saving}
             onClick={submitApplication}
             className="mt-6 w-full rounded-lg bg-brass px-6 py-3 text-sm font-semibold text-white shadow-[0_0_38px_rgba(0,157,85,.18)] transition hover:bg-brass-bright disabled:cursor-not-allowed disabled:opacity-40"
           >
@@ -235,7 +235,7 @@ export default function ConnectPage() {
             className="mt-2 w-full rounded-lg border border-ink-hairline bg-ink-elevated/75 p-4 font-mono text-sm text-paper outline-none backdrop-blur focus:border-brass/40"
           />
           <button
-            disabled={holdingsText.trim().length === 0 || !email || saving}
+            disabled={holdingsText.trim().length === 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || saving}
             onClick={submitApplication}
             className="mt-6 w-full rounded-lg bg-brass px-6 py-3 text-sm font-semibold text-white shadow-[0_0_38px_rgba(0,157,85,.18)] transition hover:bg-brass-bright disabled:cursor-not-allowed disabled:opacity-40"
           >

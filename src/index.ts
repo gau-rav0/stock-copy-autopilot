@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * FVI MCP Server — Follow Verified Investors
+ * FVI MCP Server ΓÇö Follow Verified Investors
  * Exposes investor profiles, holdings, track records, and analytics
  * as MCP tools for use with Claude Desktop and other MCP clients.
  *
@@ -15,9 +15,9 @@ import {
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // DATA TYPES
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 interface InvestorProfile {
   id: string;
@@ -56,9 +56,9 @@ interface Transaction {
   isConvictionAlert: boolean;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // EMBEDDED INVESTOR DATA  (fictional demo data)
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 const profiles: InvestorProfile[] = [
   {
@@ -223,7 +223,7 @@ const profiles: InvestorProfile[] = [
   },
 ];
 
-// ── Holdings ──────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇ Holdings ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 const holdingsByProfile: Record<string, Holding[]> = {
   "arjun-mehta": [
@@ -287,7 +287,7 @@ const holdingsByProfile: Record<string, Holding[]> = {
   ],
 };
 
-// ── Transactions ──────────────────────────────────────────────────────────────
+// ΓöÇΓöÇ Transactions ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 const transactionsByProfile: Record<string, Transaction[]> = {
   "arjun-mehta": [
@@ -347,9 +347,9 @@ const transactionsByProfile: Record<string, Transaction[]> = {
   ],
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // HELPER UTILITIES
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 function findInvestor(id: string): InvestorProfile | undefined {
   return profiles.find((p) => p.id === id);
@@ -361,13 +361,13 @@ function investorNotFoundError(id: string): string {
 }
 
 /**
- * Compute a trust score (0–100) for an investor.
+ * Compute a trust score (0ΓÇô100) for an investor.
  * Breakdown factors:
- *  - Verification tier  (0–30 pts)
- *  - CAGR performance   (0–25 pts)
- *  - Win rate           (0–20 pts)
- *  - Low drawdown       (0–15 pts)
- *  - Follower count     (0–10 pts)
+ *  - Verification tier  (0ΓÇô30 pts)
+ *  - CAGR performance   (0ΓÇô25 pts)
+ *  - Win rate           (0ΓÇô20 pts)
+ *  - Low drawdown       (0ΓÇô15 pts)
+ *  - Follower count     (0ΓÇô10 pts)
  */
 function computeTrustScore(p: InvestorProfile): {
   score: number;
@@ -377,28 +377,28 @@ function computeTrustScore(p: InvestorProfile): {
   // Verification tier: cas=30, broker=20, demo=10
   const tierScore = p.verificationTier === "cas" ? 30 : p.verificationTier === "broker" ? 20 : 10;
 
-  // CAGR: capped at 30% → maps 0–30 to 0–25
+  // CAGR: capped at 30% ΓåÆ maps 0ΓÇô30 to 0ΓÇô25
   const cagrScore = Math.min((p.cagr / 30) * 25, 25);
 
-  // Win rate: 40%–80% range → 0–20 pts
+  // Win rate: 40%ΓÇô80% range ΓåÆ 0ΓÇô20 pts
   const winScore = Math.min(Math.max(((p.winRate - 40) / 40) * 20, 0), 20);
 
-  // Max drawdown: 0% → 15 pts, -50% → 0 pts  (lower drawdown = higher score)
+  // Max drawdown: 0% ΓåÆ 15 pts, -50% ΓåÆ 0 pts  (lower drawdown = higher score)
   const drawdownScore = Math.min(Math.max(((50 + p.maxDrawdown) / 50) * 15, 0), 15);
 
-  // Follower count: 5000+ → 10 pts
+  // Follower count: 5000+ ΓåÆ 10 pts
   const followerScore = Math.min((p.followerCount / 5000) * 10, 10);
 
   const total = Math.round(tierScore + cagrScore + winScore + drawdownScore + followerScore);
 
   const interpretation =
     total >= 80
-      ? "Excellent — highly trustworthy track record"
+      ? "Excellent ΓÇö highly trustworthy track record"
       : total >= 65
-      ? "Good — strong overall profile"
+      ? "Good ΓÇö strong overall profile"
       : total >= 50
-      ? "Moderate — solid but review carefully"
-      : "Low — limited verification or weak metrics";
+      ? "Moderate ΓÇö solid but review carefully"
+      : "Low ΓÇö limited verification or weak metrics";
 
   return {
     score: total,
@@ -413,9 +413,9 @@ function computeTrustScore(p: InvestorProfile): {
   };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // TOOL DEFINITIONS
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 const TOOLS: Tool[] = [
   {
@@ -490,7 +490,7 @@ const TOOLS: Tool[] = [
   {
     name: "compare_investors",
     description:
-      "Compares two investors side by side across all key metrics — CAGR, alpha, win rate, max drawdown, volatility, followers, verification tier, and trust score.",
+      "Compares two investors side by side across all key metrics ΓÇö CAGR, alpha, win rate, max drawdown, volatility, followers, verification tier, and trust score.",
     inputSchema: {
       type: "object",
       properties: {
@@ -543,7 +543,7 @@ const TOOLS: Tool[] = [
   {
     name: "get_trust_score",
     description:
-      "Calculates and returns the trust score (0–100) for an investor along with a full breakdown of the contributing factors: verification tier, CAGR performance, win rate, drawdown, and follower count.",
+      "Calculates and returns the trust score (0ΓÇô100) for an investor along with a full breakdown of the contributing factors: verification tier, CAGR performance, win rate, drawdown, and follower count.",
     inputSchema: {
       type: "object",
       properties: {
@@ -555,11 +555,21 @@ const TOOLS: Tool[] = [
       required: ["investorId"],
     },
   },
+  {
+    name: "get_creator_connection_guide",
+    description:
+      "Returns a step-by-step guide for a verified investor (creator) to connect their portfolio to the Follow Verified Investors platform and expose it through the MCP server. Use this when a user asks how to become a creator, how to link their portfolio, or how to broadcast trade alerts.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+      required: [],
+    },
+  },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // TOOL HANDLERS
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 function handleListInvestors(args: Record<string, unknown>): string {
   let filtered = [...profiles];
@@ -837,7 +847,7 @@ function handleGetTrustScore(args: Record<string, unknown>): string {
         winRate: {
           points: breakdown.winRate,
           maxPoints: 20,
-          note: `Win rate: ${p.winRate}% (range 40%–80%)`,
+          note: `Win rate: ${p.winRate}% (range 40%ΓÇô80%)`,
         },
         lowDrawdown: {
           points: breakdown.lowDrawdown,
@@ -856,9 +866,9 @@ function handleGetTrustScore(args: Record<string, unknown>): string {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // SERVER SETUP & ENTRY POINT
-// ─────────────────────────────────────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 const server = new Server(
   {
@@ -927,7 +937,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  // Server is running — logs intentionally sent to stderr so stdout stays clean for MCP protocol
+  // Server is running ΓÇö logs intentionally sent to stderr so stdout stays clean for MCP protocol
   process.stderr.write("FVI MCP Server running on stdio\n");
 }
 

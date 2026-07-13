@@ -948,7 +948,88 @@ function handleGetCreatorConnectionGuide(): string {
 }
 
 // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-// SERVER SETUP & ENTRY POINT
+function handleGetUserConnectionGuide(): string {
+  return JSON.stringify(
+    {
+      title: "User / Follower Connection Guide — Follow Verified Investors",
+      summary:
+        "As a follower you discover verified investors, follow their portfolios, and receive real-time conviction alerts when they make moves. Here is the complete flow.",
+      steps: [
+        {
+          step: 1,
+          title: "Explore verified investors",
+          url: "https://follow-verified-investors.vercel.app/explore",
+          description:
+            "Browse the full list of verified investors at /explore. Each card shows:\n" +
+            "  • CAGR, alpha, win rate, max drawdown\n" +
+            "  • Verification tier (CAS / Broker / Demo)\n" +
+            "  • Investing style (value, growth, dividend, momentum, smallcap, longterm)\n" +
+            "  • Follower count and trust score",
+        },
+        {
+          step: 2,
+          title: "Follow an investor",
+          description:
+            "Click 'Follow' on any investor card. You will be prompted to enter your email address. " +
+            "No account creation is required — your email is all that is needed to receive trade alerts. " +
+            "You can also manage notification preferences after following.",
+          note: "Following is free. Alerts are delivered by email as soon as a creator broadcasts a conviction move.",
+        },
+        {
+          step: 3,
+          title: "Receive conviction alerts by email",
+          description:
+            "When a creator you follow broadcasts an alert (BUY / SELL / ADD / TRIM on a ticker), " +
+            "you receive an email immediately with:\n" +
+            "  • Creator name\n" +
+            "  • Action and ticker\n" +
+            "  • Creator's note/rationale\n" +
+            "  • Unsubscribe link (one-click, List-Unsubscribe compatible)",
+          note: "This is read-only information, not investment advice or an instruction to trade.",
+        },
+        {
+          step: 4,
+          title: "Manage notification preferences",
+          description:
+            "You can opt out of trade alert emails at any time via the unsubscribe link in any email, " +
+            "or by visiting your notification preferences page.",
+        },
+        {
+          step: 5,
+          title: "Use this MCP server to query the platform with AI",
+          description:
+            "Connect the FVI MCP server to Claude Desktop to ask natural-language questions about investors:",
+          exampleQueries: [
+            "Who are the top 5 investors by CAGR?",
+            "Show me all dividend investors",
+            "What does Arjun Mehta hold in his portfolio?",
+            "Which investors hold INFY?",
+            "Compare Priya Shah and Rahul Kapoor",
+            "What is Neha Iyer's trust score and why?",
+            "Show Arjun Mehta's conviction buys",
+          ],
+          config: {
+            mcpServers: {
+              fvi: {
+                command: "node",
+                args: ["C:\\path\\to\\fvi-mcp-server\\dist\\index.js"],
+              },
+            },
+          },
+          configPath: "%APPDATA%\\Claude\\claude_desktop_config.json (Windows)",
+          note: "Restart Claude Desktop after saving the config. The FVI tools will appear in the tool picker.",
+        },
+      ],
+      platformUrl: "https://follow-verified-investors.vercel.app",
+      disclaimer:
+        "All alerts are read-only portfolio disclosures. FVI cannot place trades on your behalf. This is not investment advice.",
+    },
+    null,
+    2
+  );
+}
+
+
 // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 const server = new Server(

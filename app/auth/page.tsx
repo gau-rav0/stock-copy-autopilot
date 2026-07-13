@@ -10,6 +10,14 @@ function AuthContent() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
 
   // Redirect signed-in users to ?next= or /explore
   useEffect(() => {
@@ -21,6 +29,8 @@ function AuthContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (cooldown > 0) return;
+
     setLoading(true);
     setMessage(null);
 
@@ -28,13 +38,19 @@ function AuthContent() {
     const { error } = await signInWithEmail(email, next ?? undefined);
 
     if (error) {
-      setMessage({ text: error, type: "error" });
+      if (error.toLowerCase().includes("rate limit")) {
+        setMessage({ text: "You've sent too many requests. Please wait a minute before trying again.", type: "error" });
+        setCooldown(60);
+      } else {
+        setMessage({ text: error, type: "error" });
+      }
     } else {
       setMessage({
         text: "Check your email for the magic link to sign in.",
         type: "success",
       });
       setEmail("");
+      setCooldown(60);
     }
     setLoading(false);
   };
@@ -83,10 +99,10 @@ function AuthContent() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || cooldown > 0}
             className="group relative flex w-full justify-center rounded-lg bg-brass px-3 py-3 text-sm font-semibold text-white transition hover:bg-brass-bright focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass disabled:opacity-50"
           >
-            {loading ? "Sending magic link..." : "Send magic link"}
+            {loading ? "Sending magic link..." : cooldown > 0 ? `Wait ${cooldown}s to send again` : "Send magic link"}
           </button>
         </form>
       </div>

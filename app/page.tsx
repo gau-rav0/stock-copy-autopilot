@@ -402,7 +402,7 @@ export default async function Home() {
             },
             {
               q: "What is a CAS statement and how does it verify an investor?",
-              a: "A Consolidated Account Statement (CAS) is issued by CDSL/NSDL and shows all demat holdings linked to your PAN. It cannot be faked or cherry-picked, making it the gold standard for portfolio verification in India.",
+              a: "A Consolidated Account Statement (CAS) is issued by CDSL/NSDL and shows all demat holdings linked to your PAN. Our built-in CDSL CAS portfolio tracker parses this statement to verify holdings, meaning it cannot be faked or cherry-picked, making it the gold standard for portfolio verification in India.",
             },
             {
               q: "What does the Trust Score mean?",

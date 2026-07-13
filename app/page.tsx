@@ -201,11 +201,10 @@ export default async function Home() {
               Acquisition loop
             </p>
             <h2 className="mt-3 font-display text-2xl text-paper">
-              Roast the portfolio. Then answer the real question.
+              Free NSE portfolio roast tool
             </h2>
             <p className="mt-3 text-paper-muted">
-              If screenshots cannot be trusted, what evidence should users inspect? The roast gets
-              attention; demo historical profiles explain the trust layer.
+              Get an AI-powered, blunt assessment of your holdings. If screenshots cannot be trusted, what evidence should users inspect? The roast gets attention; our verified profiles explain the trust layer.
             </p>
           </div>
           <div className="rounded-lg border border-white/[.06] bg-white/[.06] p-5 text-paper backdrop-blur-xl">

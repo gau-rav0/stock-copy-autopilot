@@ -271,7 +271,7 @@ export default async function Home() {
 
       <section className="mx-auto max-w-5xl px-6 py-24">
         <div className="flex items-end justify-between">
-          <h2 className="font-display text-2xl text-paper">Featured investors</h2>
+          <h2 className="font-display text-2xl text-paper">Best verified investors to follow in India</h2>
           <Link href="/explore" className="text-sm text-brass hover:underline">
             View all
           </Link>

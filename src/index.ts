@@ -1082,6 +1082,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "get_trust_score":
         result = handleGetTrustScore(safeArgs);
         break;
+      case "get_creator_connection_guide":
+        result = handleGetCreatorConnectionGuide();
+        break;
+      case "get_user_connection_guide":
+        result = handleGetUserConnectionGuide();
+        break;
       default:
         result = JSON.stringify({ error: `Unknown tool: "${name}". Check tool name and try again.` });
     }

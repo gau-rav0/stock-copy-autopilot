@@ -4,6 +4,8 @@
 
 This MCP server exposes the FVI investor platform data as tools for AI assistants like Claude Desktop. Connect it once, and Claude can answer questions like *"Who are the top 5 investors by CAGR?"*, *"Show me Arjun Mehta's portfolio"*, or *"Which investors hold INFY?"* — all using live tool calls.
 
+It also guides both **creators** (verified investors who share their portfolio moves) and **users/followers** (people who follow and receive alerts) through their full connection flow.
+
 > ⚠️ **All investor data in this server is fictional demo data** created for demonstration and development purposes only. It does not represent real investment advice or real portfolios.
 
 ---
@@ -38,6 +40,42 @@ Add this to your `claude_desktop_config.json` (usually at `%APPDATA%\Claude\clau
 ```
 
 Restart Claude Desktop after saving. You should see the FVI tools available in the tool picker.
+
+---
+
+## Creator Connects
+
+A **creator** is a verified investor who shares their portfolio moves with followers.
+
+### How it works
+
+1. **Apply at `/connect`** — Upload your CAS (Consolidated Account Statement from NSDL/CDSL) or enter holdings manually.
+2. **Review** — The FVI team reviews your submission. Once approved, your profile is marked verified (CAS tier, Broker tier, or Demo tier).
+3. **Dashboard at `/creator/dashboard`** — Broadcast conviction alerts (BUY / SELL / ADD / TRIM), view past alerts, and see your follower count.
+4. **Optional: Broker feed** — Register a Zerodha, Upstox, Angel One, or Groww connection. Status starts at `awaiting_authorization` until OAuth/API authorization is completed.
+5. **MCP** — Connect this server to Claude Desktop so AI clients can answer questions about your portfolio.
+
+> FVI never requests trading permissions and can never place orders on your behalf. Read-only display only.
+
+**MCP tool**: Ask Claude `"How do I connect as a creator?"` — it will call `get_creator_connection_guide` and return the full step-by-step.
+
+---
+
+## User Connects
+
+A **user/follower** discovers verified investors, follows their portfolios, and receives conviction alerts.
+
+### How it works
+
+1. **Explore at `/explore`** — Browse all verified investors. Each card shows CAGR, alpha, win rate, max drawdown, verification tier, and trust score.
+2. **Follow** — Click Follow, enter your email. No account required — email is enough.
+3. **Receive alerts** — Whenever a creator you follow broadcasts a move, you get an email immediately (creator name, action, ticker, rationale, and a one-click unsubscribe).
+4. **Manage preferences** — Opt out of alert emails any time from the unsubscribe link or notification preferences page.
+5. **MCP** — Connect this server to Claude Desktop to ask AI questions about investors.
+
+> All alerts are read-only information, not investment advice or an instruction to trade.
+
+**MCP tool**: Ask Claude `"How do I connect as a user?"` — it will call `get_user_connection_guide` and return the full step-by-step.
 
 ---
 
@@ -139,6 +177,20 @@ Calculates and explains the trust score (0–100) for an investor with a full fa
 - Follower count (0–10 pts)
 
 **Example:** *"What is Neha Iyer's trust score and why?"*
+
+---
+
+### 9. `get_creator_connection_guide`
+Returns a full step-by-step guide for a **verified investor (creator)** to connect their portfolio to the FVI platform and to this MCP server. No parameters required.
+
+**Example:** *"How do I connect as a creator?"* or *"How do I start broadcasting trade alerts?"*
+
+---
+
+### 10. `get_user_connection_guide`
+Returns a full step-by-step guide for a **follower/user** to connect to the FVI platform, follow creators, receive conviction alerts, and use MCP to query investor data. No parameters required.
+
+**Example:** *"How do I connect as a user?"* or *"How do I follow an investor?"*
 
 ---
 

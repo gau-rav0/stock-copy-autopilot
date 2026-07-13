@@ -70,9 +70,32 @@ export async function POST(req: Request) {
 
     // Extract emails
     // @ts-ignore - users is a joined relation
-    const emails: string[] = followers.map((f: any) => f.users?.email).filter(Boolean);
+    // No preference row means the follower keeps the product default: trade alerts enabled.
+    // Explicit opt-outs are removed before any recipient list is handed to the email provider.
+    const followerIds = followers.map((f: any) => f.follower_user_id).filter(Boolean);
+    const { data: preferences, error: preferencesError } = followerIds.length
+      ? await supabaseAdmin
+          .from("notification_preferences")
+          .select("user_id, trade_alerts_email")
+          .in("user_id", followerIds)
+      : { data: [], error: null };
 
-    if (emails.length === 0) {
+    if (preferencesError) {
+      console.error("Error fetching notification preferences:", preferencesError);
+      return new NextResponse("Unable to load notification preferences", { status: 500 });
+    }
+
+    const optedOut = new Set(
+      (preferences ?? [])
+        .filter((preference) => preference.trade_alerts_email === false)
+        .map((preference) => preference.user_id)
+    );
+    const optedInEmails = followers
+      .filter((f: any) => !optedOut.has(f.follower_user_id))
+      .map((f: any) => f.users?.email)
+      .filter(Boolean) as string[];
+
+    if (optedInEmails.length === 0) {
       return NextResponse.json({ message: "No valid emails found among followers" });
     }
 
@@ -113,8 +136,8 @@ export async function POST(req: Request) {
 
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: "Alerts <alerts@followverified.com>", // You must verify this domain in Resend
-      to: emails[0], // First recipient in 'to'
-      bcc: emails.slice(1), // Rest in 'bcc'
+      to: optedInEmails[0], // First recipient in 'to'
+      bcc: optedInEmails.slice(1), // Rest in 'bcc'
       subject: `🚨 ${creatorName} Alert: ${actionText} ${ticker}`,
       html: htmlContent,
     });
@@ -124,7 +147,7 @@ export async function POST(req: Request) {
       return new NextResponse("Failed to send emails", { status: 500 });
     }
 
-    return NextResponse.json({ success: true, message: `Alert sent to ${emails.length} followers`, data: emailData });
+    return NextResponse.json({ success: true, message: `Alert sent to ${optedInEmails.length} followers`, data: emailData });
     
   } catch (error: any) {
     console.error("Blast alert error:", error);

@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Bell, UserCircle2, ArrowRight, TrendingUp } from "lucide-react";
+import BrokerConnectionPanel from "@/components/BrokerConnectionPanel";
+import NotificationPreferences from "@/components/NotificationPreferences";
 
 export const metadata: Metadata = {
   title: "My Dashboard",
@@ -210,6 +212,10 @@ export default async function DashboardPage() {
       {/* Account section */}
       <div className="mt-16 border-t border-ink-hairline pt-8">
         <h2 className="font-display text-lg text-paper">Account</h2>
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <NotificationPreferences />
+          <BrokerConnectionPanel purpose="follower" />
+        </div>
         <div className="mt-4 flex flex-wrap gap-3">
           <div className="rounded-lg border border-ink-hairline bg-ink-elevated/75 px-4 py-3 text-sm text-paper-muted backdrop-blur">
             {user.email}

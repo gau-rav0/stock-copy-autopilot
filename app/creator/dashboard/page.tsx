@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import CreatorDashboardClient from "./CreatorDashboardClient";
+import BrokerConnectionPanel from "@/components/BrokerConnectionPanel";
 
 export default async function CreatorDashboardPage() {
   const supabase = await createClient();
@@ -96,6 +97,10 @@ export default async function CreatorDashboardPage() {
             <p className="text-sm text-paper-muted">No alerts broadcasted yet.</p>
           )}
         </div>
+      </div>
+
+      <div className="mt-8">
+        <BrokerConnectionPanel purpose="creator" />
       </div>
     </div>
   );

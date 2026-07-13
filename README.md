@@ -22,7 +22,7 @@ The app is a Next.js 16 demo for a read-only investor marketplace: users can roa
 
 - Seeded investor profiles and holdings are fictional demo data.
 - CAS parsing extracts recognizable equity rows and keeps every application in pending human review.
-- Broker sync is not available. Validate broker terms, read-only access constraints, privacy obligations, and SEBI implications before starting it.
+- Broker connection requests are now stored as read-only metadata; provider authorization remains pending until a broker-specific OAuth or server-to-server adapter is configured. No broker password, API key, access token, or order permission is stored by the app.
 - Paid creator/follower features are not launch-ready until legal and SEBI review is complete.
 - Payments and Razorpay subscriptions are not wired yet.
 
@@ -55,9 +55,31 @@ CRM_EMAIL_TO=
 OPERATIONS_EMAIL_TO=
 OPERATIONS_EMAIL_FROM=
 RESEND_API_KEY=
+WEBHOOK_SECRET=
+BROKER_WEBHOOK_SECRET=
 ```
 
 `CRM_WEBHOOK_URL` receives JSON events for `roast_lead`, `follow_intent`, and `creator_application`. `RESEND_API_KEY` plus an operations email destination sends a plain-text alert for the same events.
+
+## Broker trade-webhook contract
+
+The integration endpoint is `POST /api/integrations/broker/trades`. It only accepts a signed, server-to-server payload from a provider adapter; it does not accept brokerage credentials from a browser. Sign the exact JSON request body with HMAC-SHA256 using `BROKER_WEBHOOK_SECRET` and send the hex digest as `x-fvi-signature`.
+
+```json
+{
+  "creatorUserId": "<Supabase auth user UUID>",
+  "broker": "zerodha",
+  "externalTradeId": "provider-fill-id",
+  "ticker": "INFY",
+  "action": "add",
+  "price": 1512.5,
+  "allocationBefore": 8.2,
+  "allocationAfter": 12.7,
+  "occurredAt": "2026-07-13T10:30:00.000Z"
+}
+```
+
+The creator must be verified and have an `active` read-only connection before events are accepted. A provider OAuth callback or managed adapter is responsible for changing a reviewed connection from `awaiting_authorization` to `active`. Accepted events create a portfolio update and trigger follower email alerts, subject to each follower's email preference. This is alerting only: FVI never executes, copies, or recommends trades.
 
 AI summaries:
 

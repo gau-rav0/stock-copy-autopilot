@@ -1,6 +1,20 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+async function resolveProfileId(supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>, identifier: unknown) {
+  if (typeof identifier !== "string" || !identifier.trim()) return null;
+
+  const value = identifier.trim();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id")
+    .or(`id.eq.${value},slug.eq.${value}`)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data.id as string;
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   if (!supabase) {
@@ -18,12 +32,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
   }
 
+  const resolvedProfileId = await resolveProfileId(supabase, profileId);
+  if (!resolvedProfileId) {
+    return NextResponse.json({ error: "Investor profile was not found" }, { status: 404 });
+  }
+
   const { error } = await supabase
     .from("followers")
-    .insert({
+    .upsert({
       follower_user_id: user.id,
-      profile_id: profileId,
-    });
+      profile_id: resolvedProfileId,
+    }, { onConflict: "follower_user_id,profile_id" });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -49,11 +68,16 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
   }
 
+  const resolvedProfileId = await resolveProfileId(supabase, profileId);
+  if (!resolvedProfileId) {
+    return NextResponse.json({ error: "Investor profile was not found" }, { status: 404 });
+  }
+
   const { error } = await supabase
     .from("followers")
     .delete()
     .eq("follower_user_id", user.id)
-    .eq("profile_id", profileId);
+    .eq("profile_id", resolvedProfileId);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -80,11 +104,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ following: false });
   }
 
+  const resolvedProfileId = await resolveProfileId(supabase, profileId);
+  if (!resolvedProfileId) return NextResponse.json({ following: false });
+
   const { data, error } = await supabase
     .from("followers")
     .select("id")
     .eq("follower_user_id", user.id)
-    .eq("profile_id", profileId)
+    .eq("profile_id", resolvedProfileId)
     .maybeSingle();
 
   if (error) {

@@ -51,7 +51,7 @@ export default function BrokerConnectionPanel({ purpose }: { purpose: Purpose })
         data.connection,
       ]);
       setStatus("success");
-      setMessage("Connection request saved. Complete provider authorization before trade data can flow.");
+      setMessage("Broker preference saved. Live provider authorization is not enabled in this release.");
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "Could not save the broker connection.");
@@ -59,10 +59,10 @@ export default function BrokerConnectionPanel({ purpose }: { purpose: Purpose })
   };
 
   const relevantConnections = connections.filter((connection) => connection.purpose === purpose);
-  const heading = purpose === "creator" ? "Connect your read-only trade feed" : "Broker connection (optional)";
+  const heading = purpose === "creator" ? "Broker integration preference" : "Broker integration preference (optional)";
   const description = purpose === "creator"
-    ? "A verified provider connection can send your completed trades to followers as alerts. We never request order placement rights."
-    : "Your email is all that is needed for trade alerts. Broker linking is optional and never enables copy trading or order placement.";
+    ? "Tell us which provider you use. Live broker authorization is still pending provider and compliance review; we never request order placement rights."
+    : "Your email is all that is needed for trade alerts. Saving a broker preference never links an account or enables copy trading.";
 
   return (
     <section className="rounded-xl border border-ink-hairline bg-ink-elevated/75 p-5 backdrop-blur">
@@ -92,11 +92,11 @@ export default function BrokerConnectionPanel({ purpose }: { purpose: Purpose })
         <input value={accountLabel} onChange={(event) => setAccountLabel(event.target.value)} maxLength={80} placeholder="Account label (optional)" className="input-field" />
         <button type="submit" disabled={status === "loading"} className="inline-flex items-center justify-center gap-2 rounded-lg border border-brass/40 px-4 py-2 text-sm font-medium text-brass transition hover:border-brass disabled:opacity-50">
           {status === "loading" ? <Loader2 size={15} className="animate-spin" /> : <Link2 size={15} />}
-          Connect
+          Save preference
         </button>
       </form>
       {message && <p className={`mt-3 flex items-center gap-2 text-xs ${status === "error" ? "text-red-300" : "text-brass"}`}>{status === "success" && <CheckCircle2 size={14} />}{message}</p>}
-      <p className="mt-3 text-xs text-paper-muted">No broker password, API key, token, or trading permission is stored by FVI.</p>
+      <p className="mt-3 text-xs text-paper-muted">No broker password, API key, token, account data, or trading permission is stored by FVI.</p>
     </section>
   );
 }

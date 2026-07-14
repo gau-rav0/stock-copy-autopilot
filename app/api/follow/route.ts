@@ -1,18 +1,26 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+type ProfileLookup = {
+  id: string;
+  subscription_fee_inr: number | string | null;
+};
+
 async function resolveProfileId(supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>, identifier: unknown) {
   if (typeof identifier !== "string" || !identifier.trim()) return null;
 
   const value = identifier.trim();
-  const { data, error } = await supabase
+  const profileQuery = supabase
     .from("profiles")
-    .select("id")
-    .or(`id.eq.${value},slug.eq.${value}`)
-    .maybeSingle();
+    .select("id, subscription_fee_inr");
+
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  const { data, error } = isUuid
+    ? await profileQuery.eq("id", value).maybeSingle()
+    : await profileQuery.eq("slug", value).maybeSingle();
 
   if (error || !data) return null;
-  return data.id as string;
+  return data as ProfileLookup;
 }
 
 export async function POST(request: Request) {
@@ -32,16 +40,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
   }
 
-  const resolvedProfileId = await resolveProfileId(supabase, rawProfileId);
-  if (!resolvedProfileId) {
+  const profile = await resolveProfileId(supabase, rawProfileId);
+  if (!profile) {
     return NextResponse.json({ error: "Investor profile was not found" }, { status: 404 });
+  }
+
+  if (Number(profile.subscription_fee_inr ?? 0) > 0) {
+    return NextResponse.json(
+      { error: "Payment confirmation is required before following this investor." },
+      { status: 402 }
+    );
   }
 
   const { error } = await supabase
     .from("followers")
     .upsert({
       follower_user_id: user.id,
-      profile_id: resolvedProfileId,
+      profile_id: profile.id,
     }, { onConflict: "follower_user_id,profile_id" });
 
   if (error) {
@@ -68,8 +83,8 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
   }
 
-  const resolvedProfileId = await resolveProfileId(supabase, rawProfileId);
-  if (!resolvedProfileId) {
+  const profile = await resolveProfileId(supabase, rawProfileId);
+  if (!profile) {
     return NextResponse.json({ error: "Investor profile was not found" }, { status: 404 });
   }
 
@@ -77,7 +92,7 @@ export async function DELETE(request: Request) {
     .from("followers")
     .delete()
     .eq("follower_user_id", user.id)
-    .eq("profile_id", resolvedProfileId);
+    .eq("profile_id", profile.id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -104,14 +119,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ following: false });
   }
 
-  const resolvedProfileId = await resolveProfileId(supabase, rawProfileId);
-  if (!resolvedProfileId) return NextResponse.json({ following: false });
+  const profile = await resolveProfileId(supabase, rawProfileId);
+  if (!profile) return NextResponse.json({ following: false });
 
   const { data, error } = await supabase
     .from("followers")
     .select("id")
     .eq("follower_user_id", user.id)
-    .eq("profile_id", resolvedProfileId)
+    .eq("profile_id", profile.id)
     .maybeSingle();
 
   if (error) {

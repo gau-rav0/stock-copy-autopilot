@@ -76,8 +76,8 @@ export default function Navbar() {
             </>
           ) : (
             <Link
-              href="/auth"
-              className="hidden text-xs text-paper-muted transition hover:text-paper md:inline"
+              href={`/auth?next=${encodeURIComponent(pathname)}`}
+              className="hidden rounded-lg bg-white/5 px-4 py-1.5 text-xs text-paper transition hover:bg-white/10 md:inline"
             >
               Sign in
             </Link>
@@ -127,7 +127,7 @@ export default function Navbar() {
               </>
             ) : (
               <Link
-                href="/auth"
+                href={`/auth?next=${encodeURIComponent(pathname)}`}
                 className="rounded-lg px-4 py-3 text-sm text-paper-muted transition hover:bg-white/[.04] hover:text-paper"
               >
                 Sign in

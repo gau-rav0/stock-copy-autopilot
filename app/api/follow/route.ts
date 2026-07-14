@@ -26,13 +26,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { profileId } = await request.json().catch(() => ({}));
+  const { profileId: rawProfileId } = await request.json().catch(() => ({}));
   
-  if (!profileId) {
+  if (!rawProfileId) {
     return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
   }
 
-  const resolvedProfileId = await resolveProfileId(supabase, profileId);
+  const resolvedProfileId = await resolveProfileId(supabase, rawProfileId);
   if (!resolvedProfileId) {
     return NextResponse.json({ error: "Investor profile was not found" }, { status: 404 });
   }
@@ -62,13 +62,13 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { profileId } = await request.json().catch(() => ({}));
+  const { profileId: rawProfileId } = await request.json().catch(() => ({}));
   
-  if (!profileId) {
+  if (!rawProfileId) {
     return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
   }
 
-  const resolvedProfileId = await resolveProfileId(supabase, profileId);
+  const resolvedProfileId = await resolveProfileId(supabase, rawProfileId);
   if (!resolvedProfileId) {
     return NextResponse.json({ error: "Investor profile was not found" }, { status: 404 });
   }
@@ -88,9 +88,9 @@ export async function DELETE(request: Request) {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const profileId = searchParams.get("profileId");
+  const rawProfileId = searchParams.get("profileId");
 
-  if (!profileId) {
+  if (!rawProfileId) {
     return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
   }
 
@@ -104,7 +104,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ following: false });
   }
 
-  const resolvedProfileId = await resolveProfileId(supabase, profileId);
+  const resolvedProfileId = await resolveProfileId(supabase, rawProfileId);
   if (!resolvedProfileId) return NextResponse.json({ following: false });
 
   const { data, error } = await supabase

@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
-import { createClient, createWriteClient } from "@/lib/supabase/server";
+import { randomUUID } from "crypto";
 import Razorpay from "razorpay";
+import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
+
+const CheckoutSchema = z.object({
+  profileId: z.string().uuid(),
+});
 
 export async function POST(request: Request) {
   try {
@@ -15,14 +21,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { profileId } = await request.json();
-    if (!profileId) {
-      return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
+    const parsed = CheckoutSchema.safeParse(await request.json().catch(() => ({})));
+    if (!parsed.success) {
+      return NextResponse.json({ error: "A valid investor profile is required" }, { status: 400 });
     }
+    const { profileId } = parsed.data;
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("subscription_fee_inr, display_name")
+      .select("id, subscription_fee_inr, display_name")
       .eq("id", profileId)
       .single();
 
@@ -49,10 +56,10 @@ export async function POST(request: Request) {
     const order = await razorpay.orders.create({
       amount: amountInPaise,
       currency: "INR",
-      receipt: `receipt_${user.id}_${profileId}`,
+      receipt: `fvi_${randomUUID().replaceAll("-", "")}`,
       notes: {
         userId: user.id,
-        profileId: profileId,
+        profileId: profile.id,
       },
     });
 

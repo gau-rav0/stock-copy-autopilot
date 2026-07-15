@@ -140,6 +140,13 @@ export const calculatePortfolio = async (holdingsInput: HoldingInput[]): Promise
     throw new Error("Add at least one valid holding.");
   }
 
+  const unknownSymbols = [...new Set(clean.map((h) => h.stock_symbol).filter((s) => !STOCK_LOOKUP.has(s)))];
+  if (unknownSymbols.length > 0) {
+    throw new Error(
+      `We don't recognise ${unknownSymbols.join(", ")}. Enter a valid NSE symbol (e.g. RELIANCE, INFY, HDFCBANK) so the roast is based on real holdings, not guesses.`
+    );
+  }
+
   const now = new Date();
   const snapshots = await Promise.all(clean.map((holding) => getMarketSnapshot(holding.stock_symbol)));
   const historiesBySymbol = new Map(snapshots.map((snapshot) => [snapshot.symbol, snapshot.history]));

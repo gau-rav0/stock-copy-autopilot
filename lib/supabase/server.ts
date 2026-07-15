@@ -39,13 +39,22 @@ export function hasSupabaseWriteConfig() {
 }
 
 // Service-role client (bypasses RLS — only for server-side writes)
+// Must use the service role key. Never silently fall back to the anon key:
+// that would run privileged writes under an unprivileged client, which
+// either fails RLS with a confusing generic error or, worse, "succeeds"
+// with the wrong permission level. Callers already guard with
+// hasSupabaseWriteConfig() before assuming writes will work.
 export function createWriteClient() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return null;
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error(
+        "createWriteClient(): SUPABASE_SERVICE_ROLE_KEY is not set. Refusing to fall back to the anon key."
+      );
+    }
+    return null;
+  }
 
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!key) return null;
-
-  return createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL, key, {
+  return createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

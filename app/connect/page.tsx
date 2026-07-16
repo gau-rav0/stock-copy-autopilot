@@ -40,14 +40,14 @@ export default function ConnectPage() {
       });
       
       const responseText = await response.text();
-      let json: { error?: string; parsedCount?: number } = {};
+      let json: { error?: string; parsedCount?: number; stored?: boolean } = {};
       try {
         json = responseText ? JSON.parse(responseText) : {};
       } catch (parseError) {
         throw new Error("Server could not process this application. Please try again.");
       }
 
-      if (!response.ok) {
+      if (!response.ok || json.stored !== true) {
         throw new Error(json.error || "Failed to submit application");
       }
 

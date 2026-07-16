@@ -94,13 +94,17 @@ async function handlePost(request: Request) {
       parsedWarnings: parsed.warnings,
     });
 
-    return NextResponse.json({
-      stored: false,
-      reason: "Supabase is not configured.",
-      parseStatus: parse_status,
-      parsedCount: parsed.holdings.length,
-      outbound,
-    });
+    return NextResponse.json(
+      {
+        stored: false,
+        error: "Application storage is temporarily unavailable. Please try again later.",
+        reason: "Supabase is not configured.",
+        parseStatus: parse_status,
+        parsedCount: parsed.holdings.length,
+        outbound,
+      },
+      { status: 503 }
+    );
   }
 
   const insertPayload = {

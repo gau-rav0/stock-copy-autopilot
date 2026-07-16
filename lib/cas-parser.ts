@@ -84,6 +84,7 @@ const inferName = (line: string, symbol: string | null) => {
 
 const shouldSkipLine = (line: string) =>
   line.length < 4 ||
+  /^--\s*\d+\s+of\s+\d+\s*--$/i.test(line) ||
   /^(total|grand total|subtotal|folio|statement|date|isin|scheme|mutual fund|demat|account)\b/i.test(line);
 
 export function parseCasText(rawText: string): CasParseResult {
@@ -151,6 +152,15 @@ export function parseCasText(rawText: string): CasParseResult {
 }
 
 export async function extractPdfText(file: File) {
+  // pdfjs expects browser geometry globals. Install the native server-side
+  // equivalents explicitly instead of relying on its runtime auto-detection.
+  const canvas = await import("@napi-rs/canvas");
+  Object.assign(globalThis, {
+    DOMMatrix: globalThis.DOMMatrix ?? canvas.DOMMatrix,
+    ImageData: globalThis.ImageData ?? canvas.ImageData,
+    Path2D: globalThis.Path2D ?? canvas.Path2D,
+  });
+
   const { PDFParse } = await import("pdf-parse");
   const buffer = await file.arrayBuffer();
   const parser = new PDFParse({ data: new Uint8Array(buffer) });

@@ -33,6 +33,7 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  serverExternalPackages: ["@napi-rs/canvas", "pdf-parse"],
   turbopack: {
     root: projectRoot,
   },

@@ -71,15 +71,33 @@ export async function POST(req: Request) {
 
     if (roleError) throw new Error("Failed to update user role");
 
+    const displayName = application.creator_name || application.email.split("@")[0];
+    const baseSlug = displayName
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || `creator-${application.id.slice(0, 8)}`;
+    const { data: existingSlug } = await writeClient
+      .from("profiles")
+      .select("id")
+      .eq("slug", baseSlug)
+      .maybeSingle();
+    const slug = existingSlug ? `${baseSlug}-${application.id.slice(0, 6)}` : baseSlug;
+    const casReviewed = application.method === "cas" && application.parse_status === "parsed_pending_review";
+
     // 4. Create profile
     const { data: profile, error: profileError } = await writeClient
       .from("profiles")
       .insert({
         user_id: creatorUser.id,
-        display_name: application.creator_name || application.email.split("@")[0],
+        slug,
+        display_name: displayName,
         investing_style: "growth", // default style
-        verified: true,
-        verification_tier: "cas",
+        verified: casReviewed,
+        verification_tier: casReviewed ? "cas" : "demo",
+        follower_count: 0,
+        subscription_fee_inr: 0,
       })
       .select()
       .single();
@@ -105,8 +123,11 @@ export async function POST(req: Request) {
       const holdingsToInsert = parsedHoldings.map((h: any) => ({
         portfolio_id: portfolio.id,
         ticker: h.symbol || h.name || "UNKNOWN",
-        allocation_pct: h.weight_pct || 0,
-        current_price: h.market_value ? (h.market_value / (h.quantity || 1)) : null,
+        company_name: h.name || h.symbol || "Unknown holding",
+        allocation_pct: h.weightPct ?? h.weight_pct ?? 0,
+        current_price: (h.marketValue ?? h.market_value)
+          ? (h.marketValue ?? h.market_value) / (h.quantity || 1)
+          : null,
       }));
 
       const { error: holdingsError } = await writeClient
@@ -124,7 +145,7 @@ export async function POST(req: Request) {
 
     if (updateAppError) throw new Error("Failed to update application status");
 
-    return NextResponse.json({ success: true, profileId: profile.id });
+    return NextResponse.json({ success: true, profileId: profile.id, slug, verified: casReviewed });
   } catch (error: any) {
     console.error("Approve creator error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });

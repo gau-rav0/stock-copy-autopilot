@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { getProfileDetail } from "@/lib/investor-data";
 import VerificationBadge from "@/components/VerificationBadge";
@@ -71,27 +72,44 @@ export default async function InvestorProfilePage({
             </div>
             <p className="text-wrap-safe mt-1 text-sm text-paper-muted">{profile.bio}</p>
             <p className="mt-1 font-mono text-xs text-paper-muted">
-              {profile.followerCount.toLocaleString("en-IN")} followers
+              {profile.isDemo
+                ? "Fictional preview · no real followers"
+                : `${profile.followerCount.toLocaleString("en-IN")} followers`}
             </p>
           </div>
         </div>
-        <FollowButton
-          investorId={profile.id}
-          investorName={profile.displayName}
-          subscriptionFeeInr={profile.subscriptionFeeInr}
-        />
+        {profile.isDemo ? (
+          <Link
+            href="/waitlist"
+            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-brass px-6 text-sm font-semibold text-white transition hover:bg-brass-bright"
+          >
+            Join founding access
+          </Link>
+        ) : (
+          <FollowButton
+            investorId={profile.id}
+            investorName={profile.displayName}
+            subscriptionFeeInr={profile.subscriptionFeeInr}
+          />
+        )}
       </div>
 
       <div className="mt-6">
         <TrustNotice
           compact
-          items={[
-            "Fictional demo data.",
-            "Portfolio-update notifications only.",
-            "Not investment advice.",
-            "No copy trading.",
-            "No order execution.",
-          ]}
+          items={profile.isDemo
+            ? [
+                "Fictional identity and portfolio.",
+                "Illustrative performance only.",
+                "Cannot be followed or purchased.",
+                "Not investment advice.",
+              ]
+            : [
+                "Portfolio-update notifications only.",
+                "Not investment advice.",
+                "No copy trading.",
+                "No order execution.",
+              ]}
         />
       </div>
 
@@ -100,14 +118,16 @@ export default async function InvestorProfilePage({
       </div>
 
       <div className="mt-8 grid gap-4 lg:grid-cols-[280px_1fr]">
-        <TrustScoreBadge trust={trust} />
+        <TrustScoreBadge trust={trust} isDemo={profile.isDemo} />
         <div className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-4 shadow-[0_0_50px_rgba(0,157,85,.04)] backdrop-blur">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="font-mono text-xs uppercase tracking-[0.16em] text-paper-muted">
                 Evidence breakdown
               </p>
-              <h2 className="mt-1 font-display text-xl text-paper">Why this score changed</h2>
+              <h2 className="mt-1 font-display text-xl text-paper">
+                {profile.isDemo ? "How the example score works" : "Why this score changed"}
+              </h2>
             </div>
             <p className={`mono-num font-mono text-2xl ${trustScoreTone(trust.score)}`}>
               {trust.score}/100
@@ -135,9 +155,9 @@ export default async function InvestorProfilePage({
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          ["Verified means", profile.verificationTier === "demo" ? "Demo-seeded record, not a verified live creator." : "Evidence reviewed from the stated source tier."],
-          ["Verification date", profile.verificationTier === "demo" ? "Demo seed" : "June 2026"],
-          ["Source type", profile.verificationTier === "broker" ? "Read-only broker evidence" : profile.verificationTier === "cas" ? "CAS statement evidence" : "Demo dataset"],
+          ["Evidence status", profile.isDemo ? "Fictional preview, not verified evidence." : "Evidence reviewed from the stated source tier."],
+          ["Verification date", profile.isDemo ? "Not applicable" : "June 2026"],
+          ["Source type", profile.isDemo ? `Illustrative ${profile.verificationTier.toUpperCase()} workflow` : profile.verificationTier === "broker" ? "Read-only broker evidence" : profile.verificationTier === "cas" ? "CAS statement evidence" : "Unverified submission"],
           ["Last updated", alerts[0]?.transactionDate ?? transactions[0]?.transactionDate ?? "Pending"],
         ].map(([label, value]) => (
           <div key={label} className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-4 shadow-[0_0_50px_rgba(0,157,85,.04)] backdrop-blur">
@@ -157,7 +177,7 @@ export default async function InvestorProfilePage({
               </p>
             </div>
             <span className="rounded-full border border-brass/40 px-3 py-1 font-mono text-xs text-brass">
-              {alerts.length} demo alerts
+              {alerts.length} {profile.isDemo ? "demo" : "published"} alerts
             </span>
           </div>
           <div className="mt-4 grid gap-3">
@@ -202,7 +222,9 @@ export default async function InvestorProfilePage({
             <h2 className="mt-2 font-display text-xl text-paper">Portfolio growth vs. Nifty 50</h2>
           </div>
           <p className="max-w-md text-sm leading-6 text-paper-muted">
-            Indexed demo performance, shown beside benchmark movement so the track record is easy to compare.
+            {profile.isDemo
+              ? "Illustrative performance only. These values are not returns earned by a real person."
+              : "Indexed performance shown beside the benchmark so the track record is easy to compare."}
           </p>
         </div>
         <div className="mt-4 rounded-lg border border-ink-hairline bg-ink-elevated/75 p-4 shadow-[0_0_80px_rgba(0,157,85,.06)] backdrop-blur-xl sm:p-6">

@@ -68,6 +68,9 @@ export default function AdminCreatorsClient({ initialApplications }: { initialAp
                 <span className="inline-flex items-center rounded-full bg-yellow-500/10 px-2.5 py-0.5 text-xs font-medium text-yellow-500">
                   {app.status}
                 </span>
+                <span className="inline-flex items-center rounded-full bg-white/5 px-2.5 py-0.5 text-xs font-medium text-ink">
+                  Parse: {app.parse_status || "not_parsed"}
+                </span>
               </div>
             </div>
             
@@ -93,7 +96,7 @@ export default function AdminCreatorsClient({ initialApplications }: { initialAp
                 ) : (
                   <>
                     <CheckCircle className="h-4 w-4" />
-                    Approve
+                    Publish reviewed profile
                   </>
                 )}
               </button>
@@ -102,6 +105,9 @@ export default function AdminCreatorsClient({ initialApplications }: { initialAp
           
           {expandedId === app.id && (
             <div className="mt-6 border-t border-white/10 pt-6">
+              <div className="mb-4 rounded-lg border border-amber-300/25 bg-amber-300/[.06] p-4 text-sm leading-6 text-amber-100">
+                CAS applications with successfully parsed holdings publish as CAS reviewed. Manual or failed parses publish as unverified. Confirm the evidence before publishing.
+              </div>
               <h4 className="mb-3 text-sm font-medium text-ink">Parsed Holdings Data:</h4>
               <div className="rounded-lg bg-base p-4 overflow-x-auto">
                 <pre className="text-xs text-ink/80">

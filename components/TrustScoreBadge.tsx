@@ -5,9 +5,11 @@ import { ShieldCheck } from "lucide-react";
 export default function TrustScoreBadge({
   trust,
   compact = false,
+  isDemo = false,
 }: {
   trust: TrustScoreResult;
   compact?: boolean;
+  isDemo?: boolean;
 }) {
   return (
     <div
@@ -19,7 +21,7 @@ export default function TrustScoreBadge({
         <div className="flex items-center gap-2">
           <ShieldCheck size={compact ? 14 : 17} className="text-brass-bright" />
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-paper-muted">
-            Trust score
+            {isDemo ? "Example trust score" : "Trust score"}
           </p>
         </div>
         <p className={`mono-num font-mono ${compact ? "text-base" : "text-2xl"} ${trustScoreTone(trust.score)}`}>

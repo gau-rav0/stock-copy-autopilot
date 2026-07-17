@@ -70,9 +70,7 @@ function toNumber(value: number | string | null | undefined) {
   return Number(value ?? 0);
 }
 
-function toProfile(row: ProfileRow, topHoldings: Holding[] = []): Profile {
-  // A profile is only demo when its tier is "demo" and it isn't a verified real creator.
-  const isDemo = row.verification_tier === "demo" && !row.verified;
+function toProfile(row: ProfileRow, topHoldings: Holding[] = [], isDemo = false): Profile {
   return {
     id: row.slug,
     displayName: row.display_name,
@@ -80,16 +78,27 @@ function toProfile(row: ProfileRow, topHoldings: Holding[] = []): Profile {
     photoUrl: row.photo_url ?? "",
     investingStyle: row.investing_style,
     isDemo,
-    verified: row.verified,
+    verified: isDemo ? false : row.verified,
     verificationTier: row.verification_tier,
-    followerCount: toNumber(row.follower_count),
+    followerCount: isDemo ? 0 : toNumber(row.follower_count),
     cagr: toNumber(row.cagr),
     xirr: toNumber(row.xirr),
     alpha: toNumber(row.alpha),
     maxDrawdown: toNumber(row.max_drawdown),
     volatility: toNumber(row.volatility),
     winRate: toNumber(row.win_rate),
-    subscriptionFeeInr: toNumber(row.subscription_fee_inr),
+    subscriptionFeeInr: isDemo ? 0 : toNumber(row.subscription_fee_inr),
+    topHoldings,
+  };
+}
+
+function normalizeDemoProfile(profile: Profile, topHoldings = getDemoTopHoldings(profile.id)): Profile {
+  return {
+    ...profile,
+    isDemo: true,
+    verified: false,
+    followerCount: 0,
+    subscriptionFeeInr: 0,
     topHoldings,
   };
 }
@@ -131,7 +140,7 @@ function toGrowth(row: GrowthRow): GrowthPoint {
 export async function getProfiles(): Promise<Profile[]> {
   const supabase = await createClient();
   if (!supabase) {
-    return demoProfiles.map((profile) => ({ ...profile, topHoldings: getDemoTopHoldings(profile.id) }));
+    return demoProfiles.map((profile) => normalizeDemoProfile(profile));
   }
 
   const { data: profileRows, error } = await supabase
@@ -140,7 +149,7 @@ export async function getProfiles(): Promise<Profile[]> {
     .order("sort_order", { ascending: true });
 
   if (error || !profileRows?.length) {
-    return demoProfiles.map((profile) => ({ ...profile, topHoldings: getDemoTopHoldings(profile.id) }));
+    return demoProfiles.map((profile) => normalizeDemoProfile(profile));
   }
 
   const portfolioByProfile = await getPortfolioMap(profileRows.map((profile) => profile.id));
@@ -149,7 +158,7 @@ export async function getProfiles(): Promise<Profile[]> {
   return (profileRows as ProfileRow[]).map((profile) => {
     const portfolio = portfolioByProfile.get(profile.id);
     const topHoldings = portfolio ? holdingsByPortfolio.get(portfolio.id) ?? [] : [];
-    return toProfile(profile, topHoldings.length > 0 ? topHoldings.slice(0, 3) : getDemoTopHoldings(profile.slug));
+    return toProfile(profile, topHoldings.slice(0, 3), portfolio?.is_demo ?? profile.verification_tier === "demo");
   });
 }
 
@@ -159,7 +168,7 @@ export async function getProfileDetail(slug: string) {
     const profile = getDemoProfile(slug);
     return profile
       ? {
-          profile,
+          profile: normalizeDemoProfile(profile),
           holdings: holdingsByProfile[slug] ?? [],
           transactions: transactionsByProfile[slug] ?? [],
           growth: growthByProfile[slug] ?? [],
@@ -173,7 +182,7 @@ export async function getProfileDetail(slug: string) {
     const demoProfile = getDemoProfile(slug);
     return demoProfile
       ? {
-          profile: demoProfile,
+          profile: normalizeDemoProfile(demoProfile),
           holdings: holdingsByProfile[slug] ?? [],
           transactions: transactionsByProfile[slug] ?? [],
           growth: growthByProfile[slug] ?? [],
@@ -190,7 +199,13 @@ export async function getProfileDetail(slug: string) {
     .maybeSingle();
 
   if (!portfolio) {
-    return { profile: toProfile(profile as ProfileRow), holdings: [], transactions: [], growth: [], alerts: [] };
+    return {
+      profile: toProfile(profile as ProfileRow, [], (profile as ProfileRow).verification_tier === "demo"),
+      holdings: [],
+      transactions: [],
+      growth: [],
+      alerts: [],
+    };
   }
 
   const [{ data: holdings }, { data: transactions }, { data: growth }] = await Promise.all([
@@ -202,22 +217,14 @@ export async function getProfileDetail(slug: string) {
   const mappedHoldings = ((holdings ?? []) as HoldingRow[]).map(toHolding);
   const mappedTransactions = ((transactions ?? []) as TransactionRow[]).map(toTransaction);
   const mappedGrowth = ((growth ?? []) as GrowthRow[]).map(toGrowth);
-  const fallbackProfile = getDemoProfile(slug);
+  const isDemo = Boolean((portfolio as PortfolioRow).is_demo);
 
   return {
-    profile: toProfile(
-      profile as ProfileRow,
-      mappedHoldings.length > 0 ? mappedHoldings.slice(0, 3) : getDemoTopHoldings(slug)
-    ),
-    holdings: mappedHoldings.length > 0 ? mappedHoldings : holdingsByProfile[slug] ?? [],
-    transactions: mappedTransactions.length > 0 ? mappedTransactions : transactionsByProfile[slug] ?? [],
-    growth: mappedGrowth.length > 0 ? mappedGrowth : growthByProfile[slug] ?? [],
-    alerts:
-      mappedTransactions.length > 0
-        ? mappedTransactions.filter((transaction) => transaction.isConvictionAlert)
-        : fallbackProfile
-          ? getDemoAlertTransactions(slug)
-          : [],
+    profile: toProfile(profile as ProfileRow, mappedHoldings.slice(0, 3), isDemo),
+    holdings: mappedHoldings,
+    transactions: mappedTransactions,
+    growth: mappedGrowth,
+    alerts: mappedTransactions.filter((transaction) => transaction.isConvictionAlert),
   };
 }
 
@@ -231,20 +238,24 @@ export async function getHomeData() {
   };
 }
 
-export async function getTickerFeed() {
+export async function getTickerFeed(): Promise<{ items: string[]; isDemo: boolean }> {
   const supabase = await createClient();
-  if (!supabase) return demoTickerFeed;
+  if (!supabase) return { items: demoTickerFeed, isDemo: true };
 
   const { data, error } = await supabase
     .from("transactions")
-    .select("ticker, alert_text, transaction_date")
+    .select("ticker, alert_text, transaction_date, portfolios!inner(is_demo)")
     .eq("is_conviction_alert", true)
+    .eq("portfolios.is_demo", false)
     .order("transaction_date", { ascending: false })
     .limit(8);
 
-  if (error || !data?.length) return demoTickerFeed;
+  if (error || !data?.length) return { items: demoTickerFeed, isDemo: true };
 
-  return data.map((item) => item.alert_text ?? `${item.ticker} allocation changed`);
+  return {
+    items: data.map((item) => item.alert_text ?? `${item.ticker} allocation changed`),
+    isDemo: false,
+  };
 }
 
 async function getPortfolioMap(profileIds: string[]) {

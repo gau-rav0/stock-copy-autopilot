@@ -23,6 +23,21 @@ async function resolveProfileId(supabase: NonNullable<Awaited<ReturnType<typeof 
   return data as ProfileLookup;
 }
 
+async function isDemoProfile(
+  supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>,
+  profileId: string
+) {
+  const { data, error } = await supabase
+    .from("portfolios")
+    .select("is_demo")
+    .eq("profile_id", profileId)
+    .eq("name", "Primary")
+    .maybeSingle();
+
+  // A missing portfolio is not a followable creator record.
+  return Boolean(error || !data || data.is_demo);
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   if (!supabase) {
@@ -43,6 +58,13 @@ export async function POST(request: Request) {
   const profile = await resolveProfileId(supabase, rawProfileId);
   if (!profile) {
     return NextResponse.json({ error: "Investor profile was not found" }, { status: 404 });
+  }
+
+  if (await isDemoProfile(supabase, profile.id)) {
+    return NextResponse.json(
+      { error: "This is a fictional product preview. Join early access to follow real creators when they launch." },
+      { status: 409 }
+    );
   }
 
   if (Number(profile.subscription_fee_inr ?? 0) > 0) {
@@ -121,6 +143,7 @@ export async function GET(request: Request) {
 
   const profile = await resolveProfileId(supabase, rawProfileId);
   if (!profile) return NextResponse.json({ following: false });
+  if (await isDemoProfile(supabase, profile.id)) return NextResponse.json({ following: false });
 
   const { data, error } = await supabase
     .from("followers")

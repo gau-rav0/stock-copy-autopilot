@@ -1,0 +1,132 @@
+From 94c452695f34ab4a7ca1e1169f7d17415c9e6928 Mon Sep 17 00:00:00 2001
+From: "Claude (senior dev pass)" <claude@anthropic.local>
+Date: Wed, 15 Jul 2026 06:26:05 +0000
+Subject: [PATCH] fix: reject unknown NSE tickers in roast calc, stop
+ createWriteClient() silent anon-key fallback, add security headers
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+ 
+- lib/portfolio.ts: calculatePortfolio() now throws a clear 400 error for
+  ticker symbols not in STOCK_LOOKUP instead of silently pricing them at a
+  fake ₹100 and borrowing a real company's name/sector. Was producing fully
+  fabricated risk/CAGR/drawdown scores for nonexistent stocks (e.g. 'FAKE').
+- lib/supabase/server.ts: createWriteClient() no longer falls back to the
+  anon key when SUPABASE_SERVICE_ROLE_KEY is unset. It now returns null and
+  logs a clear error, matching what hasSupabaseWriteConfig() already checks
+  for. Previously it would run privileged writes under an anon client,
+  which either fails RLS with a confusing generic 500 or silently succeeds
+  with the wrong permission level.
+- next.config.mjs: added CSP, X-Frame-Options, X-Content-Type-Options,
+  Referrer-Policy, Permissions-Policy, HSTS. Site previously shipped with
+  none of these.
+---
+ lib/portfolio.ts       |  7 +++++++
+ lib/supabase/server.ts | 19 ++++++++++++++-----
+ next.config.mjs        | 35 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 56 insertions(+), 5 deletions(-)
+ 
+diff --git a/lib/portfolio.ts b/lib/portfolio.ts
+index ef6f2f3..71c8f30 100644
+--- a/lib/portfolio.ts
++++ b/lib/portfolio.ts
+@@ -140,6 +140,13 @@ export const calculatePortfolio = async (holdingsInput: HoldingInput[]): Promise
+     throw new Error("Add at least one valid holding.");
+   }
+ 
++  const unknownSymbols = [...new Set(clean.map((h) => h.stock_symbol).filter((s) => !STOCK_LOOKUP.has(s)))];
++  if (unknownSymbols.length > 0) {
++    throw new Error(
++      `We don't recognise ${unknownSymbols.join(", ")}. Enter a valid NSE symbol (e.g. RELIANCE, INFY, HDFCBANK) so the roast is based on real holdings, not guesses.`
++    );
++  }
++
+   const now = new Date();
+   const snapshots = await Promise.all(clean.map((holding) => getMarketSnapshot(holding.stock_symbol)));
+   const historiesBySymbol = new Map(snapshots.map((snapshot) => [snapshot.symbol, snapshot.history]));
+diff --git a/lib/supabase/server.ts b/lib/supabase/server.ts
+index 8965d5e..8251a8a 100644
+--- a/lib/supabase/server.ts
++++ b/lib/supabase/server.ts
+@@ -39,13 +39,22 @@ export function hasSupabaseWriteConfig() {
+ }
+ 
+ // Service-role client (bypasses RLS — only for server-side writes)
++// Must use the service role key. Never silently fall back to the anon key:
++// that would run privileged writes under an unprivileged client, which
++// either fails RLS with a confusing generic error or, worse, "succeeds"
++// with the wrong permission level. Callers already guard with
++// hasSupabaseWriteConfig() before assuming writes will work.
+ export function createWriteClient() {
+-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return null;
+-
+-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+-  if (!key) return null;
++  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
++    if (process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
++      console.error(
++        "createWriteClient(): SUPABASE_SERVICE_ROLE_KEY is not set. Refusing to fall back to the anon key."
++      );
++    }
++    return null;
++  }
+ 
+-  return createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL, key, {
++  return createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+     auth: { persistSession: false, autoRefreshToken: false },
+   });
+ }
+diff --git a/next.config.mjs b/next.config.mjs
+index 1b0848c..90b0491 100644
+--- a/next.config.mjs
++++ b/next.config.mjs
+@@ -3,12 +3,47 @@ import { fileURLToPath } from "node:url";
+ 
+ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
+ 
++const isDev = process.env.NODE_ENV !== "production";
++
++// Razorpay's checkout script and its iframe are the only third-party origins
++// this app loads client-side. Everything else stays same-origin.
++const csp = [
++  "default-src 'self'",
++  `script-src 'self' https://checkout.razorpay.com${isDev ? " 'unsafe-eval'" : ""} 'unsafe-inline'`,
++  "style-src 'self' 'unsafe-inline'",
++  "img-src 'self' data: blob:",
++  "font-src 'self' data:",
++  "connect-src 'self' https://*.razorpay.com https://query1.finance.yahoo.com https://*.supabase.co",
++  "frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com",
++  "object-src 'none'",
++  "base-uri 'self'",
++  "form-action 'self'",
++  "frame-ancestors 'none'",
++].join("; ");
++
++const securityHeaders = [
++  { key: "Content-Security-Policy", value: csp },
++  { key: "X-Frame-Options", value: "DENY" },
++  { key: "X-Content-Type-Options", value: "nosniff" },
++  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
++  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(self)" },
++  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
++];
++
+ /** @type {import('next').NextConfig} */
+ const nextConfig = {
+   reactStrictMode: true,
+   turbopack: {
+     root: projectRoot,
+   },
++  async headers() {
++    return [
++      {
++        source: "/:path*",
++        headers: securityHeaders,
++      },
++    ];
++  },
+ };
+ 
+ export default nextConfig;
+-- 
+2.43.0

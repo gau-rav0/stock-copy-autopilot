@@ -66,6 +66,16 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Webhook storage is not configured" }, { status: 503 });
       }
 
+      const { data: portfolio } = await supabase
+        .from("portfolios")
+        .select("is_demo")
+        .eq("profile_id", notesResult.data.profileId)
+        .eq("name", "Primary")
+        .maybeSingle();
+      if (!portfolio || portfolio.is_demo) {
+        throw new Error("Payment metadata references a demo or unpublished profile");
+      }
+
       const { data: existingSubscription, error: lookupError } = await supabase
         .from("subscriptions")
         .select("id")

@@ -39,7 +39,7 @@ export default function VerificationPage() {
               tier: "CAS Verified",
               color: "border-brass/40",
               description: "A CDSL or NSDL Consolidated Account Statement was reviewed by FVI. Holdings are matched against the official demat record.",
-              what: ["Official CDSL/NSDL document reviewed", "Holdings matched to statement", "Cannot be cherry-picked or faked"],
+              what: ["Submitted CDSL/NSDL document reviewed", "Published holdings matched to the statement", "Reviewed for consistency; not an authenticity guarantee"],
             },
             {
               tier: "Broker Linked",

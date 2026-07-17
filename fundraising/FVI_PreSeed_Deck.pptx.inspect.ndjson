@@ -1,0 +1,188 @@
+{"kind":"deck","id":"pr/5dctka","name":"Deck"}
+{"kind":"layout","layoutId":"8a301817-fe98-469a-9b34-946a7aa4f056","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"7363472d-655e-4db8-b537-d5bd5ef383a5","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/3abcud","slide":1,"title":"FVI / PRE-SEED","textShapes":4}
+{"kind":"textbox","id":"sh/87ups3yx","slide":1,"text":"FVI / PRE-SEED","textPreview":"FVI / PRE-SEED","textChars":14,"textLines":1,"bbox":[48,44,420,40]}
+{"kind":"textbox","id":"sh/76lozyxc","slide":1,"text":"The evidence layer for investor track records","textPreview":"The evidence layer for investor track records","textChars":45,"textLines":1,"bbox":[48,180,1050,240]}
+{"kind":"shape","id":"sh/65s7qdgr","slide":1,"bbox":[48,470,1128,0.01]}
+{"kind":"textbox","id":"sh/hc3q5sfe","slide":1,"text":"Inspect complete records. Follow read-only changes. Decide independently.","textPreview":"Inspect complete records. Follow read-only changes. Decide independently.","textChars":73,"textLines":1,"bbox":[48,510,890,88]}
+{"kind":"textbox","id":"sh/gbupwnyt","slide":1,"text":"Gaurav Bihani  |  July 2026","textPreview":"Gaurav Bihani  |  July 2026","textChars":27,"textLines":1,"bbox":[48,645,520,28]}
+{"kind":"notes","id":"nt/3abcud","slide":1,"text":""}
+{"kind":"slide","id":"sl/p9ecq8","slide":2,"title":"The market rewards claims; users absorb the missing context","textShapes":8}
+{"kind":"textbox","id":"sh/sry90f2t","slide":2,"name":"title-2","text":"The market rewards claims; users absorb the missing context","textPreview":"The market rewards claims; users absorb the missing context","textChars":59,"textLines":1,"bbox":[48,38,1125,86]}
+{"kind":"textbox","id":"sh/rqp87al8","slide":2,"text":"WHAT GETS POSTED","textPreview":"WHAT GETS POSTED","textChars":16,"textLines":1,"bbox":[48,152,480,28]}
+{"kind":"textbox","id":"sh/6pgry5kn","slide":2,"text":"+38% return","textPreview":"+38% return","textChars":11,"textLines":1,"bbox":[48,202,480,80]}
+{"kind":"textbox","id":"sh/5o7q5032","slide":2,"text":"A screenshot\nA winning position\nA selective date range","textPreview":"A screenshot | A winning position | A selective date range","textChars":54,"textLines":3,"bbox":[48,316,470,188]}
+{"kind":"shape","id":"sh/43y9wv2h","slide":2,"bbox":[630,146,594,450]}
+{"kind":"textbox","id":"sh/j2p83alw","slide":2,"text":"WHAT A FOLLOWER NEEDS","textPreview":"WHAT A FOLLOWER NEEDS","textChars":21,"textLines":1,"bbox":[670,184,500,28]}
+{"kind":"textbox","id":"sh/i1gru5kb","slide":2,"text":"Dates and exits\nDrawdowns and risk\nFull allocation history\nEvidence source and freshness","textPreview":"Dates and exits | Drawdowns and risk | Full allocation history | Evidence source and freshness","textChars":88,"textLines":4,"bbox":[670,242,500,254]}
+{"kind":"textbox","id":"sh/pkbah4j6","slide":2,"text":"Without the complete record, credibility is a storytelling advantage.","textPreview":"Without the complete record, credibility is a storytelling advantage.","textChars":69,"textLines":1,"bbox":[670,526,500,46]}
+{"kind":"textbox","id":"sh/oji98z2l","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1180,665,52,22]}
+{"kind":"notes","id":"nt/p9ecq8","slide":2,"text":""}
+{"kind":"slide","id":"sl/y1198k","slide":3,"title":"FVI turns portfolio claims into inspectable records","textShapes":4}
+{"kind":"textbox","id":"sh/pgv6ho3m","slide":3,"name":"title-3","text":"FVI turns portfolio claims into inspectable records","textPreview":"FVI turns portfolio claims into inspectable records","textChars":51,"textLines":1,"bbox":[48,38,1125,86]}
+{"kind":"textbox","id":"sh/2dk76t4v","slide":3,"text":"A read-only research surface for Indian retail investors.","textPreview":"A read-only research surface for Indian retail investors.","textChars":57,"textLines":1,"bbox":[48,158,490,70]}
+{"kind":"textbox","id":"sh/netofylg","slide":3,"text":"1  Evidence status and review limits\n\n2  Holdings, history, drawdowns and benchmarks\n\n3  Follow alerts when published allocations change\n\n4  No advice, order execution or trading access","textPreview":"1  Evidence status and review limits |  | 2  Holdings, history, drawdowns and benchmarks |  | 3  Follow alerts when published allocations...","textChars":185,"textLines":7,"bbox":[48,252,500,310]}
+{"kind":"shape","id":"sh/cjmpc3md","slide":3,"bbox":[610,145,614,485]}
+{"kind":"textbox","id":"sh/xkv6583i","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1180,665,52,22]}
+{"kind":"image","id":"im/7qd4fq5g","slide":3,"name":"","geometry":"rect","alt":"FVI product screenshot: home.png","bbox":[626,161,582,453]}
+{"kind":"notes","id":"nt/y1198k","slide":3,"text":""}
+{"kind":"slide","id":"sl/zv348t","slide":4,"title":"One narrow loop creates the company","textShapes":18}
+{"kind":"textbox","id":"sh/7uxcru1k","slide":4,"name":"title-4","text":"One narrow loop creates the company","textPreview":"One narrow loop creates the company","textChars":35,"textLines":1,"bbox":[48,38,1125,86]}
+{"kind":"textbox","id":"sh/8v6d0zi5","slide":4,"text":"A creator's evidence becomes useful only when it changes user behavior repeatedly.","textPreview":"A creator's evidence becomes useful only when it changes user behavior repeatedly.","textChars":82,"textLines":1,"bbox":[48,130,1000,48]}
+{"kind":"shape","id":"sh/9wfet4jq","slide":4,"bbox":[116,345,1036,0.01]}
+{"kind":"shape","id":"sh/yp4vup03","slide":4,"bbox":[104,329,34,34]}
+{"kind":"shape","id":"sh/zqxcna1o","slide":4,"bbox":[356,329,34,34]}
+{"kind":"shape","id":"sh/kr6dwfi9","slide":4,"bbox":[608,329,34,34]}
+{"kind":"shape","id":"sh/lsfupkje","slide":4,"bbox":[860,329,34,34]}
+{"kind":"shape","id":"sh/il8v6907","slide":4,"bbox":[1112,329,34,34]}
+{"kind":"textbox","id":"sh/jmhwze1s","slide":4,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[88,228,90,40]}
+{"kind":"textbox","id":"sh/juhc3a1k","slide":4,"text":"VERIFY","textPreview":"VERIFY","textChars":6,"textLines":1,"bbox":[54,382,160,35]}
+{"kind":"textbox","id":"sh/it8va5kf","slide":4,"text":"Review evidence\nand consent","textPreview":"Review evidence | and consent","textChars":27,"textLines":2,"bbox":[54,430,160,76]}
+{"kind":"textbox","id":"sh/5wje5kjq","slide":4,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[340,228,90,40]}
+{"kind":"textbox","id":"sh/4vadcf25","slide":4,"text":"PUBLISH","textPreview":"PUBLISH","textChars":7,"textLines":1,"bbox":[306,382,160,35]}
+{"kind":"textbox","id":"sh/ry1w7a1w","slide":4,"text":"Expose the full\nrecord","textPreview":"Expose the full | record","textChars":22,"textLines":2,"bbox":[306,430,160,76]}
+{"kind":"textbox","id":"sh/6xsve5kb","slide":4,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[592,228,90,40]}
+{"kind":"textbox","id":"sh/tkje9kj2","slide":4,"text":"FOLLOW","textPreview":"FOLLOW","textChars":6,"textLines":1,"bbox":[558,382,160,35]}
+{"kind":"textbox","id":"sh/sjadgf2h","slide":4,"text":"User chooses a\ncreator","textPreview":"User chooses a | creator","textChars":22,"textLines":2,"bbox":[558,430,160,76]}
+{"kind":"textbox","id":"sh/fmlwbu1s","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[844,228,90,40]}
+{"kind":"textbox","id":"sh/elsvip07","slide":4,"text":"ALERT","textPreview":"ALERT","textChars":5,"textLines":1,"bbox":[810,382,160,35]}
+{"kind":"textbox","id":"sh/qhwfat4f","slide":4,"text":"Allocation change,\nread-only","textPreview":"Allocation change, | read-only","textChars":28,"textLines":2,"bbox":[810,430,160,76]}
+{"kind":"textbox","id":"sh/bi5g3yl0","slide":4,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1096,228,90,40]}
+{"kind":"textbox","id":"sh/cjehc32l","slide":4,"text":"RETURN","textPreview":"RETURN","textChars":6,"textLines":1,"bbox":[1062,382,160,35]}
+{"kind":"textbox","id":"sh/dkny5836","slide":4,"text":"Evidence creates\nretention","textPreview":"Evidence creates | retention","textChars":26,"textLines":2,"bbox":[1062,430,160,76]}
+{"kind":"textbox","id":"sh/2dcf694j","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1180,665,52,22]}
+{"kind":"notes","id":"nt/zv348t","slide":4,"text":""}
+{"kind":"slide","id":"sl/nrxr0t","slide":5,"title":"Trust comes from visible limits, not a louder badge","textShapes":10}
+{"kind":"textbox","id":"sh/kjq5kr2d","slide":5,"name":"title-5","text":"Trust comes from visible limits, not a louder badge","textPreview":"Trust comes from visible limits, not a louder badge","textChars":51,"textLines":1,"bbox":[48,38,1125,86]}
+{"kind":"textbox","id":"sh/jih4bm1s","slide":5,"text":"EVIDENCE","textPreview":"EVIDENCE","textChars":8,"textLines":1,"bbox":[48,166,520,28]}
+{"kind":"textbox","id":"sh/yh8ni1kn","slide":5,"text":"CAS reviewed or broker-linked only when the underlying workflow exists.","textPreview":"CAS reviewed or broker-linked only when the underlying workflow exists.","textChars":71,"textLines":1,"bbox":[48,212,520,102]}
+{"kind":"textbox","id":"sh/xwzm9wj2","slide":5,"text":"FRESHNESS","textPreview":"FRESHNESS","textChars":9,"textLines":1,"bbox":[660,166,520,28]}
+{"kind":"textbox","id":"sh/wvq5gr2h","slide":5,"text":"Every record carries a review date, coverage period and expiry state.","textPreview":"Every record carries a review date, coverage period and expiry state.","textChars":69,"textLines":1,"bbox":[660,212,520,102]}
+{"kind":"textbox","id":"sh/bux47m1w","slide":5,"text":"LIMITS","textPreview":"LIMITS","textChars":6,"textLines":1,"bbox":[48,390,520,28]}
+{"kind":"textbox","id":"sh/atonehkb","slide":5,"text":"Review improves evidence quality; it does not guarantee authenticity or future returns.","textPreview":"Review improves evidence quality; it does not guarantee authenticity or future returns.","textChars":87,"textLines":1,"bbox":[48,436,520,118]}
+{"kind":"textbox","id":"sh/9sfm5c3q","slide":5,"text":"CORRECTIONS","textPreview":"CORRECTIONS","textChars":11,"textLines":1,"bbox":[660,390,520,28]}
+{"kind":"textbox","id":"sh/or6lc725","slide":5,"text":"Creators consent, refresh and correct. Users can see what changed and when.","textPreview":"Creators consent, refresh and correct. Users can see what changed and when.","textChars":75,"textLines":1,"bbox":[660,436,520,118]}
+{"kind":"textbox","id":"sh/6p0rit8v","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1180,665,52,22]}
+{"kind":"notes","id":"nt/nrxr0t","slide":5,"text":""}
+{"kind":"slide","id":"sl/xkr32r","slide":6,"title":"Portfolio Roast earns attention; evidence records earn trust","textShapes":5}
+{"kind":"textbox","id":"sh/czi1k7qh","slide":6,"name":"title-6","text":"Portfolio Roast earns attention; evidence records earn trust","textPreview":"Portfolio Roast earns attention; evidence records earn trust","textChars":60,"textLines":1,"bbox":[48,38,1125,86]}
+{"kind":"textbox","id":"sh/ry90r2pw","slide":6,"text":"ACQUISITION WEDGE","textPreview":"ACQUISITION WEDGE","textChars":17,"textLines":1,"bbox":[48,150,450,28]}
+{"kind":"textbox","id":"sh/qx0jih8b","slide":6,"text":"A free, shareable portfolio analysis gives users an immediate reason to enter FVI.","textPreview":"A free, shareable portfolio analysis gives users an immediate reason to enter FVI.","textChars":82,"textLines":1,"bbox":[48,200,490,150]}
+{"kind":"textbox","id":"sh/pcripc7q","slide":6,"text":"The handoff is deliberate:\n\nRoast -> inspect evidence -> follow a creator -> return on an alert","textPreview":"The handoff is deliberate: |  | Roast -> inspect evidence -> follow a creator -> return on an alert","textChars":95,"textLines":3,"bbox":[48,390,490,170]}
+{"kind":"shape","id":"sh/4by1g7q5","slide":6,"bbox":[610,145,614,485]}
+{"kind":"textbox","id":"sh/3ap0n2pk","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1180,665,52,22]}
+{"kind":"image","id":"im/ji5w7a90","slide":6,"name":"","geometry":"rect","alt":"FVI product screenshot: roast.png","bbox":[626,161,582,453]}
+{"kind":"notes","id":"nt/xkr32r","slide":6,"text":""}
+{"kind":"slide","id":"sl/heovk7","slide":7,"title":"The product exists; marketplace proof is the next milestone","textShapes":8}
+{"kind":"textbox","id":"sh/ex8jq9cf","slide":7,"name":"title-7","text":"The product exists; marketplace proof is the next milestone","textPreview":"The product exists; marketplace proof is the next milestone","textChars":59,"textLines":1,"bbox":[48,38,1125,86]}
+{"kind":"textbox","id":"sh/10ji14vq","slide":7,"text":"WORKING NOW","textPreview":"WORKING NOW","textChars":11,"textLines":1,"bbox":[48,152,520,28]}
+{"kind":"textbox","id":"sh/0za1szu5","slide":7,"text":"Creator application and review pipeline\nCAS parsing and holdings publication\nRead-only follow and alert infrastructure\nPortfolio Roast acquisition product\nPrivate, query-backed metrics room","textPreview":"Creator application and review pipeline | CAS parsing and holdings publication | Read-only follow and alert infrastructure | Portfolio Ro...","textChars":189,"textLines":5,"bbox":[48,205,520,320]}
+{"kind":"shape","id":"sh/rah0vudo","slide":7,"bbox":[648,146,576,430]}
+{"kind":"textbox","id":"sh/q98jmpc3","slide":7,"text":"STAGE","textPreview":"STAGE","textChars":5,"textLines":1,"bbox":[688,184,470,26]}
+{"kind":"textbox","id":"sh/dczix4vu","slide":7,"text":"FOUNDING\nCOHORT","textPreview":"FOUNDING | COHORT","textChars":15,"textLines":2,"bbox":[688,230,470,130]}
+{"kind":"textbox","id":"sh/sbq1ozu9","slide":7,"text":"No demo profile, seeded follower or fallback metric is counted as traction.","textPreview":"No demo profile, seeded follower or fallback metric is counted as traction.","textChars":75,"textLines":1,"bbox":[688,406,470,95]}
+{"kind":"textbox","id":"sh/36x0radc","slide":7,"text":"The next proof: 10 real creators and a measured follow-to-alert loop.","textPreview":"The next proof: 10 real creators and a measured follow-to-alert loop.","textChars":69,"textLines":1,"bbox":[688,516,470,48]}
+{"kind":"textbox","id":"sh/i5ojypc7","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1180,665,52,22]}
+{"kind":"notes","id":"nt/heovk7","slide":7,"text":""}
+{"kind":"slide","id":"sl/7qqpkt","slide":8,"title":"Creators are the supply and the first distribution channel","textShapes":14}
+{"kind":"textbox","id":"sh/8vudcfup","slide":8,"name":"title-8","text":"Creators are the supply and the first distribution channel","textPreview":"Creators are the supply and the first distribution channel","textChars":58,"textLines":1,"bbox":[48,38,1125,86]}
+{"kind":"textbox","id":"sh/nulw3ut4","slide":8,"text":"WEEKS 1-3","textPreview":"WEEKS 1-3","textChars":9,"textLines":1,"bbox":[48,186,300,28]}
+{"kind":"textbox","id":"sh/mtcvapcz","slide":8,"text":"Recruit 10 creators","textPreview":"Recruit 10 creators","textChars":19,"textLines":1,"bbox":[48,232,330,44]}
+{"kind":"textbox","id":"sh/l83e1kbe","slide":8,"text":"Founder-led outreach to credible finance creators with 5k-100k followers.","textPreview":"Founder-led outreach to credible finance creators with 5k-100k followers.","textChars":73,"textLines":1,"bbox":[48,300,330,120]}
+{"kind":"textbox","id":"sh/07ad8fut","slide":8,"text":"WEEKS 3-5","textPreview":"WEEKS 3-5","textChars":9,"textLines":1,"bbox":[460,186,300,28]}
+{"kind":"textbox","id":"sh/z61wzat8","slide":8,"text":"Onboard 500 WAU","textPreview":"Onboard 500 WAU","textChars":15,"textLines":1,"bbox":[460,232,330,44]}
+{"kind":"textbox","id":"sh/y5sv65cn","slide":8,"text":"Creator shares the reviewed profile; FVI converts inspection into follows.","textPreview":"Creator shares the reviewed profile; FVI converts inspection into follows.","textChars":74,"textLines":1,"bbox":[460,300,330,120]}
+{"kind":"textbox","id":"sh/54ned4bi","slide":8,"text":"WEEKS 5-8","textPreview":"WEEKS 5-8","textChars":9,"textLines":1,"bbox":[872,186,300,28]}
+{"kind":"textbox","id":"sh/k3exkzax","slide":8,"text":"Prove return behavior","textPreview":"Prove return behavior","textChars":21,"textLines":1,"bbox":[872,232,330,44]}
+{"kind":"textbox","id":"sh/ylgbuhor","slide":8,"text":"Allocation alerts create measurable opens, return sessions and retention.","textPreview":"Allocation alerts create measurable opens, return sessions and retention.","textChars":73,"textLines":1,"bbox":[872,300,330,120]}
+{"kind":"shape","id":"sh/zmpsnmpc","slide":8,"bbox":[48,485,1152,0.01]}
+{"kind":"textbox","id":"sh/0nytwr6x","slide":8,"text":"Creator shares reviewed record","textPreview":"Creator shares reviewed record","textChars":30,"textLines":1,"bbox":[48,516,300,50]}
+{"kind":"textbox","id":"sh/lo7apw7i","slide":8,"text":"Followers inspect and follow","textPreview":"Followers inspect and follow","textChars":28,"textLines":1,"bbox":[460,516,300,50]}
+{"kind":"textbox","id":"sh/qhwbqxov","slide":8,"text":"Demand evidence recruits the next creator","textPreview":"Demand evidence recruits the next creator","textChars":41,"textLines":1,"bbox":[872,516,330,60]}
+{"kind":"textbox","id":"sh/bi5sj2p0","slide":8,"text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1180,665,52,22]}
+{"kind":"notes","id":"nt/7qqpkt","slide":8,"text":""}
+{"kind":"slide","id":"sl/cpbv0o","slide":9,"title":"Three revenue paths share the same evidence infrastructure","textShapes":15}
+{"kind":"textbox","id":"sh/k3ytg36h","slide":9,"name":"title-9","text":"Three revenue paths share the same evidence infrastructure","textPreview":"Three revenue paths share the same evidence infrastructure","textChars":58,"textLines":1,"bbox":[48,38,1125,86]}
+{"kind":"shape","id":"sh/j2pcny5w","slide":9,"bbox":[48,170,352,400]}
+{"kind":"shape","id":"sh/y1gbetob","slide":9,"bbox":[464,170,352,400]}
+{"kind":"shape","id":"sh/t87ud8ny","slide":9,"bbox":[880,170,352,400]}
+{"kind":"textbox","id":"sh/87ytk36d","slide":9,"text":"RESEARCH","textPreview":"RESEARCH","textChars":8,"textLines":1,"bbox":[78,202,292,30]}
+{"kind":"textbox","id":"sh/76pcbi5s","slide":9,"text":"Investor subscription","textPreview":"Investor subscription","textChars":21,"textLines":1,"bbox":[78,250,292,76]}
+{"kind":"textbox","id":"sh/65gbido7","slide":9,"text":"Full histories, comparisons and alert archive.","textPreview":"Full histories, comparisons and alert archive.","textChars":46,"textLines":1,"bbox":[78,348,292,96]}
+{"kind":"textbox","id":"sh/hwruhsnu","slide":9,"text":"Test: INR 299 / month","textPreview":"Test: INR 299 / month","textChars":21,"textLines":1,"bbox":[78,510,292,30]}
+{"kind":"textbox","id":"sh/gviton69","slide":9,"text":"CREATOR","textPreview":"CREATOR","textChars":7,"textLines":1,"bbox":[494,202,292,30]}
+{"kind":"textbox","id":"sh/a947e5sr","slide":9,"text":"Verification operations","textPreview":"Verification operations","textChars":23,"textLines":1,"bbox":[494,250,292,76]}
+{"kind":"textbox","id":"sh/vaxo7atc","slide":9,"text":"Review workflow, refresh operations and audience analytics.","textPreview":"Review workflow, refresh operations and audience analytics.","textChars":59,"textLines":1,"bbox":[494,348,292,96]}
+{"kind":"textbox","id":"sh/wb6pgfax","slide":9,"text":"Test: INR 24k / year","textPreview":"Test: INR 24k / year","textChars":20,"textLines":1,"bbox":[494,510,292,30]}
+{"kind":"textbox","id":"sh/xcfq9kbi","slide":9,"text":"PLATFORM","textPreview":"PLATFORM","textChars":8,"textLines":1,"bbox":[910,202,292,30]}
+{"kind":"textbox","id":"sh/ido7ips3","slide":9,"text":"Evidence API","textPreview":"Evidence API","textChars":12,"textLines":1,"bbox":[910,250,292,76]}
+{"kind":"textbox","id":"sh/jex8buto","slide":9,"text":"Reviewed history and badge infrastructure for fintech platforms.","textPreview":"Reviewed history and badge infrastructure for fintech platforms.","textChars":64,"textLines":1,"bbox":[910,348,292,96]}
+{"kind":"textbox","id":"sh/kf6pkfat","slide":9,"text":"Test: enterprise pilots","textPreview":"Test: enterprise pilots","textChars":23,"textLines":1,"bbox":[910,510,292,30]}
+{"kind":"textbox","id":"sh/5gfqdkbe","slide":9,"text":"Pricing shown is a research hypothesis, not current revenue.","textPreview":"Pricing shown is a research hypothesis, not current revenue.","textChars":60,"textLines":1,"bbox":[48,610,720,28]}
+{"kind":"textbox","id":"sh/ehk76lsj","slide":9,"text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1180,665,52,22]}
+{"kind":"notes","id":"nt/cpbv0o","slide":9,"text":""}
+{"kind":"slide","id":"sl/cqmd0s","slide":10,"title":"A focused India wedge can support a venture-scale outcome","textShapes":14}
+{"kind":"textbox","id":"sh/2l0vuhof","slide":10,"name":"title-10","text":"A focused India wedge can support a venture-scale outcome","textPreview":"A focused India wedge can support a venture-scale outcome","textChars":57,"textLines":1,"bbox":[48,38,1125,86]}
+{"kind":"textbox","id":"sh/porepw7q","slide":10,"text":"ILLUSTRATIVE OPERATING SCENARIO","textPreview":"ILLUSTRATIVE OPERATING SCENARIO","textChars":31,"textLines":1,"bbox":[48,134,560,28]}
+{"kind":"shape","id":"sh/4nidwr65","slide":10,"bbox":[48,206,352,300]}
+{"kind":"shape","id":"sh/rq9wr6pw","slide":10,"bbox":[464,206,352,300]}
+{"kind":"shape","id":"sh/qp0vy1ob","slide":10,"bbox":[880,206,352,300]}
+{"kind":"textbox","id":"sh/dcbetw72","slide":10,"text":"100k","textPreview":"100k","textChars":4,"textLines":1,"bbox":[78,242,292,80]}
+{"kind":"textbox","id":"sh/crid0b6h","slide":10,"text":"paid researchers","textPreview":"paid researchers","textChars":16,"textLines":1,"bbox":[78,326,292,34]}
+{"kind":"textbox","id":"sh/7upcf2ps","slide":10,"text":"x INR 3,588 / year\n= INR 35.9 cr ARR","textPreview":"x INR 3,588 / year | = INR 35.9 cr ARR","textChars":36,"textLines":2,"bbox":[78,384,292,84]}
+{"kind":"textbox","id":"sh/6tgvmx87","slide":10,"text":"2,000","textPreview":"2,000","textChars":5,"textLines":1,"bbox":[494,242,292,80]}
+{"kind":"textbox","id":"sh/wfyt4j2l","slide":10,"text":"creator customers","textPreview":"creator customers","textChars":17,"textLines":1,"bbox":[494,326,292,34]}
+{"kind":"textbox","id":"sh/hg7udo36","slide":10,"text":"x INR 24k / year\n= INR 4.8 cr ARR","textPreview":"x INR 24k / year | = INR 4.8 cr ARR","textChars":33,"textLines":2,"bbox":[494,384,292,84]}
+{"kind":"textbox","id":"sh/udwb29kf","slide":10,"text":"25","textPreview":"25","textChars":2,"textLines":1,"bbox":[910,242,292,80]}
+{"kind":"textbox","id":"sh/vepcbel0","slide":10,"text":"platform customers","textPreview":"platform customers","textChars":18,"textLines":1,"bbox":[910,326,292,34]}
+{"kind":"textbox","id":"sh/4jyt8j2h","slide":10,"text":"x INR 20L / year\n= INR 5.0 cr ARR","textPreview":"x INR 20L / year | = INR 5.0 cr ARR","textChars":33,"textLines":2,"bbox":[910,384,292,84]}
+{"kind":"textbox","id":"sh/5k7uho32","slide":10,"text":"INR 45.7 cr ARR","textPreview":"INR 45.7 cr ARR","textChars":15,"textLines":1,"bbox":[48,546,540,66]}
+{"kind":"textbox","id":"sh/ihgb69kr","slide":10,"text":"A scenario to validate through pilots, not a market-size claim.","textPreview":"A scenario to validate through pilots, not a market-size claim.","textChars":63,"textLines":1,"bbox":[610,560,620,46]}
+{"kind":"textbox","id":"sh/jipcfelw","slide":10,"text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1180,665,52,22]}
+{"kind":"notes","id":"nt/cqmd0s","slide":10,"text":""}
+{"kind":"slide","id":"sl/r6djk5","slide":11,"title":"The moat is the history and the operating network, not the interface","textShapes":14}
+{"kind":"textbox","id":"sh/wb658r2x","slide":11,"name":"title-11","text":"The moat is the history and the operating network, not the interface","textPreview":"The moat is the history and the operating network, not the interface","textChars":68,"textLines":1,"bbox":[48,38,1125,86]}
+{"kind":"textbox","id":"sh/baxofmlc","slide":11,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[48,172,70,40]}
+{"kind":"textbox","id":"sh/a9on6hkr","slide":11,"text":"Longitudinal records","textPreview":"Longitudinal records","textChars":20,"textLines":1,"bbox":[132,172,430,44]}
+{"kind":"textbox","id":"sh/98v6dc36","slide":11,"text":"Repeated evidence refreshes create a history that cannot be copied overnight.","textPreview":"Repeated evidence refreshes create a history that cannot be copied overnight.","textChars":77,"textLines":1,"bbox":[132,228,430,86]}
+{"kind":"textbox","id":"sh/o7m54721","slide":11,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[650,172,70,40]}
+{"kind":"textbox","id":"sh/nmdob2lg","slide":11,"text":"Creator network","textPreview":"Creator network","textChars":15,"textLines":1,"bbox":[734,172,430,44]}
+{"kind":"textbox","id":"sh/ml4n2hkv","slide":11,"text":"Trust and distribution compound as credible creators bring their audiences.","textPreview":"Trust and distribution compound as credible creators bring their audiences.","textChars":75,"textLines":1,"bbox":[734,228,430,86]}
+{"kind":"textbox","id":"sh/1kv69c3a","slide":11,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[48,398,70,40]}
+{"kind":"textbox","id":"sh/0jm5072p","slide":11,"text":"Verification operations","textPreview":"Verification operations","textChars":23,"textLines":1,"bbox":[132,398,430,44]}
+{"kind":"textbox","id":"sh/apk3qh87","slide":11,"text":"Consent, corrections, freshness and audit controls become institutional know-how.","textPreview":"Consent, corrections, freshness and audit controls become institutional know-how.","textChars":81,"textLines":1,"bbox":[132,454,430,86]}
+{"kind":"textbox","id":"sh/bqd4jmps","slide":11,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[650,398,70,40]}
+{"kind":"textbox","id":"sh/wrm5srqd","slide":11,"text":"Behavioral distribution","textPreview":"Behavioral distribution","textChars":23,"textLines":1,"bbox":[734,398,430,44]}
+{"kind":"textbox","id":"sh/xcvmlw7y","slide":11,"text":"Roast sharing, profile inspection and alerts form a measurable acquisition loop.","textPreview":"Roast sharing, profile inspection and alerts form a measurable acquisition loop.","textChars":80,"textLines":1,"bbox":[734,454,430,86]}
+{"kind":"textbox","id":"sh/mlk3mh8b","slide":11,"text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[1180,665,52,22]}
+{"kind":"notes","id":"nt/r6djk5","slide":11,"text":""}
+{"kind":"slide","id":"sl/3yn58w","slide":12,"title":"A product-first founder has built the system; the raise builds the network","textShapes":10}
+{"kind":"textbox","id":"sh/qpsbex4v","slide":12,"name":"title-12","text":"A product-first founder has built the system; the raise builds the network","textPreview":"A product-first founder has built the system; the raise builds the network","textChars":74,"textLines":1,"bbox":[48,38,1125,86]}
+{"kind":"shape","id":"sh/dcju9c36","slide":12,"bbox":[48,160,510,420]}
+{"kind":"textbox","id":"sh/sbatg7m1","slide":12,"text":"GAURAV\nBIHANI","textPreview":"GAURAV | BIHANI","textChars":13,"textLines":2,"bbox":[86,202,430,130]}
+{"kind":"textbox","id":"sh/fe1cb2lc","slide":12,"text":"Founder / product and engineering","textPreview":"Founder / product and engineering","textChars":33,"textLines":1,"bbox":[86,372,430,42]}
+{"kind":"textbox","id":"sh/edsbih4r","slide":12,"text":"Built the working FVI prototype across verification, marketplace, alerts and portfolio analysis.","textPreview":"Built the working FVI prototype across verification, marketplace, alerts and portfolio analysis.","textChars":96,"textLines":1,"bbox":[86,440,430,100]}
+{"kind":"textbox","id":"sh/1g3udc3i","slide":12,"text":"THE FIRST HIRES","textPreview":"THE FIRST HIRES","textChars":15,"textLines":1,"bbox":[650,172,500,28]}
+{"kind":"textbox","id":"sh/0fadk7mx","slide":12,"text":"Senior full-stack / data reliability","textPreview":"Senior full-stack / data reliability","textChars":36,"textLines":1,"bbox":[650,232,520,44]}
+{"kind":"textbox","id":"sh/vihczil8","slide":12,"text":"Creator operations and verification","textPreview":"Creator operations and verification","textChars":35,"textLines":1,"bbox":[650,322,520,44]}
+{"kind":"textbox","id":"sh/uh8b6d4n","slide":12,"text":"Compliance counsel and privacy support","textPreview":"Compliance counsel and privacy support","textChars":38,"textLines":1,"bbox":[650,412,520,44]}
+{"kind":"textbox","id":"sh/c7ux4zit","slide":12,"text":"Distribution experiments stay founder-led until one loop is repeatable.","textPreview":"Distribution experiments stay founder-led until one loop is repeatable.","textChars":71,"textLines":1,"bbox":[650,510,520,62]}
+{"kind":"textbox","id":"sh/x83ed4ze","slide":12,"text":"12","textPreview":"12","textChars":2,"textLines":1,"bbox":[1180,665,52,22]}
+{"kind":"notes","id":"nt/3yn58w","slide":12,"text":""}
+{"kind":"slide","id":"sl/uoek7s","slide":13,"title":"THE ASK","textShapes":13}
+{"kind":"textbox","id":"sh/sbe1grm1","slide":13,"text":"THE ASK","textPreview":"THE ASK","textChars":7,"textLines":1,"bbox":[48,44,240,32]}
+{"kind":"textbox","id":"sh/ra5k7m5g","slide":13,"text":"Raising INR 3 crore","textPreview":"Raising INR 3 crore","textChars":19,"textLines":1,"bbox":[48,126,800,90]}
+{"kind":"textbox","id":"sh/q9wjeh4v","slide":13,"text":"18 months to prove a retained evidence network","textPreview":"18 months to prove a retained evidence network","textChars":46,"textLines":1,"bbox":[48,224,920,50]}
+{"kind":"shape","id":"sh/1g72dwni","slide":13,"bbox":[48,318,1132,0.01]}
+{"kind":"textbox","id":"sh/0fylkrmx","slide":13,"text":"10 -> 50","textPreview":"10 -> 50","textChars":8,"textLines":1,"bbox":[48,368,260,60]}
+{"kind":"textbox","id":"sh/fe5kb65s","slide":13,"text":"live reviewed creators","textPreview":"live reviewed creators","textChars":22,"textLines":1,"bbox":[48,438,260,54]}
+{"kind":"textbox","id":"sh/edw3i147","slide":13,"text":"500 -> 5,000","textPreview":"500 -> 5,000","textChars":12,"textLines":1,"bbox":[390,368,300,60]}
+{"kind":"textbox","id":"sh/hk321cne","slide":13,"text":"weekly active users","textPreview":"weekly active users","textChars":19,"textLines":1,"bbox":[390,438,300,54]}
+{"kind":"textbox","id":"sh/gju187mt","slide":13,"text":">30%","textPreview":">30%","textChars":4,"textLines":1,"bbox":[752,368,220,60]}
+{"kind":"textbox","id":"sh/qh8nudcf","slide":13,"text":"four-week retention","textPreview":"four-week retention","textChars":19,"textLines":1,"bbox":[752,438,250,54]}
+{"kind":"textbox","id":"sh/biho3it0","slide":13,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[1070,368,110,60]}
+{"kind":"textbox","id":"sh/cjq5wnul","slide":13,"text":"compliant paid pilot","textPreview":"compliant paid pilot","textChars":20,"textLines":1,"bbox":[1010,438,170,54]}
+{"kind":"textbox","id":"sh/dkz65sb6","slide":13,"text":"Build the evidence layer before the next screenshot becomes the market's truth.","textPreview":"Build the evidence layer before the next screenshot becomes the market's truth.","textChars":79,"textLines":1,"bbox":[48,586,1020,58]}
+{"kind":"textbox","id":"sh/yl87yxcr","slide":13,"text":"gauravbihanigb@gmail.com","textPreview":"gauravbihanigb@gmail.com","textChars":24,"textLines":1,"bbox":[48,660,400,24]}
+{"kind":"notes","id":"nt/uoek7s","slide":13,"text":""}

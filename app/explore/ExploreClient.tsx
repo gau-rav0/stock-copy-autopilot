@@ -43,6 +43,7 @@ export default function ExploreClient({ profiles }: { profiles: Profile[] }) {
   const [filter, setFilter] = useState<InvestingStyle | "all">("all");
   const [sortKey, setSortKey] = useState<SortKey>(fromRoast || focusTrust ? "trust" : "default");
   const [query, setQuery] = useState("");
+  const hasLiveProfiles = profiles.some((profile) => !profile.isDemo);
 
   const withScores = useMemo(
     () =>
@@ -93,14 +94,15 @@ export default function ExploreClient({ profiles }: { profiles: Profile[] }) {
       <div className="grid gap-8 border-b border-ink-hairline pb-10 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">
-            {fromRoast ? "Matched after your roast" : "Creator marketplace"}
+            {fromRoast ? "Examples after your roast" : hasLiveProfiles ? "Creator marketplace" : "Product preview"}
           </p>
           <h1 className="text-wrap-safe mt-4 max-w-3xl font-display text-4xl leading-tight text-paper sm:text-5xl">
-            Follow investors with receipts, not screenshots.
+            {hasLiveProfiles ? "Follow investors with receipts, not screenshots." : "See what evidence-first profiles will look like."}
           </h1>
           <p className="mt-4 max-w-2xl text-paper-muted">
-            Compare track records by drawdown, holdings, replay history, and conviction
-            changes. Follow only means read-only notifications.
+            {hasLiveProfiles
+              ? "Compare track records by drawdown, holdings, replay history, and conviction changes. Follow only means read-only notifications."
+              : "Every record below is fictional and exists only to demonstrate holdings, drawdowns, replay history, and evidence labels. No demo profile can be followed or purchased."}
           </p>
         </div>
         <div className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-5 shadow-[0_0_70px_rgba(0,157,85,.06)] backdrop-blur-xl">
@@ -125,6 +127,13 @@ export default function ExploreClient({ profiles }: { profiles: Profile[] }) {
         <TrustNotice compact />
       </div>
 
+      {!hasLiveProfiles && (
+        <div className="mt-6 rounded-lg border border-amber-300/30 bg-amber-300/[.07] p-5 text-sm leading-6 text-amber-50">
+          <strong>There are no public live creator profiles yet.</strong> We are onboarding the founding cohort now.
+          These fictional records are interface examples, not users, verified investors, or traction.
+        </div>
+      )}
+
       <div className="mt-6">
         <BeginnerModePanel context="explore" />
       </div>
@@ -135,11 +144,11 @@ export default function ExploreClient({ profiles }: { profiles: Profile[] }) {
             {focusTrust ? "Trust Score matches" : "From your portfolio roast"}
           </p>
           <h2 className="mt-2 font-display text-xl text-paper">
-            Start with the cleanest demo records.
+            Compare the example evidence layouts.
           </h2>
           <p className="mt-2 text-sm text-paper-muted">
-            Ranked by Trust Score, CAGR, alpha, and drawdown control. Open the record before
-            following read-only updates.
+            Example rankings demonstrate the interface only. They are not recommendations and do not
+            describe real investors or achieved returns.
           </p>
         </div>
       )}
@@ -208,7 +217,7 @@ export default function ExploreClient({ profiles }: { profiles: Profile[] }) {
             {fromRoast ? "More creators" : "Directory"}
           </p>
           <h2 className="mt-2 font-display text-2xl text-paper">
-            {query ? `Results for "${query}"` : "Browse investors"}
+            {query ? `Results for "${query}"` : hasLiveProfiles ? "Browse investors" : "Browse fictional examples"}
           </h2>
         </div>
         <p className="text-right text-xs text-paper-muted">

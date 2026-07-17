@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     "How to check if a fintwit portfolio is real",
     "Free NSE portfolio roast tool",
     "CDSL CAS portfolio tracker",
-    "Best verified investors to follow in India",
+    "Evidence-backed investor track records in India",
     "verified investor track record India",
     "NSE portfolio verification",
     "CAS statement investor",

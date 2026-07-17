@@ -19,14 +19,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate secrets
+      - name: Check for secrets
+        id: check_secrets
         run: |
-          test -n "$SUPABASE_ACCESS_TOKEN"
-          test -n "$SUPABASE_DB_PASSWORD"
-          test -n "$SUPABASE_PROJECT_REF"
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_DB_PASSWORD" ] || [ -z "$SUPABASE_PROJECT_REF" ]; then
+            echo "Supabase secrets are missing. Skipping deployment."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Link Supabase project
+        if: steps.check_secrets.outputs.skip == 'false'
         run: npx supabase@2.109.0 link --project-ref "$SUPABASE_PROJECT_REF"
 
       - name: Push database migrations
+        if: steps.check_secrets.outputs.skip == 'false'
         run: npx supabase@2.109.0 db push

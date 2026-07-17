@@ -4,13 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Zap } from "lucide-react";
 
-const PRO_FEATURES = [
-  "Unlimited portfolio roasts",
-  "Full transaction history for all investors",
-  "Email alerts when conviction changes",
-  "Nifty 50 / Midcap 150 benchmark comparisons",
-  "Priority access to new verified creators",
-  "Advanced risk metrics (Sortino, Calmar ratio)",
+const FOUNDING_FEATURES = [
+  "Priority access to the first real verified creators",
+  "Read-only alerts when published allocations change",
+  "Full evidence history and benchmark context",
+  "Direct input into which features ship first",
+  "Early access to portfolio analysis improvements",
+  "Transparent pricing research before anything is sold",
 ];
 
 export default function WaitlistPage() {
@@ -25,11 +25,11 @@ export default function WaitlistPage() {
       const res = await fetch("/api/follow-intent", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, source: "pro_waitlist" }),
+        body: JSON.stringify({ email, source: "founding_access" }),
       });
       if (!res.ok) throw new Error("Failed to join");
       setStatus("success");
-      setMsg("You're on the list! We'll email you when Pro launches.");
+      setMsg("You're on the founding-access list. We'll email you when the first real creator profiles are ready.");
       setEmail("");
     } catch {
       setStatus("error");
@@ -41,19 +41,19 @@ export default function WaitlistPage() {
     <section className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
       <div className="text-center">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-brass/40 bg-brass/10 px-3 py-1 font-mono text-xs text-brass">
-          <Zap size={12} /> Coming soon
+          <Zap size={12} /> Founding access
         </span>
         <h1 className="mt-5 font-display text-4xl text-paper sm:text-5xl">
-          FVI Pro — ₹199/month
+          Help shape the first real cohort
         </h1>
         <p className="mt-4 text-paper-muted">
-          Get notified the moment Pro launches. Early waitlist gets 3 months free.
+          Join before the marketplace opens. We are recruiting verified creators and the first users who care about evidence more than screenshots.
         </p>
       </div>
 
       <div className="mt-10 rounded-2xl border border-brass/25 bg-brass/[.04] p-8 shadow-[0_0_80px_rgba(0,157,85,.09)] backdrop-blur-xl">
         <ul className="grid gap-3 sm:grid-cols-2">
-          {PRO_FEATURES.map((feat) => (
+          {FOUNDING_FEATURES.map((feat) => (
             <li key={feat} className="flex items-start gap-2 text-sm text-paper-muted">
               <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-brass" />
               {feat}
@@ -90,14 +90,14 @@ export default function WaitlistPage() {
             <p className="mt-2 text-xs text-loss">{msg}</p>
           )}
           <p className="mt-3 text-center text-xs text-paper-muted">
-            No spam. Unsubscribe any time. 3 months free for early signups.
+            No spam, no payment, and no invented launch date. Unsubscribe any time.
           </p>
         </div>
       </div>
 
       <div className="mt-8 text-center">
         <Link href="/explore" className="text-sm text-brass hover:underline">
-          Browse free investors in the meantime →
+          Preview the fictional product examples in the meantime →
         </Link>
       </div>
     </section>

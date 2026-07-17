@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
 const CheckoutSchema = z.object({
-  profileId: z.string().uuid(),
+  profileId: z.string().trim().min(1).max(120),
 });
 
 export async function POST(request: Request) {
@@ -27,14 +27,30 @@ export async function POST(request: Request) {
     }
     const { profileId } = parsed.data;
 
-    const { data: profile } = await supabase
+    const profileQuery = supabase
       .from("profiles")
-      .select("id, subscription_fee_inr, display_name")
-      .eq("id", profileId)
-      .single();
+      .select("id, subscription_fee_inr, display_name");
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(profileId);
+    const { data: profile } = isUuid
+      ? await profileQuery.eq("id", profileId).maybeSingle()
+      : await profileQuery.eq("slug", profileId).maybeSingle();
 
     if (!profile) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
+
+    const { data: portfolio } = await supabase
+      .from("portfolios")
+      .select("is_demo")
+      .eq("profile_id", profile.id)
+      .eq("name", "Primary")
+      .maybeSingle();
+
+    if (!portfolio || portfolio.is_demo) {
+      return NextResponse.json(
+        { error: "Demo profiles cannot accept payments or subscriptions." },
+        { status: 409 }
+      );
     }
 
     const fee = profile.subscription_fee_inr || 0;

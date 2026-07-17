@@ -66,8 +66,14 @@ export default function InvestorCard({
 
       <p className="text-wrap-safe mt-4 text-sm text-paper-muted">{profile.bio}</p>
 
+      {profile.isDemo && (
+        <div className="mt-4 rounded-lg border border-amber-300/30 bg-amber-300/[.07] px-3 py-2 text-xs leading-5 text-amber-100">
+          Fictional product preview. The identity, performance, holdings, and activity below are illustrative.
+        </div>
+      )}
+
       <div className="mt-4">
-        <TrustScoreBadge trust={trust} compact />
+        <TrustScoreBadge trust={trust} compact isDemo={profile.isDemo} />
       </div>
 
       <div className="mt-4 flex min-h-7 flex-wrap gap-2">
@@ -91,12 +97,23 @@ export default function InvestorCard({
           <p className="mono-num text-loss">{profile.maxDrawdown}%</p>
         </div>
         <div>
-          <p className="text-paper-muted text-xs">Followers</p>
-          <p className="mono-num text-paper">{profile.followerCount.toLocaleString("en-IN")}</p>
+          <p className="text-paper-muted text-xs">{profile.isDemo ? "Record" : "Followers"}</p>
+          <p className="mono-num text-paper">
+            {profile.isDemo ? "Demo" : profile.followerCount.toLocaleString("en-IN")}
+          </p>
         </div>
       </div>
       <div className="mt-5 grid gap-2 border-t border-ink-hairline pt-4 sm:flex sm:flex-wrap sm:items-center">
-        <FollowButton investorId={profile.id} investorName={profile.displayName} compact />
+        {profile.isDemo ? (
+          <Link
+            href="/waitlist"
+            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-brass px-5 text-sm font-semibold text-white transition hover:bg-brass-bright"
+          >
+            Join early access
+          </Link>
+        ) : (
+          <FollowButton investorId={profile.id} investorName={profile.displayName} compact />
+        )}
         <Link
           href={`/investor/${profile.id}`}
           className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full border border-ink-hairline px-4 text-center text-sm text-paper-muted transition hover:border-paper-muted hover:text-paper"

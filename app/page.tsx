@@ -5,36 +5,34 @@ import ReplayTimeline from "@/components/ReplayTimeline";
 import TrustNotice from "@/components/TrustNotice";
 import BeginnerModePanel from "@/components/BeginnerModePanel";
 import { getHomeData } from "@/lib/investor-data";
-import { createClient } from "@/lib/supabase/server";
+import { createWriteClient } from "@/lib/supabase/server";
 
 export default async function Home() {
   const { featured, replaySample } = await getHomeData();
   const comparison = featured.slice(0, 2);
+  const hasLiveProfiles = featured.some((profile) => !profile.isDemo);
 
-  // Fetch live stats from Supabase with hardcoded fallbacks
-  let profileCount = 10;
-  let roastCount = "4,210+";
+  // Only publish counts backed by non-demo database records.
+  let profileCount: number | null = null;
   try {
-    const supabase = await createClient();
+    const supabase = createWriteClient();
     if (supabase) {
       const { count: pc } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("verified", true);
-      const { count: rc } = await supabase
-        .from("roast_leads")
-        .select("*", { count: "exact", head: true });
-      if (pc) profileCount = pc;
-      if (rc) roastCount = rc > 1000 ? `${Math.floor(rc / 100) * 100}+` : String(rc);
+        .from("portfolios")
+        .select("id, profiles!inner(verified)", { count: "exact", head: true })
+        .eq("name", "Primary")
+        .eq("is_demo", false)
+        .eq("profiles.verified", true);
+      if (pc !== null) profileCount = pc;
     }
   } catch {
-    // Silently use fallbacks
+    // Omit unavailable metrics rather than inventing traction.
   }
 
   const faqs = [
     {
       q: "How do I verify an investor's track record in India?",
-      a: "FVI requires investors to link their CDSL CAS statement or broker account. This shows actual holdings, not just screenshots. The verification tier (CAS / broker / demo) is clearly shown on every profile.",
+      a: "Creators can submit a CDSL or NSDL CAS for review. Broker-linked verification is planned but not available yet. Every profile shows whether its evidence is reviewed, unverified, or a fictional demo.",
     },
     {
       q: "Is Follow Verified Investors free to use?",
@@ -50,7 +48,7 @@ export default async function Home() {
     },
     {
       q: "What is a CAS statement and how does it verify an investor?",
-      a: "A Consolidated Account Statement (CAS) is issued by CDSL/NSDL and shows all demat holdings linked to your PAN. Our built-in CDSL CAS portfolio tracker parses this statement to verify holdings, meaning it cannot be faked or cherry-picked, making it the gold standard for portfolio verification in India.",
+      a: "A Consolidated Account Statement (CAS) is issued by CDSL or NSDL and summarizes demat holdings linked to an investor. FVI parses submitted statements and reviews the published record for consistency. This is stronger evidence than a screenshot, but it is not a guarantee of authenticity, performance, or future returns.",
     },
     {
       q: "What does the Trust Score mean?",
@@ -109,10 +107,15 @@ export default async function Home() {
               Verify as creator
             </Link>
           </div>
-          {/* Stats bar */}
+          {/* Evidence bar: never substitute demo data for traction. */}
           <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-paper-muted">
-            <span><strong className="font-mono text-paper">{profileCount}</strong> verified profiles</span>
-            <span><strong className="font-mono text-paper">{roastCount}</strong> portfolios roasted</span>
+            <span>
+              <strong className="font-mono text-paper">
+                {profileCount && profileCount > 0 ? profileCount : "Early access"}
+              </strong>{" "}
+              {profileCount && profileCount > 0 ? "real verified creators" : "founding creators onboarding"}
+            </span>
+            <span><strong className="font-mono text-paper">Live</strong> NSE portfolio analysis</span>
             <span><strong className="font-mono text-brass">Free</strong> to browse, always</span>
           </div>
         </div>
@@ -121,7 +124,7 @@ export default async function Home() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">
-                Live sample comparison
+                {hasLiveProfiles ? "Live evidence comparison" : "Fictional product preview"}
               </p>
               <h2 className="mt-2 font-display text-xl text-paper">Receipts before follows</h2>
             </div>
@@ -143,7 +146,7 @@ export default async function Home() {
                     <p className="mt-1 text-xs leading-5 text-paper-muted">{profile.bio}</p>
                   </div>
                   <span className="rounded-full border border-ink-hairline px-2.5 py-1 font-mono text-[11px] uppercase text-paper-muted">
-                    {profile.verificationTier}
+                    {profile.isDemo ? `demo ${profile.verificationTier} example` : profile.verificationTier}
                   </span>
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-2 font-mono text-sm">
@@ -210,7 +213,7 @@ export default async function Home() {
           <div className="rounded-lg border border-brass/30 bg-brass/[.06] p-5">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-lg">✅</span>
-              <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">FVI Profile (CAS verified)</p>
+              <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">Example FVI evidence record</p>
             </div>
             <div className="rounded-lg border border-ink-hairline bg-white/[.03] p-4 space-y-2">
               <p className="font-display text-paper text-sm">Arjun Mehta — COALINDIA</p>
@@ -220,7 +223,7 @@ export default async function Home() {
               </div>
             </div>
             <div className="mt-4 space-y-1.5">
-              {["CDSL CAS verified.", "Every transaction timestamped.", "Full history including exits.", "Max drawdown shown."].map(item => (
+              {["CAS review status visible.", "Every transaction timestamped.", "Full history including exits.", "Max drawdown shown."].map(item => (
                 <div key={item} className="flex items-center gap-2 text-xs text-paper-muted">
                   <span className="text-gain">✓</span> {item}
                 </div>
@@ -248,7 +251,7 @@ export default async function Home() {
               Free NSE portfolio roast tool
             </h2>
             <p className="mt-3 text-paper-muted">
-              Get an AI-powered, blunt assessment of your holdings. If screenshots cannot be trusted, what evidence should users inspect? The roast gets attention; our verified profiles explain the trust layer.
+              Get an AI-powered, blunt assessment of your holdings. If screenshots cannot be trusted, what evidence should users inspect? The roast gets attention; our profile previews explain the trust layer we are building.
             </p>
           </div>
           <div className="rounded-lg border border-white/[.06] bg-white/[.06] p-5 text-paper backdrop-blur-xl">
@@ -315,7 +318,9 @@ export default async function Home() {
 
       <section className="mx-auto max-w-5xl px-6 py-24">
         <div className="flex items-end justify-between">
-          <h2 className="font-display text-2xl text-paper">Best verified investors to follow in India</h2>
+          <h2 className="font-display text-2xl text-paper">
+            {hasLiveProfiles ? "Verified investor records" : "Preview the verified-record experience"}
+          </h2>
           <Link href="/explore" className="text-sm text-brass hover:underline">
             View all
           </Link>
@@ -340,8 +345,8 @@ export default async function Home() {
                 period: "/always",
                 badge: null,
                 items: [
-                  "Explore all investor profiles",
-                  "View top 3 holdings per investor",
+                  "Explore clearly labelled previews",
+                  "Inspect example evidence layouts",
                   "Portfolio Roast (5 free/month)",
                   "Full conviction history (demo)",
                 ],
@@ -355,7 +360,7 @@ export default async function Home() {
                 period: "/free",
                 badge: "Invite only",
                 items: [
-                  "Verified profile badge",
+                  "Verification review and evidence label",
                   "Conviction alert feed",
                   "Full holdings history (3+ yrs)",
                   "Monthly performance report",
@@ -366,9 +371,9 @@ export default async function Home() {
               },
               {
                 name: "Pro",
-                price: "₹199",
-                period: "/month",
-                badge: "Coming soon",
+                price: "Research",
+                period: "/pricing",
+                badge: "Not yet for sale",
                 items: [
                   "Unlimited portfolio roasts",
                   "Full history for all investors",
@@ -447,9 +452,9 @@ export default async function Home() {
           <div>
             <h2 className="font-display text-2xl text-paper">Replay every portfolio change</h2>
             <p className="mt-4 text-paper-muted">
-              Scrub back through an investor's actual history. Every buy, add, reduce, and exit,
-              in order, dated, with allocation before and after. This is what a real track record
-              looks like.
+              See how a verified history will expose every published buy, add, reduce, and exit in
+              order, with dates and allocation changes. The preview below is fictional until real
+              creator evidence is approved.
             </p>
           </div>
           <div className="rounded-lg border border-ink-hairline bg-ink/70 p-6 shadow-[0_0_60px_rgba(0,157,85,.06)] backdrop-blur">

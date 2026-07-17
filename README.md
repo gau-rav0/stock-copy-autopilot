@@ -1,6 +1,21 @@
-# Follow Verified Investors
+<div align="center">
+  <h1>Follow Verified Investors</h1>
+  <p>Investor discovery for people who want evidence before they follow anyone's market updates.</p>
 
-Investor discovery for people who want evidence before they follow anyone's market updates.
+  <p>
+    <img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js" alt="Next.js" />
+    <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+    <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
+  </p>
+  
+  <br/>
+  
+  <!-- Add your real screenshots here! Save them in a folder like public/screenshots and link them using: src="./public/screenshots/home.png" -->
+  <img src="https://placehold.co/800x450/1e1e2e/009d55/png?text=FVI+App+Screenshot+%0A+(Replace+with+your+real+screenshot)" alt="Project Screenshot" width="800" style="border-radius: 8px;" />
+</div>
+
+<br/>
 
 The app is a Next.js 16 demo for a read-only investor marketplace: users can roast a portfolio, compare fictional seeded investor profiles, inspect holdings and replay history, and submit creator verification applications. It is intentionally educational and evidence-first. It does not provide investment advice, copy trades, execute orders, manage funds, or request trading permissions.
 

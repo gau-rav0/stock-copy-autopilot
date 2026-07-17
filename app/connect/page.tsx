@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckCircle2, XCircle } from "lucide-react";
 import TrustNotice from "@/components/TrustNotice";
 
 type Step = "method" | "details" | "done";
@@ -38,7 +39,7 @@ export default function ConnectPage() {
         method: "POST",
         body: formData,
       });
-      
+
       const responseText = await response.text();
       let json: { error?: string; parsedCount?: number; stored?: boolean } = {};
       try {
@@ -54,7 +55,7 @@ export default function ConnectPage() {
       const parseNote = json.parsedCount
         ? `${json.parsedCount} holding${json.parsedCount === 1 ? "" : "s"} parsed for reviewer checks.`
         : "No holdings were parsed automatically; reviewer checks are required.";
-      
+
       setSaveNote(`Application saved for review. ${parseNote}`);
       setSubmitStatus("success");
       setStep("done");
@@ -88,21 +89,20 @@ export default function ConnectPage() {
         />
       </div>
 
-      <div className="mt-8 flex flex-wrap items-center gap-2 font-mono text-xs text-paper-muted">
-        {["01 Method", "02 Details", "03 Done"].map((label, i) => (
-          <span
-            key={label}
-            className={`rounded-full border px-3 py-1 ${
-              (step === "method" && i === 0) ||
-              (step === "details" && i === 1) ||
-              (step === "done" && i === 2)
-                ? "border-brass text-brass"
-                : "border-ink-hairline"
-            }`}
-          >
-            {label}
-          </span>
-        ))}
+      <div className="mt-8">
+        <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.14em] text-paper-muted">
+          <span className={step === "method" ? "text-brass" : ""}>Method</span>
+          <span className={step === "details" ? "text-brass" : ""}>Details</span>
+          <span className={step === "done" ? "text-brass" : ""}>Done</span>
+        </div>
+        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-ink-hairline">
+          <div
+            className="h-full rounded-full bg-brass transition-all duration-300"
+            style={{
+              width: step === "method" ? "8%" : step === "details" ? "55%" : "100%",
+            }}
+          />
+        </div>
       </div>
 
       {step === "method" && (
@@ -245,8 +245,19 @@ export default function ConnectPage() {
       )}
 
       {step === "done" && (
-        <div className="mt-10 rounded-lg border border-brass/30 bg-ink-elevated/75 p-8 text-center shadow-[0_0_70px_rgba(0,157,85,.08)] backdrop-blur-xl">
-          <p className="font-display text-xl text-paper">
+        <div className="mt-10 rounded-xl border border-ink-hairline bg-ink-elevated/75 p-8 text-center backdrop-blur-xl">
+          <div
+            className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full ${
+              submitStatus === "success" ? "bg-brass/15" : "bg-red-500/10"
+            }`}
+          >
+            {submitStatus === "success" ? (
+              <CheckCircle2 size={24} className="text-brass" />
+            ) : (
+              <XCircle size={24} className="text-red-400" />
+            )}
+          </div>
+          <p className="mt-4 font-display text-xl text-paper">
             {submitStatus === "success" ? "Application received" : "Submission failed"}
           </p>
           {submitStatus === "success" ? (

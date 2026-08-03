@@ -16,6 +16,14 @@ export default function ConnectPage() {
   const [creatorName, setCreatorName] = useState("");
   const [email, setEmail] = useState("");
   const [holdingsText, setHoldingsText] = useState("");
+  const [twitter, setTwitter] = useState("");
+  const [linkedin, setLinkedin] = useState("");
+  const [youtube, setYoutube] = useState("");
+  const [broker, setBroker] = useState("");
+  const [aum, setAum] = useState("");
+  const [followers, setFollowers] = useState("");
+  const [proofUrl, setProofUrl] = useState("");
+  const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveNote, setSaveNote] = useState("");
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>("idle");
@@ -28,7 +36,10 @@ export default function ConnectPage() {
     try {
       const formData = new FormData();
       formData.set("creatorName", creatorName);
+      formData.set("name", creatorName);
       formData.set("email", email);
+      formData.set("twitter", twitter); formData.set("linkedin", linkedin); formData.set("youtube", youtube);
+      formData.set("broker", broker); formData.set("aum", aum); formData.set("followers", followers); formData.set("proof_url", proofUrl); formData.set("notes", notes);
       formData.set("method", method ?? "");
       formData.set("holdingsText", holdingsText);
       if (casFile) {
@@ -148,6 +159,22 @@ export default function ConnectPage() {
               unverified, and broker sync stays disabled until legal and ToS checks are done.
             </p>
           </div>
+        </div>
+      )}
+
+      {step === "details" && (
+        <div className="mt-6 space-y-3">
+          <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">Profile details (optional)</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <input value={twitter} onChange={(e) => setTwitter(e.target.value)} placeholder="Twitter / X URL" className="input-field" />
+            <input value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="LinkedIn URL" className="input-field" />
+            <input value={youtube} onChange={(e) => setYoutube(e.target.value)} placeholder="YouTube URL" className="input-field" />
+            <input value={broker} onChange={(e) => setBroker(e.target.value)} placeholder="Broker" className="input-field" />
+            <input value={aum} onChange={(e) => setAum(e.target.value)} placeholder="AUM (optional)" className="input-field" />
+            <input value={followers} onChange={(e) => setFollowers(e.target.value)} placeholder="Followers (optional)" className="input-field" />
+          </div>
+          <input value={proofUrl} onChange={(e) => setProofUrl(e.target.value)} placeholder="Proof URL (CAS or public track record)" className="input-field w-full" />
+          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Notes for the reviewer" className="input-field w-full" />
         </div>
       )}
 

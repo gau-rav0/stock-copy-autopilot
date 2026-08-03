@@ -22,18 +22,19 @@ export default function WaitlistPage() {
     e.preventDefault();
     setStatus("loading");
     try {
-      const res = await fetch("/api/follow-intent", {
+      const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email, source: "founding_access" }),
       });
-      if (!res.ok) throw new Error("Failed to join");
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || "Failed to join");
       setStatus("success");
       setMsg("You're on the founding-access list. We'll email you when the first real creator profiles are ready.");
       setEmail("");
-    } catch {
+    } catch (error) {
       setStatus("error");
-      setMsg("Something went wrong. Please try again.");
+      setMsg(error instanceof Error ? error.message : "Could not join the waitlist. Please try again.");
     }
   };
 

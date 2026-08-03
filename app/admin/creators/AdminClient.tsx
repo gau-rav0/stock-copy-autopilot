@@ -32,7 +32,7 @@ export default function AdminClient({ applications }: { applications: Applicatio
 
       // Optimistically update
       setApps((prev) =>
-        prev.map((app) => (app.id === id ? { ...app, status: "approved" } : app))
+        prev.map((app) => (app.id === id ? { ...app, status: "Accepted" } : app))
       );
     } catch (err: any) {
       setError(err.message);
@@ -76,12 +76,12 @@ export default function AdminClient({ applications }: { applications: Applicatio
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-                        app.status === "approved"
+                        app.status === "Accepted"
                           ? "bg-gain/10 text-gain"
                           : "bg-brass/10 text-brass"
                       }`}
                     >
-                      {app.status === "approved" ? (
+                      {app.status === "Accepted" ? (
                         <CheckCircle2 size={12} />
                       ) : (
                         <Clock size={12} />
@@ -93,7 +93,7 @@ export default function AdminClient({ applications }: { applications: Applicatio
                     {new Date(app.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    {app.status === "pending_review" && (
+                    {app.status === "Pending" && (
                       <button
                         onClick={() => handleApprove(app.id)}
                         disabled={loading === app.id}

@@ -5,12 +5,14 @@ import { useAuth } from "@/lib/auth-context";
 import { useSearchParams } from "next/navigation";
 
 function AuthContent() {
-  const { signInWithEmail, user } = useAuth();
+  const { signInWithEmail, verifyEmailOtp, user } = useAuth();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
   const [cooldown, setCooldown] = useState(0);
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
 
   useEffect(() => {
     if (cooldown > 0) {
@@ -46,12 +48,21 @@ function AuthContent() {
       }
     } else {
       setMessage({
-        text: "Check your email for the magic link to sign in.",
+        text: "Check your email for the sign-in button and 6-digit code. Use the code here if you opened the email on another device.",
         type: "success",
       });
-      setEmail("");
       setCooldown(60);
+      setOtpSent(true);
     }
+    setLoading(false);
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true); setMessage(null);
+    const { error } = await verifyEmailOtp(email, otp.trim());
+    if (error) setMessage({ text: "That code is invalid or expired. Request a new email and try again.", type: "error" });
+    else setMessage({ text: "Signed in successfully. Redirecting…", type: "success" });
     setLoading(false);
   };
 
@@ -119,6 +130,13 @@ function AuthContent() {
             {loading ? "Sending magic link..." : cooldown > 0 ? `Wait ${cooldown}s to send again` : "Send magic link"}
           </button>
         </form>
+        {otpSent && (
+          <form onSubmit={handleVerifyOtp} className="mt-6 border-t border-ink-hairline pt-6">
+            <label htmlFor="otp" className="mb-2 block text-sm text-paper-muted">6-digit code</label>
+            <input id="otp" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))} required className="block w-full rounded-lg border border-ink-hairline bg-ink/50 p-3 text-paper tracking-[0.4em] focus:border-brass focus:outline-none" />
+            <button type="submit" disabled={loading || otp.length !== 6} className="mt-3 w-full rounded-lg border border-brass/50 px-3 py-3 text-sm font-semibold text-brass disabled:opacity-50">{loading ? "Verifying…" : "Verify code"}</button>
+          </form>
+        )}
       </div>
     </div>
   );

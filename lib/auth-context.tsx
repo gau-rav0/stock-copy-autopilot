@@ -8,6 +8,7 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   signInWithEmail: (email: string, next?: string) => Promise<{ error: string | null }>;
+  verifyEmailOtp: (email: string, token: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 };
 
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   signInWithEmail: async () => ({ error: null }),
+  verifyEmailOtp: async () => ({ error: null }),
   signOut: async () => {},
 });
 
@@ -70,6 +72,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [supabase]
   );
 
+  const verifyEmailOtp = useCallback(async (email: string, token: string) => {
+    if (!supabase) return { error: "Authentication is not configured." };
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+    return { error: error?.message ?? null };
+  }, [supabase]);
+
   const signOut = useCallback(async () => {
     if (!supabase) return;
 
@@ -78,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithEmail, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signInWithEmail, verifyEmailOtp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

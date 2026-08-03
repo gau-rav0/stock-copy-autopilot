@@ -15,9 +15,23 @@ export const RoastRequestSchema = z.object({
 
 export const CreatorApplicationSchema = z.object({
   creatorName: z.string().max(100).optional().default(""),
+  name: z.string().max(100).optional(),
   email: z.string().email("Valid email is required.").max(200),
+  twitter: z.string().url().max(500).optional().or(z.literal("")),
+  linkedin: z.string().url().max(500).optional().or(z.literal("")),
+  youtube: z.string().url().max(500).optional().or(z.literal("")),
+  broker: z.string().max(100).optional().or(z.literal("")),
+  aum: z.string().max(100).optional().or(z.literal("")),
+  followers: z.string().max(100).optional().or(z.literal("")),
+  proof_url: z.string().url().max(500).optional().or(z.literal("")),
+  notes: z.string().max(5000).optional().or(z.literal("")),
   method: z.enum(["cas", "manual"]),
   holdingsText: z.string().max(50_000).optional().default(""),
+});
+
+export const WaitlistSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Valid email is required.").max(200),
+  source: z.string().trim().max(100).default("founding_access"),
 });
 
 export const FollowIntentSchema = z.object({

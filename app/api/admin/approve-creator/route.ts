@@ -45,7 +45,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Application not found" }, { status: 404 });
     }
 
-    if (application.status !== "pending_review") {
+    if (application.status !== "Pending") {
       return NextResponse.json({ error: "Application is not pending review" }, { status: 400 });
     }
 
@@ -140,7 +140,7 @@ export async function POST(req: Request) {
     // 7. Update application status
     const { error: updateAppError } = await writeClient
       .from("creator_applications")
-      .update({ status: "approved" })
+      .update({ status: "Accepted" })
       .eq("id", applicationId);
 
     if (updateAppError) throw new Error("Failed to update application status");

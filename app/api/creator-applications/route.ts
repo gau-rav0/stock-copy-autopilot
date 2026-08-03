@@ -9,7 +9,9 @@ export const runtime = "nodejs";
 
 type CreatorPayload = {
   creatorName?: string;
+  name?: string;
   email?: string;
+  twitter?: string; linkedin?: string; youtube?: string; broker?: string; aum?: string; followers?: string; proof_url?: string; notes?: string;
   method?: "cas" | "manual";
   fileName?: string | null;
   holdingsText?: string;
@@ -24,7 +26,9 @@ const getPayload = async (request: Request): Promise<CreatorPayload & { file: Fi
 
     return {
       creatorName: String(form.get("creatorName") ?? ""),
+      name: String(form.get("name") ?? ""),
       email: String(form.get("email") ?? ""),
+      twitter: String(form.get("twitter") ?? ""), linkedin: String(form.get("linkedin") ?? ""), youtube: String(form.get("youtube") ?? ""), broker: String(form.get("broker") ?? ""), aum: String(form.get("aum") ?? ""), followers: String(form.get("followers") ?? ""), proof_url: String(form.get("proof_url") ?? ""), notes: String(form.get("notes") ?? ""),
       method: form.get("method") === "cas" ? "cas" : "manual",
       fileName: file instanceof File ? file.name : null,
       holdingsText: String(form.get("holdingsText") ?? ""),
@@ -107,9 +111,15 @@ async function handlePost(request: Request) {
     );
   }
 
+  const { data: existing } = await supabase.from("creator_applications").select("id").eq("email", payload.email).maybeSingle();
+  if (existing) return NextResponse.json({ stored: false, error: "An application for this email already exists." }, { status: 409 });
+
   const insertPayload = {
-    creator_name: payload.creatorName || null,
+    creator_name: payload.creatorName || payload.name || null,
+    name: payload.name || payload.creatorName || null,
     email: payload.email,
+    twitter: payload.twitter || null, linkedin: payload.linkedin || null, youtube: payload.youtube || null,
+    broker: payload.broker || null, aum: payload.aum || null, followers: payload.followers || null, proof_url: payload.proof_url || null, notes: payload.notes || null,
     method: payload.method,
     cas_file_name: payload.fileName || null,
     holdings_text: sourceText || payload.holdingsText || null,
@@ -118,7 +128,7 @@ async function handlePost(request: Request) {
     parse_error: parseError,
     parse_status,
     parsed_at: parsed.holdings.length > 0 ? new Date().toISOString() : null,
-    status: "pending_review",
+    status: "Pending",
   };
 
   const canUsePrivateWrites = hasSupabaseWriteConfig();
@@ -127,13 +137,15 @@ async function handlePost(request: Request) {
     : await supabase.from("creator_applications").insert(insertPayload);
 
   if (error) {
-    return NextResponse.json({ stored: false, error: error.message }, { status: 500 });
+    if (error.code === "23505") return NextResponse.json({ stored: false, error: "An application for this email already exists." }, { status: 409 });
+    console.error("Creator application insert failed", { code: error.code, message: error.message });
+    return NextResponse.json({ stored: false, error: "Could not save your application. Please try again." }, { status: 500 });
   }
 
   const applicationId = canUsePrivateWrites && data && "id" in data ? data.id : null;
 
   if (applicationId && parsed.holdings.length > 0) {
-    await supabase.from("creator_application_holdings").insert(
+    const { error: holdingsError } = await supabase.from("creator_application_holdings").insert(
       parsed.holdings.map((holding) => ({
         application_id: applicationId,
         symbol: holding.symbol,
@@ -145,6 +157,10 @@ async function handlePost(request: Request) {
         source_line: holding.sourceLine,
       }))
     );
+    if (holdingsError) {
+      console.error("Creator holdings insert failed", { applicationId, code: holdingsError.code, message: holdingsError.message });
+      return NextResponse.json({ stored: false, error: "Application was received but its holdings could not be saved. Please contact support." }, { status: 500 });
+    }
   }
 
   const outbound = await dispatchOutboundEvent("creator_application", {
@@ -165,7 +181,7 @@ async function handlePost(request: Request) {
     ]);
   }
 
-  return NextResponse.json({ stored: true, parseStatus: parse_status, parsedCount: parsed.holdings.length, outbound });
+  return NextResponse.json({ stored: true, success: true, parseStatus: parse_status, parsedCount: parsed.holdings.length, outbound }, { status: 201 });
 }
 
 export async function POST(request: Request) {

@@ -26,7 +26,7 @@ export default async function AdminCreatorsPage() {
   const { data: applications } = await supabase
     .from("creator_applications")
     .select("*")
-    .eq("status", "pending_review")
+    .eq("status", "Pending")
     .order("created_at", { ascending: false });
 
   return (

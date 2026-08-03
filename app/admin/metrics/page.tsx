@@ -58,8 +58,8 @@ export default async function AdminMetricsPage() {
         .eq("profiles.verified", true)
     ),
     exactCount(supabase.from("creator_applications").select("id", { count: "exact", head: true })),
-    exactCount(supabase.from("creator_applications").select("id", { count: "exact", head: true }).eq("status", "pending_review")),
-    exactCount(supabase.from("creator_applications").select("id", { count: "exact", head: true }).eq("status", "approved")),
+    exactCount(supabase.from("creator_applications").select("id", { count: "exact", head: true }).eq("status", "Pending")),
+    exactCount(supabase.from("creator_applications").select("id", { count: "exact", head: true }).eq("status", "Accepted")),
     exactCount(supabase.from("creator_applications").select("id", { count: "exact", head: true }).in("parse_status", ["parsed_pending_review", "manual_parsed_pending_review"])),
     exactCount(supabase.from("followers").select("id", { count: "exact", head: true })),
     exactCount(supabase.from("roast_leads").select("id", { count: "exact", head: true })),

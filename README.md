@@ -12,7 +12,7 @@
   <br/>
   
   <!-- Add your real screenshots here! Save them in a folder like public/screenshots and link them using: src="./public/screenshots/home.png" -->
-  <img src="https://placehold.co/800x450/1e1e2e/009d55/png?text=FVI+App+Screenshot+%0A+(Replace+with+your+real+screenshot)" alt="Project Screenshot" width="800" style="border-radius: 8px;" />
+  <img src="https://drive.google.com/file/d/1zoYbKp-4Y9b1R6PGHOsD1xEHUBXqkj7F/view?usp=drive_link" alt="Project Screenshot" width="800" style="border-radius: 8px;" />
 </div>
 
 <br/>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bell, UserCircle2, ArrowRight, TrendingUp } from "lucide-react";
 import BrokerConnectionPanel from "@/components/BrokerConnectionPanel";
 import NotificationPreferences from "@/components/NotificationPreferences";
+import PortfolioImportPanel from "@/components/PortfolioImportPanel";
 
 export const metadata: Metadata = {
   title: "My Dashboard",
@@ -215,6 +216,7 @@ export default async function DashboardPage() {
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <NotificationPreferences />
           <BrokerConnectionPanel purpose="follower" />
+          <PortfolioImportPanel />
         </div>
         <div className="mt-4 flex flex-wrap gap-3">
           <div className="rounded-lg border border-ink-hairline bg-ink-elevated/75 px-4 py-3 text-sm text-paper-muted backdrop-blur">

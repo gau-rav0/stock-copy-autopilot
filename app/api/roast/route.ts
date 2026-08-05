@@ -32,6 +32,7 @@ export async function POST(request: Request) {
       ...computed,
       ...roast
     };
+    let leadStored = true;
 
     if (payload.email) {
       const outboundPayload = {
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
       };
       const supabase = createWriteClient();
       if (supabase) {
-        await supabase.from("roast_leads").insert({
+        const { error: roastLeadsError } = await supabase.from("roast_leads").insert({
           email: payload.email,
           display_name: payload.displayName || null,
           score: result.score,
@@ -58,11 +59,27 @@ export async function POST(request: Request) {
           generated_by: result.generated_by,
           source: "portfolio_roast",
         });
+        if (roastLeadsError) {
+          leadStored = false;
+          console.error("Roast lead insert failed", {
+            table: "roast_leads",
+            code: roastLeadsError.code,
+            message: roastLeadsError.message,
+          });
+        }
         // Also capture in waitlist
-        await supabase.from("waitlist_signups").insert({
+        const { error: waitlistSignupsError } = await supabase.from("waitlist_signups").insert({
           email: payload.email,
           source: "roast_page",
         });
+        if (waitlistSignupsError) {
+          leadStored = false;
+          console.error("Roast lead insert failed", {
+            table: "waitlist_signups",
+            code: waitlistSignupsError.code,
+            message: waitlistSignupsError.message,
+          });
+        }
         const outbound = await dispatchOutboundEvent("roast_lead", outboundPayload);
         await supabase.from("outbound_deliveries").insert([
           { event_type: "roast_lead", destination: "crm", status: outbound.crm, payload: outboundPayload },
@@ -73,7 +90,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json({ ...result, leadStored });
   } catch (error) {
     return NextResponse.json(
       {

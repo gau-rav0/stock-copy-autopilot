@@ -1,5 +1,17 @@
 import { z } from "zod";
 
+// Users naturally type "twitter.com/handle" instead of "https://twitter.com/handle".
+// Prepend a scheme before validating so bare domains don't fail z.string().url().
+const normalizeUrlOrEmpty = (val: unknown) => {
+  if (typeof val !== "string") return val;
+  const trimmed = val.trim();
+  if (trimmed === "") return "";
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+};
+
+const optionalUrlField = () =>
+  z.preprocess(normalizeUrlOrEmpty, z.string().url().max(500).or(z.literal(""))).optional().default("");
+
 export const HoldingInputSchema = z.object({
   stock_symbol: z.string().min(1).max(20),
   qty: z.coerce.number().positive(),
@@ -17,13 +29,13 @@ export const CreatorApplicationSchema = z.object({
   creatorName: z.string().max(100).optional().default(""),
   name: z.string().max(100).optional(),
   email: z.string().email("Valid email is required.").max(200),
-  twitter: z.string().url().max(500).optional().or(z.literal("")),
-  linkedin: z.string().url().max(500).optional().or(z.literal("")),
-  youtube: z.string().url().max(500).optional().or(z.literal("")),
+  twitter: optionalUrlField(),
+  linkedin: optionalUrlField(),
+  youtube: optionalUrlField(),
   broker: z.string().max(100).optional().or(z.literal("")),
   aum: z.string().max(100).optional().or(z.literal("")),
   followers: z.string().max(100).optional().or(z.literal("")),
-  proof_url: z.string().url().max(500).optional().or(z.literal("")),
+  proof_url: optionalUrlField(),
   notes: z.string().max(5000).optional().or(z.literal("")),
   method: z.enum(["cas", "manual"]),
   holdingsText: z.string().max(50_000).optional().default(""),

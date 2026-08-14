@@ -8,7 +8,7 @@ export default async function AdminCreatorsPage() {
   if (!supabase) return redirect("/");
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return redirect("/auth");
+  if (!user) return redirect(`/auth?next=${encodeURIComponent("/admin/creators")}`);
 
   // Check admin role
   const { data: userData } = await supabase

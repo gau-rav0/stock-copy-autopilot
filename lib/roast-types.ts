@@ -20,6 +20,7 @@ export type HoldingResult = HoldingInput & {
   absolute_return_pct: number;
   cagr_pct: number | null;
   holding_months: number | null;
+  market_data_source: "yahoo" | "fallback";
 };
 
 export type SectorExposure = {
@@ -50,5 +51,7 @@ export type RoastResult = {
     sector_exposure: SectorExposure[];
   };
   holdings: HoldingResult[];
+  market_data_source: "yahoo" | "fallback";
+  warnings: string[];
   generated_by: "deterministic" | "openai";
 };

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 const BrokerConnectionSchema = z.object({
   broker: z.enum(["zerodha", "upstox", "angelone", "groww", "other"]),
@@ -26,6 +27,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const limiter = rateLimit(`broker-connections:${getClientIp(request)}`, { maxRequests: 10 });
+  if (!limiter.success) return NextResponse.json({ error: "Too many requests. Try again in a minute." }, { status: 429 });
   const supabase = await createClient();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured" }, { status: 500 });
 

@@ -40,6 +40,8 @@ const getPayload = async (request: Request): Promise<CreatorPayload & { file: Fi
   return { ...payload, file: null };
 };
 
+const MAX_CAS_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 const parsedStatus = (method: CreatorPayload["method"], holdings: ParsedCasHolding[], parseError?: string | null) => {
   if (parseError) {
     return "parse_failed";
@@ -70,6 +72,10 @@ async function handlePost(request: Request) {
   }
 
   const payload = { ...raw, ...validated.data };
+
+  if (payload.file && payload.file.size > MAX_CAS_FILE_SIZE_BYTES) {
+    return NextResponse.json({ error: "CAS file must be 10 MB or smaller." }, { status: 400 });
+  }
 
   let sourceText = payload.holdingsText ?? "";
   let parseError: string | null = null;

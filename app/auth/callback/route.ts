@@ -6,7 +6,10 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   // Honour the ?next= param forwarded from the sign-in page so users land
   // on the page they were trying to reach before being asked to sign in.
-  const next = searchParams.get("next") ?? "/explore";
+  const requestedNext = searchParams.get("next");
+  const next = requestedNext?.startsWith("/") && !requestedNext.startsWith("//") && !requestedNext.includes("://")
+    ? requestedNext
+    : "/explore";
 
   if (code) {
     const supabase = await createClient();

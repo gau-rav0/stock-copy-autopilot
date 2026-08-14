@@ -35,12 +35,12 @@ type ConvictionAlert = {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  if (!supabase) return redirect("/auth");
+  if (!supabase) return redirect(`/auth?next=${encodeURIComponent("/dashboard")}`);
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return redirect("/auth");
+  if (!user) return redirect(`/auth?next=${encodeURIComponent("/dashboard")}`);
 
   // Fetch followed investors with their profile details
   const { data: follows } = await supabase

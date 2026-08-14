@@ -145,7 +145,7 @@ export async function getProfiles(): Promise<Profile[]> {
 
   const { data: profileRows, error } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id,slug,display_name,bio,photo_url,investing_style,verified,verification_tier,follower_count,cagr,xirr,alpha,max_drawdown,volatility,win_rate,sort_order,subscription_fee_inr")
     .order("sort_order", { ascending: true });
 
   if (error || !profileRows?.length) {
@@ -177,7 +177,7 @@ export async function getProfileDetail(slug: string) {
       : null;
   }
 
-  const { data: profile, error } = await supabase.from("profiles").select("*").eq("slug", slug).maybeSingle();
+  const { data: profile, error } = await supabase.from("profiles").select("id,slug,display_name,bio,photo_url,investing_style,verified,verification_tier,follower_count,cagr,xirr,alpha,max_drawdown,volatility,win_rate,sort_order,subscription_fee_inr").eq("slug", slug).maybeSingle();
   if (error || !profile) {
     const demoProfile = getDemoProfile(slug);
     return demoProfile

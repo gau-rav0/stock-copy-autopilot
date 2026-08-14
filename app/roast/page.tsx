@@ -435,7 +435,7 @@ export default function Home() {
               </form>
 
               <div className="grid grid-cols-3 gap-2">
-                <MiniTile icon={<ShieldAlert size={16} />} label="Risk" value={result ? `${result.risk_score}` : "live"} />
+                <MiniTile icon={<ShieldAlert size={16} />} label="Risk" value={result ? `${result.risk_score} · ${result.market_data_source === "yahoo" ? "live" : "estimated"}` : "live"} />
                 <MiniTile icon={<BadgeIndianRupee size={16} />} label="Return" value={result ? formatPct(result.metrics.absolute_return_pct) : "calc"} />
                 <MiniTile icon={<Share2 size={16} />} label="Card" value="PNG" />
               </div>
@@ -469,6 +469,9 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+
+              {result.market_data_source === "fallback" ? <p className="mt-4 text-sm text-paper-muted">Estimated: one or more live prices were unavailable, so fallback market data was used.</p> : null}
+              {result.warnings.map((warning) => <p key={warning} className="mt-2 text-sm text-paper-muted">{warning}</p>)}
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <ScoreRing score={result.risk_score} label="Risk Score" tone="risk" />

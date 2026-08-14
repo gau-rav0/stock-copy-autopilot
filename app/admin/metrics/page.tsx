@@ -18,7 +18,7 @@ export default async function AdminMetricsPage() {
   if (!authClient) redirect("/");
 
   const { data: { user } } = await authClient.auth.getUser();
-  if (!user) redirect("/auth");
+  if (!user) redirect(`/auth?next=${encodeURIComponent("/admin/metrics")}`);
 
   const { data: userData } = await authClient
     .from("users")

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 type ProfileLookup = {
   id: string;
@@ -39,6 +40,8 @@ async function isDemoProfile(
 }
 
 export async function POST(request: Request) {
+  const limiter = rateLimit(`follow:${getClientIp(request)}`, { maxRequests: 20 });
+  if (!limiter.success) return NextResponse.json({ error: "Too many requests. Try again in a minute." }, { status: 429 });
   const supabase = await createClient();
   if (!supabase) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
@@ -89,6 +92,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const limiter = rateLimit(`follow:${getClientIp(request)}`, { maxRequests: 20 });
+  if (!limiter.success) return NextResponse.json({ error: "Too many requests. Try again in a minute." }, { status: 429 });
   const supabase = await createClient();
   if (!supabase) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });

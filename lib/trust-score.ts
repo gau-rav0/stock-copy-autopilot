@@ -26,11 +26,16 @@ const verificationScore: Record<Profile["verificationTier"], number> = {
 };
 
 export function calculateTrustScore(profile: Profile, holdings: Holding[] = []): TrustScoreResult {
+  const hasPerformanceHistory =
+    profile.cagr !== 0 || profile.xirr !== 0 || profile.alpha !== 0 ||
+    profile.maxDrawdown !== 0 || profile.volatility !== 0 || profile.winRate !== 0;
   const verifiedScore = profile.verified
     ? verificationScore[profile.verificationTier]
     : Math.min(verificationScore[profile.verificationTier], 38);
   const returnScore = clamp(profile.cagr * 2.2 + profile.alpha * 2.4 + profile.winRate * 0.35);
-  const riskScore = clamp(100 - Math.abs(profile.maxDrawdown) * 1.35 - profile.volatility * 0.85);
+  const riskScore = hasPerformanceHistory
+    ? clamp(100 - Math.abs(profile.maxDrawdown) * 1.35 - profile.volatility * 0.85)
+    : 38;
   const consistencyScore = clamp(profile.winRate * 0.9 + profile.xirr * 0.8 - Math.max(0, profile.volatility - 18));
   const transparencyScore = clamp(
     (holdings.length >= 5 ? 90 : holdings.length >= 3 ? 74 : 46) +
@@ -59,7 +64,9 @@ export function calculateTrustScore(profile: Profile, holdings: Holding[] = []):
       label: "Risk control",
       score: round(riskScore),
       weight: 0.22,
-      note: `Max drawdown ${profile.maxDrawdown}% and volatility ${profile.volatility}%.`,
+      note: hasPerformanceHistory
+        ? `Max drawdown ${profile.maxDrawdown}% and volatility ${profile.volatility}%.`
+        : "Not enough trading history to assess risk control yet.",
     },
     {
       label: "Consistency",

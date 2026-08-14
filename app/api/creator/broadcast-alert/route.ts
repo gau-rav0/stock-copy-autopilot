@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createWriteClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
   try {
@@ -44,7 +44,12 @@ export async function POST(req: Request) {
     }
 
     // Insert conviction alert transaction
-    const { data: newAlert, error: insertError } = await supabase
+    const writeClient = createWriteClient();
+    if (!writeClient) {
+      return NextResponse.json({ error: "Service role client not configured" }, { status: 500 });
+    }
+
+    const { data: newAlert, error: insertError } = await writeClient
       .from("transactions")
       .insert({
         portfolio_id: portfolio.id,

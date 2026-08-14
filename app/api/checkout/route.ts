@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import Razorpay from "razorpay";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 const CheckoutSchema = z.object({
   profileId: z.string().trim().min(1).max(120),
@@ -10,6 +11,8 @@ const CheckoutSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const limiter = rateLimit(`checkout:${getClientIp(request)}`, { maxRequests: 10 });
+    if (!limiter.success) return NextResponse.json({ error: "Too many requests. Try again in a minute." }, { status: 429 });
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });

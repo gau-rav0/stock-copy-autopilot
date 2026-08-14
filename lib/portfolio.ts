@@ -1,4 +1,4 @@
-import { NSE_UNIVERSE, STOCK_LOOKUP } from "@/data/nse-universe";
+import { STOCK_LOOKUP } from "@/data/nse-universe";
 import { getBenchmarkHistory, getMarketSnapshot } from "@/lib/market-data";
 import type { HoldingInput, HoldingResult, RoastResult, SectorExposure } from "@/lib/roast-types";
 
@@ -141,18 +141,15 @@ export const calculatePortfolio = async (holdingsInput: HoldingInput[]): Promise
   }
 
   const unknownSymbols = [...new Set(clean.map((h) => h.stock_symbol).filter((s) => !STOCK_LOOKUP.has(s)))];
-  if (unknownSymbols.length > 0) {
-    throw new Error(
-      `We don't recognise ${unknownSymbols.join(", ")}. Enter a valid NSE symbol (e.g. RELIANCE, INFY, HDFCBANK) so the roast is based on real holdings, not guesses.`
-    );
-  }
+  const recognised = clean.filter((holding) => STOCK_LOOKUP.has(holding.stock_symbol));
+  if (recognised.length === 0) throw new Error("Add at least one recognised NSE symbol (e.g. RELIANCE, INFY, HDFCBANK).");
 
   const now = new Date();
-  const snapshots = await Promise.all(clean.map((holding) => getMarketSnapshot(holding.stock_symbol)));
+  const snapshots = await Promise.all(recognised.map((holding) => getMarketSnapshot(holding.stock_symbol)));
   const historiesBySymbol = new Map(snapshots.map((snapshot) => [snapshot.symbol, snapshot.history]));
 
-  const holdings: HoldingResult[] = clean.map((holding, index) => {
-    const meta = STOCK_LOOKUP.get(holding.stock_symbol) ?? NSE_UNIVERSE[0];
+  const holdings: HoldingResult[] = recognised.map((holding, index) => {
+    const meta = STOCK_LOOKUP.get(holding.stock_symbol)!;
     const snapshot = snapshots[index];
     const buyDate = parseBuyDate(holding.buy_date);
     const holdingMonths = buyDate ? monthsBetween(buyDate, now) : null;
@@ -169,7 +166,8 @@ export const calculatePortfolio = async (holdingsInput: HoldingInput[]): Promise
       current_value: pct(currentValue),
       absolute_return_pct: pct(((currentValue - investedValue) / investedValue) * 100),
       cagr_pct: holdingCagr === null ? null : pct(holdingCagr),
-      holding_months: holdingMonths
+      holding_months: holdingMonths,
+      market_data_source: snapshot.source
     };
   });
 
@@ -198,7 +196,7 @@ export const calculatePortfolio = async (holdingsInput: HoldingInput[]): Promise
       : null;
   const benchmarkCagr = calculateBenchmarkCagr(await getBenchmarkHistory(), avgMonths);
 
-  const diversificationScore = clamp(uniqueSectors * 18 + clean.length * 4 - concentration * 0.8);
+  const diversificationScore = clamp(uniqueSectors * 18 + recognised.length * 4 - concentration * 0.8);
   const riskScore = clamp(concentration * 1.1 + weightedDrawdown * 1.7 + (uniqueSectors <= 2 ? 18 : 0));
   const convictionScore = clamp(82 - Math.abs(holdings.length - 6) * 7 - (concentration > 55 ? 22 : 0));
   const timingScore = clamp(50 + absoluteReturn * 0.65 - weightedDrawdown * 0.45);
@@ -232,7 +230,11 @@ export const calculatePortfolio = async (holdingsInput: HoldingInput[]): Promise
       benchmark_cagr_pct: benchmarkCagr === null ? null : pct(benchmarkCagr),
       sector_exposure: exposures
     },
-    holdings
+    holdings,
+    market_data_source: snapshots.some((snapshot) => snapshot.source === "fallback") ? "fallback" : "yahoo",
+    warnings: unknownSymbols.length
+      ? [`Skipped unrecognised NSE symbol${unknownSymbols.length > 1 ? "s" : ""}: ${unknownSymbols.join(", ")}.`]
+      : []
   };
 };
 

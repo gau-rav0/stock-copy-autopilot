@@ -18,6 +18,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from("portfolio_imports")
     .select("id, source, broker, status, holdings, errors, duplicates, missing_symbols, created_at")
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(5);
   if (error) return NextResponse.json({ error: "Could not load imports." }, { status: 500 });

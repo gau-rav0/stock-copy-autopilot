@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { deliverTradeAlert } from "@/lib/trade-alert-delivery";
+import { secureStringEquals } from "@/lib/secure-compare";
 
 // Resend is initialised lazily inside the handler so we can return a proper error
 // if RESEND_API_KEY is missing rather than silently failing with a "dummy" key.
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
     const authHeader = req.headers.get("Authorization");
     const secretKey = process.env.WEBHOOK_SECRET;
 
-    if (authHeader !== `Bearer ${secretKey}`) {
+    if (!secureStringEquals(authHeader, `Bearer ${secretKey}`)) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 

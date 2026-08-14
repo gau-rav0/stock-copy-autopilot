@@ -347,7 +347,7 @@ export default async function Home() {
                 items: [
                   "Explore clearly labelled previews",
                   "Inspect example evidence layouts",
-                  "Portfolio Roast (5 free/month)",
+                  "Portfolio Roast (free)",
                   "Full conviction history (demo)",
                 ],
                 cta: "Start browsing",

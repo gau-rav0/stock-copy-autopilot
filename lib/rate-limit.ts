@@ -47,6 +47,8 @@ export function rateLimit(
 }
 
 export function getClientIp(request: Request): string {
+  // Vercel overwrites this header before requests reach functions. Self-hosted
+  // deployments must only trust it when their proxy strips client-supplied values.
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
     return forwarded.split(",")[0].trim();

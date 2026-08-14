@@ -1,5 +1,16 @@
 import { NextResponse } from "next/server";
 import { createClient, createWriteClient } from "@/lib/supabase/server";
+import { STOCK_LOOKUP } from "@/data/nse-universe";
+import { rateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
+
+const BroadcastAlertSchema = z.object({
+  ticker: z.string().trim().toUpperCase().min(1).max(20).refine((ticker) => STOCK_LOOKUP.has(ticker), "Enter a recognised NSE symbol."),
+  action: z.enum(["buy", "add", "reduce", "exit"]),
+  alertText: z.string().trim().min(1).max(500),
+  allocationBefore: z.coerce.number().min(0).max(100).optional().default(0),
+  allocationAfter: z.coerce.number().min(0).max(100).optional().default(0),
+});
 
 export async function POST(req: Request) {
   try {
@@ -13,12 +24,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { ticker, action, alertText, allocationBefore, allocationAfter } = body;
+    const parsed = BroadcastAlertSchema.safeParse(await req.json().catch(() => ({})));
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.issues.map((issue) => issue.message).join("; ") }, { status: 400 });
+    const { ticker, action, alertText, allocationBefore, allocationAfter } = parsed.data;
 
-    if (!ticker || !action || !alertText) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
+    const limiter = rateLimit(`broadcast:${user.id}`, { maxRequests: 5, windowMs: 3_600_000 });
+    if (!limiter.success) return NextResponse.json({ error: "Too many broadcast alerts. Try again later." }, { status: 429 });
 
     // Verify creator profile
     const { data: profile, error: profileError } = await supabase
@@ -55,8 +66,8 @@ export async function POST(req: Request) {
         portfolio_id: portfolio.id,
         ticker,
         action,
-        allocation_before: allocationBefore || 0,
-        allocation_after: allocationAfter || 0,
+        allocation_before: allocationBefore,
+        allocation_after: allocationAfter,
         price: 0,             // Can be fetched from a market API or left 0
         transaction_date: new Date().toISOString().split("T")[0],
         is_conviction_alert: true,

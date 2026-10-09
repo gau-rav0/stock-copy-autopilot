@@ -57,8 +57,8 @@ const calculateBenchmarkCagr = (history: number[], averageMonths: number | null)
   return cagr(start, end, months);
 };
 
-export const normaliseHoldings = (holdings: HoldingInput[]) =>
-  holdings
+export const normaliseHoldings = (holdings: HoldingInput[]) => {
+  const lots = holdings
     .slice(0, 10)
     .map((holding) => ({
       stock_symbol: holding.stock_symbol.toUpperCase().trim(),
@@ -66,7 +66,21 @@ export const normaliseHoldings = (holdings: HoldingInput[]) =>
       avg_buy_price: Number(holding.avg_buy_price),
       buy_date: holding.buy_date || undefined
     }))
-    .filter((holding) => holding.stock_symbol && holding.qty > 0 && holding.avg_buy_price > 0);
+    .filter((holding) => holding.stock_symbol && Number.isFinite(holding.qty) && Number.isFinite(holding.avg_buy_price) && holding.qty > 0 && holding.avg_buy_price > 0);
+  const positions = new Map<string, HoldingInput>();
+  for (const lot of lots) {
+    const existing = positions.get(lot.stock_symbol);
+    if (!existing) { positions.set(lot.stock_symbol, lot); continue; }
+    const quantity = existing.qty + lot.qty;
+    positions.set(lot.stock_symbol, {
+      stock_symbol: lot.stock_symbol, qty: quantity,
+      avg_buy_price: (existing.qty * existing.avg_buy_price + lot.qty * lot.avg_buy_price) / quantity,
+      // Mixed acquisition dates cannot be represented by a single buy month.
+      buy_date: existing.buy_date === lot.buy_date ? lot.buy_date : undefined,
+    });
+  }
+  return [...positions.values()];
+};
 
 const sectorExposure = (holdings: HoldingResult[], totalValue: number): SectorExposure[] => {
   const bySector = new Map<string, number>();

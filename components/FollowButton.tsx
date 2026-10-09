@@ -114,6 +114,20 @@ export default function FollowButton({
       }
 
       try {
+        // Reuse a confirmed entitlement after an unfollow before opening checkout.
+        const restoreResponse = await fetch("/api/follow", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ profileId: investorId }),
+        });
+        if (restoreResponse.ok) {
+          setFollowing(true);
+          setSaving(false);
+          return;
+        }
+        if (restoreResponse.status !== 402) {
+          const data = await restoreResponse.json().catch(() => ({}));
+          throw new Error(data.error || "Could not check your subscription. Please try again.");
+        }
         const orderResponse = await fetch("/api/checkout", {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -195,12 +209,13 @@ export default function FollowButton({
   return (
     <>
       {subscriptionFeeInr > 0 && (
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" onLoad={() => setRazorpayLoaded(true)} />
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" onReady={() => setRazorpayLoaded(true)}
+          onError={() => setError("Payment checkout could not load. Please refresh and try again.")} />
       )}
       <div className={compact ? "w-full sm:w-auto" : "w-full max-w-xs sm:w-auto"}>
         <button
           onClick={toggleFollow}
-          disabled={saving || (subscriptionFeeInr > 0 && !razorpayLoaded)}
+          disabled={saving || (!following && subscriptionFeeInr > 0 && !razorpayLoaded)}
           className={`w-full rounded-lg px-5 py-2 text-sm font-semibold transition sm:w-auto ${
             following
               ? "border border-ink-hairline bg-ink-elevated/80 text-paper-muted hover:border-loss/40 hover:text-loss"

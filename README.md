@@ -11,8 +11,6 @@
   
   <br/>
   
-  <!-- Add your real screenshots here! Save them in a folder like public/screenshots and link them using: src="./public/screenshots/home.png" -->
-  <img src="https://drive.google.com/file/d/1zoYbKp-4Y9b1R6PGHOsD1xEHUBXqkj7F/view?usp=drive_link" alt="Project Screenshot" width="800" style="border-radius: 8px;" />
 </div>
 
 <br/>
@@ -39,12 +37,12 @@ The app is a Next.js 16 demo for a read-only investor marketplace: users can roa
 - CAS parsing extracts recognizable equity rows and keeps every application in pending human review.
 - Broker connection requests are now stored as read-only metadata; provider authorization remains pending until a broker-specific OAuth or server-to-server adapter is configured. No broker password, API key, access token, or order permission is stored by the app.
 - Paid creator/follower features are not launch-ready until legal and SEBI review is complete.
-- Payments and Razorpay subscriptions are not wired yet.
+- Razorpay one-time checkout and signed webhook activation are implemented for non-demo profiles. Recurring billing, refunds, cancellation and entitlement expiry are not implemented; this is not a launch-ready subscription system.
 
 ## Local Setup
 
 ```bash
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev
 ```
@@ -106,9 +104,10 @@ KMICHI_MODEL=
 
 Generic aliases also work: `AI_API_URL`, `AI_API_KEY`, `AI_MODEL`, `OPENAI_API_KEY`, `OPENAI_MODEL`, and `OPENAI_BASE_URL`.
 
-Payments placeholder:
+Payments (use test-mode keys during validation):
 
 ```bash
+NEXT_PUBLIC_RAZORPAY_KEY_ID=
 RAZORPAY_KEY_ID=
 RAZORPAY_KEY_SECRET=
 RAZORPAY_WEBHOOK_SECRET=
@@ -156,5 +155,51 @@ Before treating production as ready:
 1. Apply migrations to the production Supabase project and verify tables in the dashboard.
 2. Configure production CRM/email destinations and test delivery failure handling.
 3. Expand CAS parsing with real sample statements from supported providers.
-4. Add authenticated reviewer tooling for approving parsed creator applications.
+4. Test the authenticated admin reviewer and atomic creator approval against staging evidence.
 5. Add payments only after SEBI/legal review approves the product model.
+
+## Checks and audit
+
+```bash
+npm test
+npm run lint
+npm audit --omit=dev --audit-level=moderate
+npm run build
+```
+
+`lint` checks generated Next.js types and TypeScript. Tests cover redirect safety,
+CSV/market validation, alert provider failures, and PostgreSQL RLS/transaction
+behavior using PGlite. CI runs these checks on pull requests and main pushes.
+See [the October 2026 audit](docs/audit-2026-10-09.md) for findings and remaining gaps.
+
+## Alert delivery configuration
+
+Set `RESEND_API_KEY`, `ALERTS_EMAIL_FROM` (a verified sending address),
+`UNSUBSCRIBE_SECRET`, `NEXT_PUBLIC_SITE_URL`, and `CRON_SECRET` in the server
+hosting environment. `WEBHOOK_SECRET` protects the internal trigger endpoint;
+`BROKER_WEBHOOK_SECRET` signs broker events. Use independent random secrets.
+
+Alert recipients are queued in the database when a transaction is inserted.
+Next.js `after()` starts delivery immediately; the retry cron handles interruptions.
+Workers claim up to 500 recipients per transaction with a ten-minute lease,
+re-check consent and follow membership, and stop after three claimed attempts.
+Identical batches use Resend idempotency keys. The current Vercel cron runs once
+per day at 09:00 UTC, so retries and overflow can be delayed by a day; change the
+schedule and worker capacity for a paid hosting plan before promising timely alerts.
+
+## Rollout of the October audit changes
+
+Apply the five `20261009*` migrations before deploying the updated routes. They
+add authenticated approval/broker RPCs, a durable alert queue, a private checkout
+ledger, and entitlement checks. The code requires these migrations.
+
+Drain any pre-upgrade checkout orders first. New webhooks accept only orders
+recorded in `checkout_orders`; legacy in-flight orders need reconciliation from
+trusted Razorpay records. Existing active subscription rows remain available for
+restoring follows. Old alerts are not automatically re-enqueued, which avoids
+sending historical alerts to newer followers. Inspect failed legacy deliveries
+before restarting them.
+
+Verify changes in staging with a real Supabase session and Razorpay test-mode
+webhooks, then run the hosted checks above. The local audit does not migrate or
+exercise production services.

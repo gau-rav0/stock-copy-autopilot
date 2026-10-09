@@ -7,21 +7,14 @@
  * edge middleware or an external store like Upstash Redis.
  */
 
-const store = new Map<string, number[]>();
+const store = new Map<string, { timestamps: number[]; expiresAt: number }>();
 
 // Prevent the in-memory store from growing unbounded
 const MAX_KEYS = 10_000;
 
-function pruneOldEntries(windowMs: number) {
-  if (store.size <= MAX_KEYS) return;
-  const cutoff = Date.now() - windowMs;
-  for (const [key, timestamps] of store) {
-    const fresh = timestamps.filter((t) => t > cutoff);
-    if (fresh.length === 0) {
-      store.delete(key);
-    } else {
-      store.set(key, fresh);
-    }
+function pruneOldEntries(now: number) {
+  for (const [key, entry] of store) {
+    if (entry.expiresAt <= now) store.delete(key);
   }
 }
 
@@ -32,16 +25,19 @@ export function rateLimit(
   const now = Date.now();
   const cutoff = now - windowMs;
 
-  pruneOldEntries(windowMs);
+  if (!store.has(key) && store.size >= MAX_KEYS) {
+    pruneOldEntries(now);
+    if (store.size >= MAX_KEYS) return { success: false, remaining: 0 };
+  }
 
-  const timestamps = (store.get(key) ?? []).filter((t) => t > cutoff);
+  const timestamps = (store.get(key)?.timestamps ?? []).filter((t) => t > cutoff);
 
   if (timestamps.length >= maxRequests) {
     return { success: false, remaining: 0 };
   }
 
   timestamps.push(now);
-  store.set(key, timestamps);
+  store.set(key, { timestamps, expiresAt: now + windowMs });
 
   return { success: true, remaining: maxRequests - timestamps.length };
 }

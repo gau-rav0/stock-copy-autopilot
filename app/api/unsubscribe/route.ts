@@ -1,13 +1,11 @@
-import { createHmac, timingSafeEqual } from "crypto";
+import { verifyWebhookSignature } from "@/lib/webhook-signature";
 import { NextResponse } from "next/server";
 import { createWriteClient, hasSupabaseWriteConfig } from "@/lib/supabase/server";
 
 function validSignature(userId: string, supplied: string | null) {
   const secret = process.env.UNSUBSCRIBE_SECRET;
   if (!secret || !supplied) return false;
-  const expected = Buffer.from(createHmac("sha256", secret).update(userId).digest("hex"), "hex");
-  const actual = Buffer.from(supplied, "hex");
-  return actual.length === expected.length && timingSafeEqual(actual, expected);
+  return verifyWebhookSignature(userId, supplied, secret);
 }
 
 async function unsubscribe(request: Request) {

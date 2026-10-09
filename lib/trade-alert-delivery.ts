@@ -1,7 +1,8 @@
-import { createHmac } from "crypto";
+import { createHash, createHmac } from "crypto";
 import { Resend } from "resend";
 
-type AdminClient = any;
+import type { SupabaseClient } from "@supabase/supabase-js";
+type AdminClient = SupabaseClient;
 
 type Transaction = {
   id: string;
@@ -11,11 +12,12 @@ type Transaction = {
   alert_text: string | null;
 };
 
-type Follower = {
+type Recipient = {
   follower_user_id: string;
-  users: { email: string | null } | null;
+  recipient_email: string;
+  attempts: number;
+  last_attempt_at: string;
 };
-
 const MAX_ATTEMPTS = 3;
 const MAX_BATCH_SIZE = 100;
 
@@ -67,138 +69,80 @@ function emailHtml({ creatorName, action, ticker, alertText, unsubscribe }: {
 }
 
 async function setDeliveryStatus(
-  supabase: AdminClient,
-  transactionId: string,
-  followerUserId: string,
-  values: Record<string, unknown>
+  supabase: AdminClient, transactionId: string, recipient: Recipient, values: Record<string, unknown>
 ) {
-  await supabase
-    .from("alert_delivery_attempts")
+  const { error } = await supabase.from("alert_delivery_attempts")
     .update({ ...values, updated_at: new Date().toISOString() })
-    .eq("transaction_id", transactionId)
-    .eq("follower_user_id", followerUserId);
+    .eq("transaction_id", transactionId).eq("follower_user_id", recipient.follower_user_id)
+    .eq("status", "queued").eq("attempts", recipient.attempts)
+    .eq("last_attempt_at", recipient.last_attempt_at);
+  if (error) throw new Error(`Could not record alert delivery: ${error.message}`);
 }
 
 export async function deliverTradeAlert(supabase: AdminClient, transaction: Transaction) {
-  const { data: portfolio, error: portfolioError } = await supabase
-    .from("portfolios")
-    .select("profile_id, profiles!inner(display_name)")
-    .eq("id", transaction.portfolio_id)
-    .single();
-  if (portfolioError || !portfolio) throw new Error("Portfolio not found for trade alert");
-
-  const profileId = portfolio.profile_id as string;
-  const creatorName = (portfolio.profiles as { display_name?: string } | null)?.display_name ?? "A creator you follow";
-  const { data: followers, error: followersError } = await supabase
-    .from("followers")
-    .select("follower_user_id, users!inner(email)")
-    .eq("profile_id", profileId);
-  if (followersError) throw new Error("Followers could not be loaded");
-
-  const candidates = (followers ?? []) as Follower[];
-  if (!candidates.length) return { queued: 0, sent: 0, skipped: 0, failed: 0 };
-
-  const followerIds = candidates.map((follower) => follower.follower_user_id);
-  const [{ data: preferences, error: preferencesError }, { data: existing, error: existingError }] = await Promise.all([
-    supabase.from("notification_preferences").select("user_id, trade_alerts_email").in("user_id", followerIds),
-    supabase.from("alert_delivery_attempts").select("follower_user_id, status, attempts").eq("transaction_id", transaction.id).in("follower_user_id", followerIds),
-  ]);
-  if (preferencesError || existingError) throw new Error("Alert delivery state could not be loaded");
-
-  const optedOut = new Set((preferences ?? []).filter((preference: any) => preference.trade_alerts_email === false).map((preference: any) => preference.user_id));
-  const existingByFollower = new Map((existing ?? []).map((delivery: any) => [delivery.follower_user_id, delivery]));
-  const recipients = candidates.filter((follower) => {
-    const delivery = existingByFollower.get(follower.follower_user_id) as { status: string; attempts: number } | undefined;
-    return Boolean(follower.users?.email) && !optedOut.has(follower.follower_user_id) && delivery?.status !== "sent" && (delivery?.attempts ?? 0) < MAX_ATTEMPTS;
-  });
-
-  const skipped = candidates.length - recipients.length;
-  if (!recipients.length) return { queued: 0, sent: 0, skipped, failed: 0 };
-
-  const now = new Date().toISOString();
-  await supabase.from("alert_delivery_attempts").upsert(
-    recipients.map((follower) => ({
-      transaction_id: transaction.id,
-      follower_user_id: follower.follower_user_id,
-      recipient_email: follower.users!.email,
-      status: "queued",
-      error_message: null,
-      attempts: ((existingByFollower.get(follower.follower_user_id) as { attempts?: number } | undefined)?.attempts ?? 0) + 1,
-      last_attempt_at: now,
-      updated_at: now,
-    })),
-    { onConflict: "transaction_id,follower_user_id" }
-  );
-
+  // Configuration failures must leave the durable queue untouched, so they do
+  // not exhaust the three attempts before an operator restores configuration.
   const resendKey = process.env.RESEND_API_KEY;
-  const from = process.env.ALERTS_EMAIL_FROM ?? "Follow Verified Investors <onboarding@resend.dev>";
-  if (!resendKey) {
-    await Promise.all(recipients.map((follower) => setDeliveryStatus(supabase, transaction.id, follower.follower_user_id, { status: "failed", error_message: "RESEND_API_KEY is not configured" })));
-    return { queued: recipients.length, sent: 0, skipped, failed: recipients.length };
+  if (!resendKey || !process.env.UNSUBSCRIBE_SECRET || !process.env.NEXT_PUBLIC_SITE_URL) {
+    throw new Error("RESEND_API_KEY, UNSUBSCRIBE_SECRET and NEXT_PUBLIC_SITE_URL are required for alerts");
   }
-
-  const prepared = recipients.map((follower) => ({ follower, unsubscribe: unsubscribeUrl(follower.follower_user_id) }));
-  const withoutUnsubscribe = prepared.filter((item) => !item.unsubscribe);
-  if (withoutUnsubscribe.length) {
-    await Promise.all(withoutUnsubscribe.map(({ follower }) => setDeliveryStatus(supabase, transaction.id, follower.follower_user_id, { status: "failed", error_message: "UNSUBSCRIBE_SECRET or NEXT_PUBLIC_SITE_URL is not configured" })));
-  }
-
-  const ready = prepared.filter((item): item is typeof item & { unsubscribe: string } => Boolean(item.unsubscribe));
+  const { data: portfolio, error: portfolioError } = await supabase.from("portfolios")
+    .select("is_demo, profiles!inner(display_name)").eq("id", transaction.portfolio_id).single();
+  if (portfolioError || !portfolio) throw new Error("Portfolio not found for trade alert");
+  if (portfolio.is_demo) return { queued: 0, sent: 0, skipped: 0, failed: 0 };
+  const creatorName = (portfolio.profiles as unknown as { display_name: string }).display_name;
+  const { data: claims, error: claimError } = await supabase.rpc("claim_alert_deliveries", { p_transaction_id: transaction.id });
+  if (claimError) throw new Error(`Could not claim alert recipients: ${claimError.message}`);
+  const recipients = (claims ?? []) as Recipient[];
   const resend = new Resend(resendKey);
   let sent = 0;
-  let failed = withoutUnsubscribe.length;
-  for (const group of chunk(ready, MAX_BATCH_SIZE)) {
-    const { data, error } = await resend.batch.send(group.map(({ follower, unsubscribe }) => ({
-      from,
-      to: [follower.users!.email!],
-      subject: `Creator update: ${transaction.action.toUpperCase()} ${transaction.ticker}`,
-      html: emailHtml({ creatorName, action: transaction.action, ticker: transaction.ticker, alertText: transaction.alert_text ?? "No additional explanation provided.", unsubscribe }),
-      headers: {
-        "List-Unsubscribe": `<${unsubscribe}>`,
-        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-        "X-Entity-Ref-ID": `${transaction.id}-${follower.follower_user_id}`,
-      },
-    })));
-
-    if (error || !data) {
+  let failed = 0;
+  for (const group of chunk(recipients, MAX_BATCH_SIZE)) {
+    if (sent + failed > 0) await new Promise((resolve) => setTimeout(resolve, 650));
+    const messages = group.map((recipient) => {
+      const unsubscribe = unsubscribeUrl(recipient.follower_user_id)!;
+      return {
+        from: process.env.ALERTS_EMAIL_FROM?.trim() || "Follow Verified Investors <onboarding@resend.dev>",
+        to: [recipient.recipient_email],
+        subject: `Creator update: ${transaction.action.toUpperCase()} ${transaction.ticker}`,
+        html: emailHtml({ creatorName, action: transaction.action, ticker: transaction.ticker,
+          alertText: transaction.alert_text ?? "No additional explanation provided.", unsubscribe }),
+        headers: { "List-Unsubscribe": `<${unsubscribe}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
+      };
+    });
+    // Stable across duplicate deliveries of the same batch; provider deduplication
+    // also protects a retry after a successful send but failed audit write.
+    const idempotencyKey = `fvi-${transaction.id}-${createHash("sha256").update(JSON.stringify(messages)).digest("hex")}`;
+    const { data, error } = await resend.batch.send(messages, { idempotencyKey });
+    if (error || !data || data.data.length !== group.length) {
       failed += group.length;
-      await Promise.all(group.map(({ follower }) => setDeliveryStatus(supabase, transaction.id, follower.follower_user_id, { status: "failed", error_message: error?.message ?? "Email provider did not return message identifiers" })));
+      await Promise.all(group.map((recipient) => setDeliveryStatus(supabase, transaction.id, recipient,
+        { status: "failed", error_message: error?.message ?? "Incomplete email provider response" })));
       continue;
     }
-
-    sent += group.length;
-    await Promise.all(group.map(({ follower }, index) => setDeliveryStatus(supabase, transaction.id, follower.follower_user_id, {
-      status: "sent",
-      provider_message_id: (data as any).data?.[index]?.id ?? null,
-      error_message: null,
-      delivered_at: new Date().toISOString(),
+    await Promise.all(group.map((recipient, index) => setDeliveryStatus(supabase, transaction.id, recipient, {
+      status: "sent", provider_message_id: data.data[index].id, error_message: null, delivered_at: new Date().toISOString(),
     })));
+    sent += group.length;
   }
-
-  return { queued: recipients.length, sent, skipped, failed };
+  return { queued: recipients.length, sent, skipped: 0, failed };
 }
 
 export async function retryFailedTradeAlerts(supabase: AdminClient) {
-  const { data: pending, error } = await supabase
-    .from("alert_delivery_attempts")
-    .select("transaction_id")
-    .in("status", ["queued", "failed"])
-    .lt("attempts", MAX_ATTEMPTS)
-    .order("last_attempt_at", { ascending: true })
-    .limit(50);
+  const { data: pending, error } = await supabase.from("alert_delivery_attempts")
+    .select("transaction_id").in("status", ["queued", "failed"]).lt("attempts", MAX_ATTEMPTS)
+    .or(`last_attempt_at.is.null,last_attempt_at.lt.${new Date(Date.now() - 600_000).toISOString()}`)
+    .order("last_attempt_at", { ascending: true, nullsFirst: true }).limit(500);
   if (error) throw new Error("Failed deliveries could not be loaded");
-
-  const transactionIds = [...new Set((pending ?? []).map((row: any) => row.transaction_id))];
+  const transactionIds = [...new Set((pending ?? []).map((row) => row.transaction_id as string))].slice(0, 5);
   let retried = 0;
   let sent = 0;
   for (const transactionId of transactionIds) {
-    const { data: transaction } = await supabase
-      .from("transactions")
-      .select("id, portfolio_id, ticker, action, alert_text")
-      .eq("id", transactionId)
-      .maybeSingle();
+    const { data: transaction, error: lookupError } = await supabase.from("transactions")
+      .select("id, portfolio_id, ticker, action, alert_text").eq("id", transactionId).maybeSingle();
+    if (lookupError) throw new Error("Could not load queued transaction");
     if (!transaction) continue;
-    const result = await deliverTradeAlert(supabase, transaction as Transaction);
+    const result = await deliverTradeAlert(supabase, transaction);
     retried += 1;
     sent += result.sent;
   }

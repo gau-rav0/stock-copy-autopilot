@@ -48,6 +48,7 @@ function readCsv(text: string): string[][] {
       cell += char;
     }
   }
+  if (quoted) throw new Error("CSV contains an unclosed quoted field.");
   row.push(cell.trim());
   if (row.some(Boolean)) rows.push(row);
   return rows;
@@ -64,7 +65,11 @@ function parseNumber(value: string | undefined) {
 }
 
 export function parsePortfolioCsv(text: string): PortfolioImportResult {
-  const rows = readCsv(text.replace(/^\uFEFF/, ""));
+  let rows: string[][];
+  try { rows = readCsv(text.replace(/^\uFEFF/, "")); }
+  catch (error) {
+    return { holdings: [], errors: [error instanceof Error ? error.message : "Invalid CSV."], duplicates: [], missingSymbols: [], totalRows: 0 };
+  }
   if (rows.length < 2) {
     return { holdings: [], errors: ["Add a header row and at least one holding."], duplicates: [], missingSymbols: [], totalRows: 0 };
   }
@@ -109,7 +114,8 @@ export function parsePortfolioCsv(text: string): PortfolioImportResult {
     bySymbol.set(symbol, {
       symbol,
       quantity: totalQuantity,
-      averagePrice: existingValue + incomingValue > 0 ? Number(((existingValue + incomingValue) / totalQuantity).toFixed(4)) : null,
+      averagePrice: existing.averagePrice && averagePrice && averagePrice > 0
+        ? Number(((existingValue + incomingValue) / totalQuantity).toFixed(4)) : null,
     });
   });
 

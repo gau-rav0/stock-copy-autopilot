@@ -13,10 +13,12 @@ const optionalUrlField = () =>
   z.preprocess(normalizeUrlOrEmpty, z.string().url().max(500).or(z.literal(""))).optional().default("");
 
 export const HoldingInputSchema = z.object({
-  stock_symbol: z.string().min(1).max(20),
-  qty: z.coerce.number().positive(),
-  avg_buy_price: z.coerce.number().positive(),
-  buy_date: z.string().max(10).optional().default(""),
+  stock_symbol: z.string().trim().toUpperCase().min(1).max(20),
+  qty: z.coerce.number().positive().max(1_000_000_000),
+  avg_buy_price: z.coerce.number().positive().max(1_000_000_000),
+  buy_date: z.string().refine((value) => value === "" || /^\d{4}-(0[1-9]|1[0-2])$/.test(value), "Use a valid buy month (YYYY-MM).")
+    .refine((value) => !value || value <= new Date().toISOString().slice(0, 7), "Buy month cannot be in the future.")
+    .optional().default(""),
 });
 
 export const RoastRequestSchema = z.object({

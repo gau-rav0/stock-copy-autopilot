@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import Razorpay from "razorpay";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createWriteClient } from "@/lib/supabase/server";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 const CheckoutSchema = z.object({
@@ -56,21 +56,27 @@ export async function POST(request: Request) {
       );
     }
 
-    const fee = profile.subscription_fee_inr || 0;
-    if (fee <= 0) {
+    const fee = Number(profile.subscription_fee_inr ?? 0);
+    const amountInPaise = Math.round(fee * 100);
+    if (!Number.isSafeInteger(amountInPaise) || amountInPaise <= 0) {
       return NextResponse.json({ error: "This profile does not have a subscription fee" }, { status: 400 });
     }
 
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
       return NextResponse.json({ error: "Razorpay keys not configured" }, { status: 500 });
     }
+    const writeClient = createWriteClient();
+    if (!writeClient) return NextResponse.json({ error: "Payment storage is unavailable" }, { status: 503 });
+    const { data: entitlement, error: entitlementError } = await supabase.from("subscriptions")
+      .select("id").eq("follower_user_id", user.id).eq("profile_id", profile.id)
+      .eq("status", "active").limit(1).maybeSingle();
+    if (entitlementError) return NextResponse.json({ error: "Could not check payment status" }, { status: 503 });
+    if (entitlement) return NextResponse.json({ error: "You already have access. Follow this creator to restore updates." }, { status: 409 });
 
     const razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
-
-    const amountInPaise = Math.round(fee * 100);
 
     const order = await razorpay.orders.create({
       amount: amountInPaise,
@@ -82,9 +88,15 @@ export async function POST(request: Request) {
       },
     });
 
+    const { error: storageError } = await writeClient.from("checkout_orders").insert({
+      razorpay_order_id: order.id, follower_user_id: user.id, profile_id: profile.id,
+      amount_paise: amountInPaise, currency: "INR",
+    });
+    if (storageError) throw new Error(`Could not persist checkout order: ${storageError.message}`);
+
     return NextResponse.json(order);
-  } catch (error: any) {
+  } catch (error) {
     console.error("Razorpay order creation error:", error);
-    return NextResponse.json({ error: error.message || "Failed to create order" }, { status: 500 });
+    return NextResponse.json({ error: "Could not start payment. Please try again." }, { status: 500 });
   }
 }

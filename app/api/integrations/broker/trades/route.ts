@@ -1,6 +1,8 @@
-import { createHmac, timingSafeEqual } from "crypto";
-import { NextResponse } from "next/server";
+import { verifyWebhookSignature } from "@/lib/webhook-signature";
+import { NextResponse, after } from "next/server";
 import { z } from "zod";
+import { deliverTradeAlert } from "@/lib/trade-alert-delivery";
+export const maxDuration = 60;
 import { createWriteClient, hasSupabaseWriteConfig } from "@/lib/supabase/server";
 
 const TradeWebhookSchema = z.object({
@@ -15,20 +17,12 @@ const TradeWebhookSchema = z.object({
   occurredAt: z.string().datetime(),
 });
 
-function signatureMatches(payload: string, supplied: string | null, secret: string) {
-  if (!supplied) return false;
-  const expected = createHmac("sha256", secret).update(payload).digest("hex");
-  const actualBytes = Buffer.from(supplied, "hex");
-  const expectedBytes = Buffer.from(expected, "hex");
-  return actualBytes.length === expectedBytes.length && timingSafeEqual(actualBytes, expectedBytes);
-}
-
 export async function POST(request: Request) {
   const secret = process.env.BROKER_WEBHOOK_SECRET;
   if (!secret) return NextResponse.json({ error: "Broker webhook is not configured" }, { status: 503 });
 
   const rawBody = await request.text();
-  if (!signatureMatches(rawBody, request.headers.get("x-fvi-signature"), secret)) {
+  if (!verifyWebhookSignature(rawBody, request.headers.get("x-fvi-signature"), secret)) {
     return NextResponse.json({ error: "Invalid webhook signature" }, { status: 401 });
   }
 
@@ -74,15 +68,9 @@ export async function POST(request: Request) {
     .single();
   if (transactionError || !transaction) return NextResponse.json({ error: "Trade event was recorded but could not be delivered" }, { status: 500 });
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  const blastSecret = process.env.WEBHOOK_SECRET;
-  if (siteUrl && blastSecret) {
-    void fetch(`${siteUrl}/api/internal/blast-alert`, {
-      method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${blastSecret}` },
-      body: JSON.stringify({ record: transaction }),
-    }).catch(() => undefined);
-  }
-
+  after(async () => {
+    try { await deliverTradeAlert(supabase, transaction); }
+    catch (error) { console.error("Broker delivery deferred to retry queue", error); }
+  });
   return NextResponse.json({ accepted: true, eventId: result.event_id, transactionId: result.transaction_id }, { status: 201 });
 }

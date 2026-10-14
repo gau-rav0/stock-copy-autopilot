@@ -1,8 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createClient, createWriteClient } from "@/lib/supabase/server";
 import { STOCK_LOOKUP } from "@/data/nse-universe";
 import { rateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
+import { deliverTradeAlert } from "@/lib/trade-alert-delivery";
+export const maxDuration = 60;
 
 const BroadcastAlertSchema = z.object({
   ticker: z.string().trim().toUpperCase().min(1).max(20).refine((ticker) => STOCK_LOOKUP.has(ticker), "Enter a recognised NSE symbol."),
@@ -47,7 +49,8 @@ export async function POST(req: Request) {
       .from("portfolios")
       .select("id")
       .eq("profile_id", profile.id)
-      .limit(1)
+      .eq("name", "Primary")
+      .eq("is_demo", false)
       .single();
 
     if (portfolioError || !portfolio) {
@@ -80,26 +83,10 @@ export async function POST(req: Request) {
       throw new Error("Failed to insert conviction alert: " + insertError.message);
     }
 
-    // Trigger the email blast
-    try {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://fvi-ochre.vercel.app";
-      const webhookSecret = process.env.WEBHOOK_SECRET;
-      if (webhookSecret) {
-        fetch(`${siteUrl}/api/internal/blast-alert`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${webhookSecret}`,
-          },
-          body: JSON.stringify({ record: newAlert }),
-        }).catch(err => console.error("Failed to trigger email blast fetch", err));
-      } else {
-        console.warn("WEBHOOK_SECRET is not set, skipping email blast");
-      }
-    } catch (e) {
-      console.error("Error setting up email blast trigger", e);
-    }
-
+    after(async () => {
+      try { await deliverTradeAlert(writeClient, newAlert); }
+      catch (error) { console.error("Broadcast delivery deferred to retry queue", error); }
+    });
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("Broadcast alert error:", error);

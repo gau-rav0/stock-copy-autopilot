@@ -13,7 +13,7 @@ export default async function CreatorDashboardPage() {
   // Check if user has a verified creator profile
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, display_name, verified")
+    .select("id, display_name, verified, follower_count")
     .eq("user_id", user.id)
     .single();
 
@@ -22,18 +22,16 @@ export default async function CreatorDashboardPage() {
     return redirect("/");
   }
 
-  // Count followers (from followers table)
-  const { count: followerCount } = await supabase
-    .from("followers")
-    .select("*", { count: "exact", head: true })
-    .eq("profile_id", profile.id);
+  // Follower rows are private to each follower. Use the trigger-maintained count.
+  const followerCount = profile.follower_count;
 
   // Fetch their portfolio ID to get history
   const { data: portfolio } = await supabase
     .from("portfolios")
     .select("id")
     .eq("profile_id", profile.id)
-    .limit(1)
+    .eq("name", "Primary")
+    .eq("is_demo", false)
     .single();
 
   // Fetch recent alerts

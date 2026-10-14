@@ -36,7 +36,7 @@ const withTimeout = async (url: string) => {
       throw new Error(`Market request failed: ${response.status}`);
     }
 
-    return response.json() as Promise<unknown>;
+    return await response.json() as unknown;
   } finally {
     clearTimeout(timeout);
   }
@@ -59,11 +59,11 @@ export const getMarketSnapshot = async (rawSymbol: string): Promise<MarketSnapsh
     }).chart?.result?.[0];
 
     const closes = result?.indicators?.quote?.[0]?.close?.filter(
-      (value): value is number => typeof value === "number" && Number.isFinite(value)
+      (value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0
     );
     const price = result?.meta?.regularMarketPrice ?? result?.meta?.previousClose ?? closes?.at(-1);
 
-    if (!price || !closes || closes.length < 15) {
+    if (typeof price !== "number" || !Number.isFinite(price) || price <= 0 || !closes || closes.length < 15) {
       throw new Error("Incomplete Yahoo chart payload");
     }
 
@@ -86,7 +86,7 @@ export const getBenchmarkHistory = async () => {
     const closes = (json as {
       chart?: { result?: Array<{ indicators?: { quote?: Array<{ close?: Array<number | null> }> } }> };
     }).chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter(
-      (value): value is number => typeof value === "number" && Number.isFinite(value)
+      (value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0
     );
 
     if (!closes || closes.length < 12) {

@@ -30,7 +30,7 @@ type ConvictionAlert = {
   action: string;
   alert_text: string | null;
   transaction_date: string;
-  profiles: { display_name: string; slug: string } | null;
+  portfolios: { profiles: { display_name: string; slug: string } | null } | null;
 };
 
 export default async function DashboardPage() {
@@ -49,7 +49,7 @@ export default async function DashboardPage() {
       "profile_id, profiles!inner(slug, display_name, bio, verification_tier, verified, cagr, follower_count)"
     )
     .eq("follower_user_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("followed_at", { ascending: false });
 
   const followed = (follows ?? []) as unknown as FollowedInvestor[];
   const followedProfileIds = followed.map((f) => f.profile_id);
@@ -198,6 +198,11 @@ export default async function DashboardPage() {
                     </span>
                   </div>
                   <p className="mt-1.5 font-mono text-sm text-paper">{alert.ticker}</p>
+                  {alert.portfolios?.profiles && (
+                    <Link href={`/investor/${alert.portfolios.profiles.slug}`} className="mt-1 block text-xs text-brass hover:underline">
+                      {alert.portfolios.profiles.display_name}
+                    </Link>
+                  )}
                   {alert.alert_text && (
                     <p className="mt-1 text-xs leading-5 text-paper-muted line-clamp-2">
                       {alert.alert_text}

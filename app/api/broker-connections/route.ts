@@ -52,23 +52,10 @@ export async function POST(request: Request) {
     }
   }
 
-  const { data, error } = await supabase
-    .from("broker_connections")
-    .upsert(
-      {
-        user_id: user.id,
-        broker,
-        purpose,
-        account_label: accountLabel || null,
-        // A provider OAuth callback or a verified server-to-server setup is the only path to active.
-        status: "awaiting_authorization",
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id,broker,purpose" }
-    )
-    .select("id, broker, purpose, account_label, status")
-    .single();
-
+  const { data: connections, error } = await supabase.rpc("save_broker_preference", {
+    p_broker: broker, p_purpose: purpose, p_account_label: accountLabel,
+  });
+  const data = connections?.[0];
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ connection: data });
 }

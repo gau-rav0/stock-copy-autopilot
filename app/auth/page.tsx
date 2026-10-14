@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useSearchParams } from "next/navigation";
+import { safeAuthRedirect } from "@/lib/auth-redirect";
 
 function AuthContent() {
   const { signInWithEmail, verifyEmailOtp, user } = useAuth();
@@ -24,8 +25,7 @@ function AuthContent() {
   // Redirect signed-in users to ?next= or /explore
   useEffect(() => {
     if (user) {
-      const next = searchParams.get("next") || "/explore";
-      window.location.replace(decodeURIComponent(next));
+      window.location.replace(safeAuthRedirect(searchParams.get("next")));
     }
   }, [user, searchParams]);
 
@@ -36,8 +36,8 @@ function AuthContent() {
     setLoading(true);
     setMessage(null);
 
-    const next = searchParams.get("next");
-    const { error } = await signInWithEmail(email, next ?? undefined);
+    const next = safeAuthRedirect(searchParams.get("next"));
+    const { error } = await signInWithEmail(email, next);
 
     if (error) {
       if (error.toLowerCase().includes("rate limit")) {
@@ -65,19 +65,6 @@ function AuthContent() {
     else setMessage({ text: "Signed in successfully. Redirecting…", type: "success" });
     setLoading(false);
   };
-
-  // Cooldown timer
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (cooldown > 0) {
-      timer = setInterval(() => {
-        setCooldown((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [cooldown]);
 
   return (
     <div className="flex min-h-[calc(100vh-80px)] items-center justify-center p-4">

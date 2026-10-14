@@ -7,10 +7,12 @@ export default function Dialog({
   title,
   onClose,
   children,
+  closeLabel = "Close result",
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  closeLabel?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
@@ -78,7 +80,7 @@ export default function Dialog({
         <button
           onClick={onClose}
           className="dialog-close"
-          aria-label="Close result"
+          aria-label={closeLabel}
         >
           <X size={20} />
         </button>

@@ -8,6 +8,7 @@ import { NSE_UNIVERSE } from "@/data/nse-universe";
 import type { RoastResult } from "@/lib/roast-types";
 import { parsePortfolioCsv } from "@/lib/portfolio-import";
 import Dialog from "@/components/Dialog";
+import RoastLoading from "@/components/RoastLoading";
 import WaitlistSignup from "@/components/WaitlistSignup";
 import { trackEvent } from "@/lib/product-events";
 type Row = {
@@ -72,6 +73,7 @@ function RoastTool() {
   const [sharing, setSharing] = useState(false);
   const [csv, setCsv] = useState("");
   const card = useRef<HTMLDivElement>(null);
+  const roastRequest = useRef<AbortController | null>(null);
   function update(id: string, patch: Partial<Row>) {
     setIsSample(false);
     setRows((current) =>
@@ -117,6 +119,13 @@ function RoastTool() {
     setError("");
     setShareError("");
     trackEvent("roast_started");
+    const controller = new AbortController();
+    roastRequest.current = controller;
+    const timeout = setTimeout(
+      () =>
+        controller.abort(new DOMException("Request timed out", "TimeoutError")),
+      30000,
+    );
     try {
       const res = await fetch("/api/roast", {
         method: "POST",
@@ -131,7 +140,7 @@ function RoastTool() {
             }),
           ),
         }),
-        signal: AbortSignal.timeout(30000),
+        signal: controller.signal,
       });
       const json = await res.json();
       if (!res.ok)
@@ -144,12 +153,16 @@ function RoastTool() {
       trackEvent("roast_success");
     } catch (err) {
       setError(
-        err instanceof Error && err.name !== "TimeoutError"
-          ? err.message
-          : "This is taking longer than expected. Please try again.",
+        err instanceof Error && err.name === "AbortError"
+          ? "Roast cancelled. Your holdings are still here."
+          : err instanceof Error && err.name !== "TimeoutError"
+            ? err.message
+            : "This is taking longer than expected. Please try again.",
       );
       trackEvent("roast_error");
     } finally {
+      clearTimeout(timeout);
+      roastRequest.current = null;
       setLoading(false);
     }
   }
@@ -569,7 +582,10 @@ function RoastTool() {
           <WaitlistSignup source="roast_result" />
         </section>
       )}
-      {modal && result && (
+      {loading && (
+        <RoastLoading onCancel={() => roastRequest.current?.abort()} />
+      )}
+      {!loading && modal && result && (
         <Dialog
           title="Your portfolio roast result"
           onClose={() => setModal(false)}

@@ -1,4 +1,4 @@
-import { createWriteClient, hasSupabaseWriteConfig } from "@/lib/supabase/server";
+import { createClient, createWriteClient, hasSupabaseWriteConfig } from "@/lib/supabase/server";
 import { dispatchOutboundEvent } from "@/lib/outbound";
 import { extractPdfText, parseCasText, type ParsedCasHolding } from "@/lib/cas-parser";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
@@ -6,6 +6,32 @@ import { CreatorApplicationSchema } from "@/lib/validation";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
+
+const existingApplicationResponse = () => NextResponse.json({
+  stored: false,
+  code: "APPLICATION_EXISTS",
+  error: "An application for this email is already on file. This upload did not replace it.",
+}, { status: 409 });
+
+// Only disclose review status for the authenticated user's own email.
+export async function GET() {
+  const headers = { "Cache-Control": "no-store" };
+  try {
+    const auth = await createClient();
+    if (!auth) return NextResponse.json({ error: "Sign in to view your application." }, { status: 401, headers });
+    const { data: { user }, error: authError } = await auth.auth.getUser();
+    if (authError || !user?.email) return NextResponse.json({ error: "Sign in to view your application." }, { status: 401, headers });
+    const supabase = createWriteClient();
+    if (!supabase) return NextResponse.json({ error: "Application status is temporarily unavailable." }, { status: 503, headers });
+    const { data, error } = await supabase.from("creator_applications")
+      .select("status").ilike("email", user.email.trim().replace(/[\\%_]/g, "\\$&")).maybeSingle();
+    if (error) throw error;
+    return NextResponse.json({ exists: Boolean(data), status: data?.status, email: user.email }, { headers });
+  } catch (error) {
+    console.error("Creator application status lookup failed", error);
+    return NextResponse.json({ error: "Could not check your application status. Please try again." }, { status: 503, headers });
+  }
+}
 
 type CreatorPayload = {
   creatorName?: string;
@@ -117,8 +143,13 @@ async function handlePost(request: Request) {
     );
   }
 
-  const { data: existing } = await supabase.from("creator_applications").select("id").eq("email", payload.email).maybeSingle();
-  if (existing) return NextResponse.json({ stored: false, error: "An application for this email already exists." }, { status: 409 });
+  const { data: existing, error: lookupError } = await supabase.from("creator_applications").select("id")
+    .ilike("email", payload.email.replace(/[\\%_]/g, "\\$&")).maybeSingle();
+  if (lookupError) {
+    console.error("Creator application lookup failed", { code: lookupError.code });
+    return NextResponse.json({ stored: false, error: "Could not check your existing application. Please try again." }, { status: 503 });
+  }
+  if (existing) return existingApplicationResponse();
 
   const insertPayload = {
     creator_name: payload.creatorName || payload.name || null,
@@ -143,7 +174,7 @@ async function handlePost(request: Request) {
     : await supabase.from("creator_applications").insert(insertPayload);
 
   if (error) {
-    if (error.code === "23505") return NextResponse.json({ stored: false, error: "An application for this email already exists." }, { status: 409 });
+    if (error.code === "23505") return existingApplicationResponse();
     console.error("Creator application insert failed", { code: error.code, message: error.message });
     return NextResponse.json({ stored: false, error: "Could not save your application. Please try again." }, { status: 500 });
   }

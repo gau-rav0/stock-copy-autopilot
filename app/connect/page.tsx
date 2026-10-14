@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { CheckCircle2, FileCheck2, XCircle } from "lucide-react";
 import TrustNotice from "@/components/TrustNotice";
+import { existingApplicationMessage } from "@/lib/creator-application-status";
 
 type Step = "method" | "details" | "done";
 type Method = "cas" | "manual" | null;
-type SubmitStatus = "idle" | "success" | "error";
+type SubmitStatus = "idle" | "success" | "existing" | "error";
 
 export default function ConnectPage() {
   const [step, setStep] = useState<Step>("method");
@@ -27,8 +29,36 @@ export default function ConnectPage() {
   const [saving, setSaving] = useState(false);
   const [saveNote, setSaveNote] = useState("");
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>("idle");
+  const [checkingApplication, setCheckingApplication] = useState(true);
+  const [statusCheckNote, setStatusCheckNote] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const checkApplication = async () => {
+      try {
+        const response = await fetch("/api/creator-applications", { cache: "no-store", signal: controller.signal });
+        if (response.status === 401) return;
+        if (!response.ok) throw new Error("Status lookup unavailable");
+        const application = await response.json();
+        if (controller.signal.aborted) return;
+        if (application.email) setEmail(application.email);
+        if (application.exists) {
+          setSaveNote(existingApplicationMessage(application.status));
+          setSubmitStatus("existing");
+          setStep("done");
+        }
+      } catch {
+        if (!controller.signal.aborted) setStatusCheckNote("We could not check for an existing application. You can still submit; any application already on file will be kept.");
+      } finally {
+        if (!controller.signal.aborted) setCheckingApplication(false);
+      }
+    };
+    void checkApplication();
+    return () => controller.abort();
+  }, []);
 
   const submitApplication = async () => {
+    if (saving) return;
     setSaving(true);
     setSaveNote("");
     setSubmitStatus("idle");
@@ -52,11 +82,18 @@ export default function ConnectPage() {
       });
 
       const responseText = await response.text();
-      let json: { error?: string; parsedCount?: number; stored?: boolean } = {};
+      let json: { error?: string; code?: string; parsedCount?: number; stored?: boolean } = {};
       try {
         json = responseText ? JSON.parse(responseText) : {};
       } catch (parseError) {
         throw new Error("Server could not process this application. Please try again.");
+      }
+
+      if (response.status === 409 && json.code === "APPLICATION_EXISTS") {
+        setSaveNote(existingApplicationMessage());
+        setSubmitStatus("existing");
+        setStep("done");
+        return;
       }
 
       if (!response.ok || json.stored !== true) {
@@ -70,8 +107,8 @@ export default function ConnectPage() {
       setSaveNote(`Application saved for review. ${parseNote}`);
       setSubmitStatus("success");
       setStep("done");
-    } catch (err: any) {
-      setSaveNote(err.message || "An unexpected error occurred. Please try again.");
+    } catch (err: unknown) {
+      setSaveNote(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
       setSubmitStatus("error");
       setStep("done");
     } finally {
@@ -116,7 +153,14 @@ export default function ConnectPage() {
         </div>
       </div>
 
-      {step === "method" && (
+      {checkingApplication ? (
+        <p role="status" className="mt-8 text-sm text-paper-muted">Checking your application status…</p>
+      ) : null}
+      {statusCheckNote && step !== "done" ? (
+        <p role="status" className="mt-6 text-sm text-paper-muted">{statusCheckNote}</p>
+      ) : null}
+
+      {step === "method" && !checkingApplication && (
         <div className="mt-8 space-y-4">
           <button
             aria-label="Upload CAS statement"
@@ -272,20 +316,22 @@ export default function ConnectPage() {
       )}
 
       {step === "done" && (
-        <div className="mt-10 rounded-xl border border-ink-hairline bg-ink-elevated/75 p-8 text-center backdrop-blur-xl">
+        <div role="status" aria-live="polite" className="mt-10 rounded-xl border border-ink-hairline bg-ink-elevated/75 p-8 text-center backdrop-blur-xl">
           <div
             className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full ${
-              submitStatus === "success" ? "bg-brass/15" : "bg-red-500/10"
+              submitStatus !== "error" ? "bg-brass/15" : "bg-red-500/10"
             }`}
           >
-            {submitStatus === "success" ? (
+            {submitStatus === "existing" ? (
+              <FileCheck2 size={24} className="text-brass" />
+            ) : submitStatus === "success" ? (
               <CheckCircle2 size={24} className="text-brass" />
             ) : (
               <XCircle size={24} className="text-red-400" />
             )}
           </div>
           <p className="mt-4 font-display text-xl text-paper">
-            {submitStatus === "success" ? "Application received" : "Submission failed"}
+            {submitStatus === "existing" ? "Application already on file" : submitStatus === "success" ? "Application received" : "Submission failed"}
           </p>
           {submitStatus === "success" ? (
             <p className="mt-2 text-sm text-paper-muted">
@@ -295,9 +341,21 @@ export default function ConnectPage() {
             </p>
           ) : null}
           {saveNote ? (
-            <p className={`mt-3 text-sm ${submitStatus === "success" ? "text-brass" : "text-red-300"}`}>
+            <p className={`mt-3 text-sm ${submitStatus === "error" ? "text-red-300" : "text-paper-muted"}`}>
               {saveNote}
             </p>
+          ) : null}
+          {submitStatus === "existing" || submitStatus === "success" ? (
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <Link href="/dashboard" className="rounded-lg bg-brass px-5 py-2 text-sm font-semibold text-white transition hover:bg-brass-bright">
+                Open dashboard
+              </Link>
+              {submitStatus === "existing" ? (
+                <a href="mailto:gauravbihanigb@gmail.com?subject=Creator%20application%20help" className="rounded-lg border border-brass/40 px-5 py-2 text-sm font-semibold text-brass transition hover:border-brass">
+                  Contact us
+                </a>
+              ) : null}
+            </div>
           ) : null}
           {submitStatus === "error" ? (
             <button

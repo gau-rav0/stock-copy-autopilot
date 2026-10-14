@@ -57,8 +57,10 @@ Suggested homepage copy:
 >
 > Check concentration, sector exposure, and estimated risk from your NSE holdings. Get a free portfolio roast, then preview how FVI will help you inspect investor evidence.
 >
-> **Primary:** Try a sample roast  
-> **Secondary:** Join early access  
+> **Primary:** Try a sample roast
+>
+> **Secondary:** Join early access
+>
 > **Small link:** Apply as a creator
 >
 > No login required for the roast. Educational estimates; source quality is shown with each result.

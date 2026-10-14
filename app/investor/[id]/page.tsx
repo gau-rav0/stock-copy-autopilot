@@ -36,6 +36,10 @@ export async function generateMetadata({
 
   return {
     title: `${detail.profile.displayName} evidence profile`,
+    robots: detail.profile.isDemo
+      ? { index: false, follow: true }
+      : { index: true, follow: true },
+    alternates: { canonical: `/investor/${id}` },
     description: `Inspect ${detail.profile.displayName}'s verification tier, holdings, benchmark comparison, portfolio replay, and risk context.`,
   };
 }
@@ -67,10 +71,17 @@ export default async function InvestorProfilePage({
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-wrap-safe font-display text-2xl text-paper">{profile.displayName}</h1>
-              <VerificationBadge tier={profile.verificationTier} isDemo={profile.isDemo} />
+              <h1 className="text-wrap-safe font-display text-2xl text-paper">
+                {profile.displayName}
+              </h1>
+              <VerificationBadge
+                tier={profile.verificationTier}
+                isDemo={profile.isDemo}
+              />
             </div>
-            <p className="text-wrap-safe mt-1 text-sm text-paper-muted">{profile.bio}</p>
+            <p className="text-wrap-safe mt-1 text-sm text-paper-muted">
+              {profile.bio}
+            </p>
             <p className="mt-1 font-mono text-xs text-paper-muted">
               {profile.isDemo
                 ? "Fictional preview · no real followers"
@@ -97,19 +108,21 @@ export default async function InvestorProfilePage({
       <div className="mt-6">
         <TrustNotice
           compact
-          items={profile.isDemo
-            ? [
-                "Fictional identity and portfolio.",
-                "Illustrative performance only.",
-                "Cannot be followed or purchased.",
-                "Not investment advice.",
-              ]
-            : [
-                "Portfolio-update notifications only.",
-                "Not investment advice.",
-                "No copy trading.",
-                "No order execution.",
-              ]}
+          items={
+            profile.isDemo
+              ? [
+                  "Fictional identity and portfolio.",
+                  "Illustrative performance only.",
+                  "Cannot be followed or purchased.",
+                  "Not investment advice.",
+                ]
+              : [
+                  "Portfolio-update notifications only.",
+                  "Not investment advice.",
+                  "No copy trading.",
+                  "No order execution.",
+                ]
+          }
         />
       </div>
 
@@ -126,10 +139,14 @@ export default async function InvestorProfilePage({
                 Evidence breakdown
               </p>
               <h2 className="mt-1 font-display text-xl text-paper">
-                {profile.isDemo ? "How the example score works" : "Why this score changed"}
+                {profile.isDemo
+                  ? "How the example score works"
+                  : "Why this score changed"}
               </h2>
             </div>
-            <p className={`mono-num font-mono text-2xl ${trustScoreTone(trust.score)}`}>
+            <p
+              className={`mono-num font-mono text-2xl ${trustScoreTone(trust.score)}`}
+            >
               {trust.score}/100
             </p>
           </div>
@@ -137,8 +154,12 @@ export default async function InvestorProfilePage({
             {trust.components.map((component) => (
               <div key={component.label}>
                 <div className="mb-2 flex items-center justify-between gap-3 text-sm">
-                  <span className="font-medium text-paper">{component.label}</span>
-                  <span className="mono-num font-mono text-paper-muted">{component.score}</span>
+                  <span className="font-medium text-paper">
+                    {component.label}
+                  </span>
+                  <span className="mono-num font-mono text-paper-muted">
+                    {component.score}
+                  </span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-white/10">
                   <div
@@ -146,7 +167,9 @@ export default async function InvestorProfilePage({
                     style={{ width: `${component.score}%` }}
                   />
                 </div>
-                <p className="mt-2 text-xs leading-5 text-paper-muted">{component.note}</p>
+                <p className="mt-2 text-xs leading-5 text-paper-muted">
+                  {component.note}
+                </p>
               </div>
             ))}
           </div>
@@ -155,14 +178,66 @@ export default async function InvestorProfilePage({
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          ["Evidence status", profile.isDemo ? "Fictional preview, not verified evidence." : "Evidence reviewed from the stated source tier."],
-          ["Verification date", profile.isDemo ? "Not applicable" : "June 2026"],
-          ["Source type", profile.isDemo ? `Illustrative ${profile.verificationTier.toUpperCase()} workflow` : profile.verificationTier === "broker" ? "Read-only broker evidence" : profile.verificationTier === "cas" ? "CAS statement evidence" : "Unverified submission"],
-          ["Last updated", alerts[0]?.transactionDate ?? transactions[0]?.transactionDate ?? "Pending"],
+          [
+            "Evidence status",
+            profile.isDemo
+              ? "Fictional preview, not verified evidence."
+              : "Evidence reviewed from the stated source tier.",
+          ],
+          [
+            "Verification date",
+            profile.isDemo
+              ? "Not applicable"
+              : profile.evidenceReviewedAt
+                ? new Date(profile.evidenceReviewedAt).toLocaleDateString(
+                    "en-IN",
+                    {
+                      timeZone: "Asia/Kolkata",
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    },
+                  )
+                : "Not reviewed",
+          ],
+          [
+            "Source type",
+            profile.isDemo
+              ? `Illustrative ${profile.verificationTier.toUpperCase()} workflow`
+              : profile.verificationTier === "broker"
+                ? "Read-only broker evidence"
+                : profile.verificationTier === "cas"
+                  ? "CAS statement evidence"
+                  : "Unverified submission",
+          ],
+          [
+            "Evidence as of",
+            profile.isDemo
+              ? "Illustrative"
+              : (profile.evidenceStatementAsOf ?? "Not supplied"),
+          ],
+          [
+            "Last updated",
+            profile.isDemo
+              ? (alerts[0]?.transactionDate ?? "Illustrative")
+              : profile.evidenceUpdatedAt
+                ? new Date(profile.evidenceUpdatedAt).toLocaleDateString(
+                    "en-IN",
+                    { timeZone: "Asia/Kolkata" },
+                  )
+                : "Unavailable",
+          ],
         ].map(([label, value]) => (
-          <div key={label} className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-4 shadow-[0_0_50px_rgba(0,157,85,.04)] backdrop-blur">
-            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-paper-muted">{label}</p>
-            <p className="text-wrap-safe mt-2 text-sm font-medium text-paper">{value}</p>
+          <div
+            key={label}
+            className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-4 shadow-[0_0_50px_rgba(0,157,85,.04)] backdrop-blur"
+          >
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-paper-muted">
+              {label}
+            </p>
+            <p className="text-wrap-safe mt-2 text-sm font-medium text-paper">
+              {value}
+            </p>
           </div>
         ))}
       </div>
@@ -171,9 +246,12 @@ export default async function InvestorProfilePage({
         <div className="mt-8 rounded-lg border border-brass/30 bg-brass/10 p-5 shadow-[0_0_70px_rgba(0,157,85,.08)] backdrop-blur-xl">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="font-display text-xl text-paper">Conviction alerts</h2>
+              <h2 className="font-display text-xl text-paper">
+                Conviction alerts
+              </h2>
               <p className="mt-1 text-sm text-paper-muted">
-                Only major allocation changes, new stocks, full exits, or top-conviction shifts.
+                Only major allocation changes, new stocks, full exits, or
+                top-conviction shifts.
               </p>
             </div>
             <span className="rounded-full border border-brass/40 px-3 py-1 font-mono text-xs text-brass">
@@ -182,7 +260,10 @@ export default async function InvestorProfilePage({
           </div>
           <div className="mt-4 grid gap-3">
             {alerts.slice(0, 3).map((alert) => (
-              <div key={alert.id} className="rounded-lg border border-ink-hairline bg-ink-elevated/80 p-4 backdrop-blur">
+              <div
+                key={alert.id}
+                className="rounded-lg border border-ink-hairline bg-ink-elevated/80 p-4 backdrop-blur"
+              >
                 <div className="flex items-center justify-between gap-3 text-xs text-paper-muted">
                   <span className="font-mono">{alert.transactionDate}</span>
                   <span className="font-mono">{alert.ticker}</span>
@@ -198,9 +279,17 @@ export default async function InvestorProfilePage({
       <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-6">
         {METRICS.map(([label, key, suffix, tone]) => {
           const value = profile[key as keyof typeof profile] as number;
-          const color = tone === "gain" ? "text-gain" : tone === "loss" ? "text-loss" : "text-paper";
+          const color =
+            tone === "gain"
+              ? "text-gain"
+              : tone === "loss"
+                ? "text-loss"
+                : "text-paper";
           return (
-            <div key={key} className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-4 shadow-[0_0_50px_rgba(0,157,85,.04)] backdrop-blur">
+            <div
+              key={key}
+              className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-4 shadow-[0_0_50px_rgba(0,157,85,.04)] backdrop-blur"
+            >
               <p className="text-xs text-paper-muted">{label}</p>
               <p className={`mono-num mt-1 font-mono text-lg ${color}`}>
                 {value > 0 && tone === "gain" ? "+" : ""}
@@ -219,7 +308,9 @@ export default async function InvestorProfilePage({
             <p className="font-mono text-xs uppercase tracking-[0.16em] text-paper-muted">
               Performance evidence
             </p>
-            <h2 className="mt-2 font-display text-xl text-paper">Portfolio growth vs. Nifty 50</h2>
+            <h2 className="mt-2 font-display text-xl text-paper">
+              Portfolio growth vs. Nifty 50
+            </h2>
           </div>
           <p className="max-w-md text-sm leading-6 text-paper-muted">
             {profile.isDemo
@@ -255,10 +346,19 @@ export default async function InvestorProfilePage({
                 </thead>
                 <tbody>
                   {holdings.map((h) => (
-                    <tr key={h.ticker} className="border-b border-ink-hairline last:border-0">
-                      <td className="px-4 py-3 font-mono text-paper">{h.ticker}</td>
-                      <td className="px-4 py-3 font-mono text-paper-muted">{h.allocationPct}%</td>
-                      <td className="px-4 py-3 text-paper-muted">{h.holdingSince}</td>
+                    <tr
+                      key={h.ticker}
+                      className="border-b border-ink-hairline last:border-0"
+                    >
+                      <td className="px-4 py-3 font-mono text-paper">
+                        {h.ticker}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-paper-muted">
+                        {h.allocationPct}%
+                      </td>
+                      <td className="px-4 py-3 text-paper-muted">
+                        {h.holdingSince}
+                      </td>
                       <td
                         className={`px-4 py-3 text-right font-mono ${
                           h.unrealizedReturnPct >= 0 ? "text-gain" : "text-loss"
@@ -295,24 +395,32 @@ export default async function InvestorProfilePage({
 
       <div className="mt-12 grid gap-4 lg:grid-cols-3">
         <div className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-5 backdrop-blur">
-          <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">Audit trail</p>
+          <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">
+            Audit trail
+          </p>
           <p className="mt-2 text-sm leading-6 text-paper-muted">
-            Every published holding and replay event is tied to an evidence tier. Demo records are
-            explicitly labeled until a CAS or read-only source review is complete.
+            Every published holding and replay event is tied to an evidence
+            tier. Demo records are explicitly labeled until a CAS or read-only
+            source review is complete.
           </p>
         </div>
         <div className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-5 backdrop-blur">
-          <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">Change log</p>
+          <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">
+            Change log
+          </p>
           <p className="mt-2 text-sm leading-6 text-paper-muted">
-            Conviction alerts show major additions, reductions, exits, and top-holding changes so
-            users can see behavior over time.
+            Conviction alerts show major additions, reductions, exits, and
+            top-holding changes so users can see behavior over time.
           </p>
         </div>
         <div className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-5 backdrop-blur">
-          <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">Risk explanation</p>
+          <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">
+            Risk explanation
+          </p>
           <p className="mt-2 text-sm leading-6 text-paper-muted">
-            Drawdown, volatility, concentration, and benchmark comparison are shown beside returns
-            because performance without risk context is incomplete.
+            Drawdown, volatility, concentration, and benchmark comparison are
+            shown beside returns because performance without risk context is
+            incomplete.
           </p>
         </div>
       </div>

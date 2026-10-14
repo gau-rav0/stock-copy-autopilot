@@ -54,4 +54,8 @@ export type RoastResult = {
   market_data_source: "yahoo" | "fallback";
   warnings: string[];
   generated_by: "deterministic" | "openai";
+  benchmark_data_source: "yahoo" | "fallback";
+  data_checked_at: string;
+  metric_method: "holding_estimates";
+  leadStored?: boolean;
 };

@@ -1,122 +1,221 @@
 "use client";
-
 import { useState } from "react";
-import { CheckCircle, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
-
-export default function AdminCreatorsClient({ initialApplications }: { initialApplications: any[] }) {
+type Application = {
+  id: string;
+  creator_name: string;
+  email: string;
+  method: string;
+  parse_status: string;
+  parsed_holdings: unknown;
+  evidence_path: string | null;
+  evidence_sha256: string | null;
+};
+export default function AdminCreatorsClient({
+  initialApplications,
+}: {
+  initialApplications: Application[];
+}) {
   const [applications, setApplications] = useState(initialApplications);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [approvingId, setApprovingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const toggleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
-
-  const handleApprove = async (id: string) => {
-    setApprovingId(id);
-    setError(null);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [notes, setNotes] = useState("");
+  const [date, setDate] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+  const [opened, setOpened] = useState(false);
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  function select(id: string) {
+    setSelected(selected === id ? null : id);
+    setNotes("");
+    setDate("");
+    setConfirmed(false);
+    setOpened(false);
+    setUrl("");
+    setError("");
+  }
+  async function evidence(id: string) {
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/creator-evidence?id=${id}`, {
+        cache: "no-store",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setUrl(data.url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not open the evidence.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function approve(application: Application) {
+    setBusy(true);
+    setError("");
     try {
       const res = await fetch("/api/admin/approve-creator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ applicationId: id }),
+        body: JSON.stringify({
+          applicationId: application.id,
+          evidenceConfirmed: confirmed && opened,
+          reviewNotes: notes,
+          statementAsOf: date || null,
+        }),
       });
-      
       const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to approve application");
-      }
-      
-      // Remove approved application from list
-      setApplications((prev) => prev.filter((app) => app.id !== id));
-    } catch (err: any) {
-      setError(err.message);
+      if (!res.ok) throw new Error(data.error);
+      setApplications((current) =>
+        current.filter((a) => a.id !== application.id),
+      );
+      setSelected(null);
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Could not publish this profile.",
+      );
     } finally {
-      setApprovingId(null);
+      setBusy(false);
     }
-  };
-
-  if (applications.length === 0) {
-    return (
-      <div className="rounded-xl border border-white/10 bg-surface/50 p-8 text-center text-ink/70">
-        No pending applications to review.
-      </div>
-    );
   }
-
+  if (!applications.length)
+    return <p className="notice">No pending applications to review.</p>;
   return (
-    <div className="space-y-4">
+    <div>
       {error && (
-        <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-500/10 p-4 text-red-400">
-          <AlertCircle className="h-5 w-5" />
-          <p>{error}</p>
-        </div>
+        <p role="alert" className="notice notice-error">
+          {error}
+        </p>
       )}
-      
       {applications.map((app) => (
-        <div key={app.id} className="rounded-xl border border-white/10 bg-surface/50 p-6 transition-colors hover:border-white/20">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <section key={app.id} className="review-panel">
+          <div className="panel-heading">
             <div>
-              <h3 className="text-xl font-medium text-paper">{app.creator_name}</h3>
-              <p className="text-sm text-ink/70">{app.email}</p>
-              <div className="mt-2 flex gap-2">
-                <span className="inline-flex items-center rounded-full bg-white/5 px-2.5 py-0.5 text-xs font-medium text-ink">
-                  Method: {app.method}
-                </span>
-                <span className="inline-flex items-center rounded-full bg-yellow-500/10 px-2.5 py-0.5 text-xs font-medium text-yellow-500">
-                  {app.status}
-                </span>
-                <span className="inline-flex items-center rounded-full bg-white/5 px-2.5 py-0.5 text-xs font-medium text-ink">
-                  Parse: {app.parse_status || "not_parsed"}
-                </span>
-              </div>
+              <h2>{app.creator_name || "Creator application"}</h2>
+              <p className="form-help mt-2">
+                {app.email} ·{" "}
+                {app.method === "cas"
+                  ? "Statement review"
+                  : "Manual holdings / unverified"}
+              </p>
             </div>
-            
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => toggleExpand(app.id)}
-                className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-ink hover:bg-white/5 hover:text-paper"
-              >
-                {expandedId === app.id ? (
-                  <>Hide Details <ChevronUp className="h-4 w-4" /></>
-                ) : (
-                  <>View Details <ChevronDown className="h-4 w-4" /></>
-                )}
-              </button>
-              
-              <button
-                onClick={() => handleApprove(app.id)}
-                disabled={approvingId === app.id}
-                className="flex items-center gap-2 rounded-lg bg-brass px-4 py-2 text-sm font-medium text-base shadow-sm hover:bg-brass/90 disabled:opacity-50"
-              >
-                {approvingId === app.id ? (
-                  "Approving..."
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4" />
-                    Publish reviewed profile
-                  </>
-                )}
-              </button>
-            </div>
+            <button
+              className="button-secondary"
+              aria-expanded={selected === app.id}
+              onClick={() => select(app.id)}
+            >
+              {selected === app.id ? "Close review" : "Review application"}
+            </button>
           </div>
-          
-          {expandedId === app.id && (
-            <div className="mt-6 border-t border-white/10 pt-6">
-              <div className="mb-4 rounded-lg border border-amber-300/25 bg-amber-300/[.06] p-4 text-sm leading-6 text-amber-100">
-                CAS applications with successfully parsed holdings publish as CAS reviewed. Manual or failed parses publish as unverified. Confirm the evidence before publishing.
-              </div>
-              <h4 className="mb-3 text-sm font-medium text-ink">Parsed Holdings Data:</h4>
-              <div className="rounded-lg bg-base p-4 overflow-x-auto">
-                <pre className="text-xs text-ink/80">
+          {selected === app.id && (
+            <>
+              <p className="notice">
+                A parser result is not verification. Inspect the original, match
+                account ownership and published holdings, and record the
+                statement date before issuing a CAS badge.
+              </p>
+              {app.method === "cas" && (
+                <div className="mt-5">
+                  {app.evidence_path ? (
+                    <>
+                      <button
+                        className="button-secondary"
+                        disabled={busy}
+                        onClick={() => void evidence(app.id)}
+                      >
+                        Prepare original statement link
+                      </button>
+                      {url && (
+                        <p className="mt-4">
+                          <a
+                            className="text-link underline"
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={() => setOpened(true)}
+                          >
+                            Open original statement / link expires in 60 seconds
+                          </a>
+                        </p>
+                      )}
+                      <p className="form-help mt-3 break-all">
+                        SHA-256: {app.evidence_sha256}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="notice notice-error">
+                      No original evidence on file. Contact the applicant for a
+                      fresh submission; this application cannot receive a CAS
+                      badge.
+                    </p>
+                  )}
+                </div>
+              )}
+              <details className="import-details">
+                <summary>Parsed holdings / {app.parse_status}</summary>
+                <pre className="mt-4">
                   {JSON.stringify(app.parsed_holdings, null, 2)}
                 </pre>
+              </details>
+              <div className="form-grid">
+                <label className="full-width">
+                  <span className="field-label">
+                    Review notes / visible to the applicant
+                  </span>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="input-field"
+                    maxLength={3000}
+                  />
+                </label>
+                {app.method === "cas" && (
+                  <label>
+                    <span className="field-label">Statement as of</span>
+                    <input
+                      type="date"
+                      max={new Date().toISOString().slice(0, 10)}
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="input-field"
+                    />
+                  </label>
+                )}
               </div>
-            </div>
+              {app.method === "cas" && (
+                <label className="check-label">
+                  <input
+                    type="checkbox"
+                    disabled={!opened}
+                    checked={confirmed}
+                    onChange={(e) => setConfirmed(e.target.checked)}
+                  />
+                  <span>
+                    I reviewed the original, matched its owner to the
+                    application, and checked the holdings against the statement.
+                  </span>
+                </label>
+              )}
+              <button
+                onClick={() => void approve(app)}
+                disabled={
+                  busy ||
+                  (app.method === "cas" &&
+                    (!confirmed ||
+                      !opened ||
+                      !date ||
+                      notes.trim().length < 10))
+                }
+                className="button-primary mt-5"
+              >
+                {busy
+                  ? "Saving review…"
+                  : app.method === "cas"
+                    ? "Publish with CAS review label"
+                    : "Publish as unverified"}
+              </button>
+            </>
           )}
-        </div>
+        </section>
       ))}
     </div>
   );

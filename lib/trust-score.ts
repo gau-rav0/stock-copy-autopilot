@@ -9,12 +9,14 @@ export type TrustScoreComponent = {
 
 export type TrustScoreResult = {
   score: number;
-  band: "High evidence" | "Balanced evidence" | "Review closely" | "Low evidence";
+  band:
+    "High evidence" | "Balanced evidence" | "Review closely" | "Low evidence";
   summary: string;
   components: TrustScoreComponent[];
 };
 
-const clamp = (value: number, min = 0, max = 100) => Math.min(max, Math.max(min, value));
+const clamp = (value: number, min = 0, max = 100) =>
+  Math.min(max, Math.max(min, value));
 
 const round = (value: number) => Math.round(clamp(value));
 
@@ -25,22 +27,38 @@ const verificationScore: Record<Profile["verificationTier"], number> = {
   demo: 46,
 };
 
-export function calculateTrustScore(profile: Profile, holdings: Holding[] = []): TrustScoreResult {
+export function calculateTrustScore(
+  profile: Profile,
+  holdings: Holding[] = [],
+): TrustScoreResult {
+  const holdingsCount = profile.holdingsCount ?? holdings.length;
   const hasPerformanceHistory =
-    profile.cagr !== 0 || profile.xirr !== 0 || profile.alpha !== 0 ||
-    profile.maxDrawdown !== 0 || profile.volatility !== 0 || profile.winRate !== 0;
+    profile.cagr !== 0 ||
+    profile.xirr !== 0 ||
+    profile.alpha !== 0 ||
+    profile.maxDrawdown !== 0 ||
+    profile.volatility !== 0 ||
+    profile.winRate !== 0;
   const verifiedScore = profile.verified
     ? verificationScore[profile.verificationTier]
     : Math.min(verificationScore[profile.verificationTier], 38);
-  const returnScore = clamp(profile.cagr * 2.2 + profile.alpha * 2.4 + profile.winRate * 0.35);
+  const returnScore = clamp(
+    profile.cagr * 2.2 + profile.alpha * 2.4 + profile.winRate * 0.35,
+  );
   const riskScore = hasPerformanceHistory
-    ? clamp(100 - Math.abs(profile.maxDrawdown) * 1.35 - profile.volatility * 0.85)
+    ? clamp(
+        100 - Math.abs(profile.maxDrawdown) * 1.35 - profile.volatility * 0.85,
+      )
     : 38;
-  const consistencyScore = clamp(profile.winRate * 0.9 + profile.xirr * 0.8 - Math.max(0, profile.volatility - 18));
+  const consistencyScore = clamp(
+    profile.winRate * 0.9 +
+      profile.xirr * 0.8 -
+      Math.max(0, profile.volatility - 18),
+  );
   const transparencyScore = clamp(
-    (holdings.length >= 5 ? 90 : holdings.length >= 3 ? 74 : 46) +
+    (holdingsCount >= 5 ? 90 : holdingsCount >= 3 ? 74 : 46) +
       (profile.verified ? 8 : -10) +
-      (profile.isDemo ? -4 : 6)
+      (profile.isDemo ? -4 : 6),
   );
 
   const components: TrustScoreComponent[] = [
@@ -78,11 +96,14 @@ export function calculateTrustScore(profile: Profile, holdings: Holding[] = []):
       label: "Transparency",
       score: round(transparencyScore),
       weight: 0.12,
-      note: `${holdings.length} published holdings are available for inspection.`,
+      note: `${holdingsCount} published holdings are available for inspection.`,
     },
   ];
 
-  const weightedScore = components.reduce((sum, item) => sum + item.score * item.weight, 0);
+  const weightedScore = components.reduce(
+    (sum, item) => sum + item.score * item.weight,
+    0,
+  );
   const score = round(weightedScore);
 
   const band =
@@ -97,10 +118,9 @@ export function calculateTrustScore(profile: Profile, holdings: Holding[] = []):
   return {
     score,
     band,
-    summary:
-      profile.isDemo
-        ? "Demo score based on verification status, returns, drawdown, volatility, consistency, and published holdings."
-        : "Trust score based on verified evidence: returns, drawdown, volatility, consistency, and published holdings.",
+    summary: profile.isDemo
+      ? "Demo score based on verification status, returns, drawdown, volatility, consistency, and published holdings."
+      : "Trust score based on verified evidence: returns, drawdown, volatility, consistency, and published holdings.",
     components,
   };
 }

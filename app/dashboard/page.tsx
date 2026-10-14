@@ -30,12 +30,15 @@ type ConvictionAlert = {
   action: string;
   alert_text: string | null;
   transaction_date: string;
-  portfolios: { profiles: { display_name: string; slug: string } | null } | null;
+  portfolios: {
+    profiles: { display_name: string; slug: string } | null;
+  } | null;
 };
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  if (!supabase) return redirect(`/auth?next=${encodeURIComponent("/dashboard")}`);
+  if (!supabase)
+    return redirect(`/auth?next=${encodeURIComponent("/dashboard")}`);
 
   const {
     data: { user },
@@ -43,10 +46,10 @@ export default async function DashboardPage() {
   if (!user) return redirect(`/auth?next=${encodeURIComponent("/dashboard")}`);
 
   // Fetch followed investors with their profile details
-  const { data: follows } = await supabase
+  const { data: follows, error: followsError } = await supabase
     .from("followers")
     .select(
-      "profile_id, profiles!inner(slug, display_name, bio, verification_tier, verified, cagr, follower_count)"
+      "profile_id, profiles!inner(slug, display_name, bio, verification_tier, verified, cagr, follower_count)",
     )
     .eq("follower_user_id", user.id)
     .order("followed_at", { ascending: false });
@@ -55,17 +58,17 @@ export default async function DashboardPage() {
   const followedProfileIds = followed.map((f) => f.profile_id);
 
   // Fetch latest conviction alerts from followed investors
-  const { data: alerts } = followedProfileIds.length
+  const { data: alerts, error: alertsError } = followedProfileIds.length
     ? await supabase
         .from("transactions")
         .select(
-          "ticker, action, alert_text, transaction_date, portfolios!inner(profile_id, profiles!inner(display_name, slug))"
+          "ticker, action, alert_text, transaction_date, portfolios!inner(profile_id, profiles!inner(display_name, slug))",
         )
         .in("portfolios.profile_id", followedProfileIds)
         .eq("is_conviction_alert", true)
         .order("transaction_date", { ascending: false })
         .limit(20)
-    : { data: [] };
+    : { data: [], error: null };
 
   const recentAlerts = (alerts ?? []) as unknown as ConvictionAlert[];
 
@@ -80,14 +83,29 @@ export default async function DashboardPage() {
     <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
       {/* Header */}
       <div className="border-b border-ink-hairline pb-8">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">My account</p>
-        <h1 className="mt-3 font-display text-3xl text-paper sm:text-4xl">Dashboard</h1>
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">
+          My account
+        </p>
+        <h1 className="mt-3 font-display text-3xl text-paper sm:text-4xl">
+          Dashboard
+        </h1>
         <p className="mt-2 text-paper-muted">
-          {user.email} · {followed.length} investor{followed.length !== 1 ? "s" : ""} followed
+          {user.email} · {followed.length} investor
+          {followed.length !== 1 ? "s" : ""} followed
         </p>
       </div>
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_340px]">
+        {followsError || alertsError ? (
+          <p
+            role="alert"
+            className="col-span-full rounded-lg border border-loss/30 p-4 text-sm text-paper"
+          >
+            We could not load{" "}
+            {followsError ? "your followed investors" : "your alerts"}. Refresh
+            this page to try again.
+          </p>
+        ) : null}
         {/* Left: followed investors */}
         <div>
           <div className="flex items-center justify-between">
@@ -95,14 +113,19 @@ export default async function DashboardPage() {
               <UserCircle2 size={20} className="text-brass" />
               Following
             </h2>
-            <Link href="/explore" className="text-sm text-brass hover:underline">
+            <Link
+              href="/explore"
+              className="text-sm text-brass hover:underline"
+            >
               Find more
             </Link>
           </div>
 
           {followed.length === 0 ? (
             <div className="mt-6 rounded-lg border border-ink-hairline bg-ink-elevated/75 p-8 text-center backdrop-blur">
-              <p className="text-paper-muted">You're not following anyone yet.</p>
+              <p className="text-paper-muted">
+                You're not following anyone yet.
+              </p>
               <Link
                 href="/explore"
                 className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brass px-5 py-2 text-sm font-semibold text-white hover:bg-brass-bright"
@@ -130,7 +153,9 @@ export default async function DashboardPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-paper">{p.display_name}</p>
-                      <p className="truncate text-xs text-paper-muted">{p.bio}</p>
+                      <p className="truncate text-xs text-paper-muted">
+                        {p.bio}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="font-mono text-sm text-gain">
@@ -139,7 +164,10 @@ export default async function DashboardPage() {
                       </p>
                       <p className="text-xs text-paper-muted">CAGR</p>
                     </div>
-                    <ArrowRight size={16} className="shrink-0 text-paper-muted" />
+                    <ArrowRight
+                      size={16}
+                      className="shrink-0 text-paper-muted"
+                    />
                   </Link>
                 );
               })}
@@ -153,8 +181,9 @@ export default async function DashboardPage() {
                 <p className="text-sm font-medium text-paper">Get started</p>
               </div>
               <p className="mt-2 text-sm text-paper-muted">
-                Follow investors with verified track records to receive read-only conviction alerts
-                whenever they make a significant portfolio move.
+                Follow investors with verified track records to receive
+                read-only conviction alerts whenever they make a significant
+                portfolio move.
               </p>
             </div>
           )}
@@ -173,7 +202,8 @@ export default async function DashboardPage() {
           {recentAlerts.length === 0 ? (
             <div className="mt-6 rounded-lg border border-ink-hairline bg-ink-elevated/75 p-6 text-center backdrop-blur">
               <p className="text-sm text-paper-muted">
-                No alerts yet. Follow investors to see their conviction moves here.
+                No alerts yet. Follow investors to see their conviction moves
+                here.
               </p>
             </div>
           ) : (
@@ -197,9 +227,14 @@ export default async function DashboardPage() {
                       {alert.action}
                     </span>
                   </div>
-                  <p className="mt-1.5 font-mono text-sm text-paper">{alert.ticker}</p>
+                  <p className="mt-1.5 font-mono text-sm text-paper">
+                    {alert.ticker}
+                  </p>
                   {alert.portfolios?.profiles && (
-                    <Link href={`/investor/${alert.portfolios.profiles.slug}`} className="mt-1 block text-xs text-brass hover:underline">
+                    <Link
+                      href={`/investor/${alert.portfolios.profiles.slug}`}
+                      className="mt-1 block text-xs text-brass hover:underline"
+                    >
                       {alert.portfolios.profiles.display_name}
                     </Link>
                   )}

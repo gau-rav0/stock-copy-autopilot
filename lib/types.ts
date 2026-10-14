@@ -1,10 +1,5 @@
 export type InvestingStyle =
-  | "value"
-  | "growth"
-  | "dividend"
-  | "momentum"
-  | "smallcap"
-  | "longterm";
+  "value" | "growth" | "dividend" | "momentum" | "smallcap" | "longterm";
 
 export type VerificationTier = "demo" | "cas" | "broker" | "auto";
 
@@ -25,6 +20,10 @@ export interface Profile {
   volatility: number;
   winRate: number;
   topHoldings?: Holding[];
+  holdingsCount?: number;
+  evidenceReviewedAt?: string | null;
+  evidenceStatementAsOf?: string | null;
+  evidenceUpdatedAt?: string | null;
   subscriptionFeeInr: number;
 }
 

@@ -1,13 +1,24 @@
 import { STOCK_LOOKUP } from "@/data/nse-universe";
-import { getBenchmarkHistory, getMarketSnapshot } from "@/lib/market-data";
-import type { HoldingInput, HoldingResult, RoastResult, SectorExposure } from "@/lib/roast-types";
+import { getBenchmarkSnapshot, getMarketSnapshot } from "@/lib/market-data";
+import type {
+  HoldingInput,
+  HoldingResult,
+  RoastResult,
+  SectorExposure,
+} from "@/lib/roast-types";
 
-const clamp = (value: number, min = 0, max = 100) => Math.min(max, Math.max(min, value));
+const clamp = (value: number, min = 0, max = 100) =>
+  Math.min(max, Math.max(min, value));
 
 const pct = (value: number) => Number(value.toFixed(2));
 
 const monthsBetween = (from: Date, to: Date) =>
-  Math.max(0, (to.getFullYear() - from.getFullYear()) * 12 + to.getMonth() - from.getMonth());
+  Math.max(
+    0,
+    (to.getFullYear() - from.getFullYear()) * 12 +
+      to.getMonth() -
+      from.getMonth(),
+  );
 
 const parseBuyDate = (value?: string) => {
   if (!value) {
@@ -41,7 +52,10 @@ const cagr = (start: number, end: number, months: number) => {
   return (Math.pow(end / start, 1 / years) - 1) * 100;
 };
 
-const calculateBenchmarkCagr = (history: number[], averageMonths: number | null) => {
+const calculateBenchmarkCagr = (
+  history: number[],
+  averageMonths: number | null,
+) => {
   if (!averageMonths || history.length < 2) {
     return null;
   }
@@ -64,17 +78,30 @@ export const normaliseHoldings = (holdings: HoldingInput[]) => {
       stock_symbol: holding.stock_symbol.toUpperCase().trim(),
       qty: Number(holding.qty),
       avg_buy_price: Number(holding.avg_buy_price),
-      buy_date: holding.buy_date || undefined
+      buy_date: holding.buy_date || undefined,
     }))
-    .filter((holding) => holding.stock_symbol && Number.isFinite(holding.qty) && Number.isFinite(holding.avg_buy_price) && holding.qty > 0 && holding.avg_buy_price > 0);
+    .filter(
+      (holding) =>
+        holding.stock_symbol &&
+        Number.isFinite(holding.qty) &&
+        Number.isFinite(holding.avg_buy_price) &&
+        holding.qty > 0 &&
+        holding.avg_buy_price > 0,
+    );
   const positions = new Map<string, HoldingInput>();
   for (const lot of lots) {
     const existing = positions.get(lot.stock_symbol);
-    if (!existing) { positions.set(lot.stock_symbol, lot); continue; }
+    if (!existing) {
+      positions.set(lot.stock_symbol, lot);
+      continue;
+    }
     const quantity = existing.qty + lot.qty;
     positions.set(lot.stock_symbol, {
-      stock_symbol: lot.stock_symbol, qty: quantity,
-      avg_buy_price: (existing.qty * existing.avg_buy_price + lot.qty * lot.avg_buy_price) / quantity,
+      stock_symbol: lot.stock_symbol,
+      qty: quantity,
+      avg_buy_price:
+        (existing.qty * existing.avg_buy_price + lot.qty * lot.avg_buy_price) /
+        quantity,
       // Mixed acquisition dates cannot be represented by a single buy month.
       buy_date: existing.buy_date === lot.buy_date ? lot.buy_date : undefined,
     });
@@ -82,27 +109,40 @@ export const normaliseHoldings = (holdings: HoldingInput[]) => {
   return [...positions.values()];
 };
 
-const sectorExposure = (holdings: HoldingResult[], totalValue: number): SectorExposure[] => {
+const sectorExposure = (
+  holdings: HoldingResult[],
+  totalValue: number,
+): SectorExposure[] => {
   const bySector = new Map<string, number>();
 
   holdings.forEach((holding) => {
-    bySector.set(holding.sector, (bySector.get(holding.sector) ?? 0) + holding.current_value);
+    bySector.set(
+      holding.sector,
+      (bySector.get(holding.sector) ?? 0) + holding.current_value,
+    );
   });
 
   return [...bySector.entries()]
     .map(([sector, value]) => ({
       sector,
       value: pct(value),
-      percentage: totalValue > 0 ? pct((value / totalValue) * 100) : 0
+      percentage: totalValue > 0 ? pct((value / totalValue) * 100) : 0,
     }))
     .sort((a, b) => b.value - a.value);
 };
 
-const deterministicRoast = (result: Omit<RoastResult, "verdict" | "roast_lines" | "generated_by">) => {
-  const { metrics, score, risk_score, diversification_score, timing_score, conviction_score } = result;
+const deterministicRoast = (
+  result: Omit<RoastResult, "verdict" | "roast_lines" | "generated_by">,
+) => {
+  const {
+    metrics,
+    score,
+    risk_score,
+    diversification_score,
+    timing_score,
+    conviction_score,
+  } = result;
   const topSector = metrics.sector_exposure[0];
-  const underBenchmark =
-    metrics.cagr_pct !== null && metrics.benchmark_cagr_pct !== null && metrics.cagr_pct < metrics.benchmark_cagr_pct;
 
   const verdict =
     score >= 78
@@ -116,51 +156,82 @@ const deterministicRoast = (result: Omit<RoastResult, "verdict" | "roast_lines" 
   const lines: string[] = [];
 
   if (metrics.concentration_pct > 45) {
-    lines.push(`One stock is ${metrics.concentration_pct.toFixed(0)}% of the portfolio. That's not conviction, that's emotional hostage-taking.`);
+    lines.push(
+      `One stock is ${metrics.concentration_pct.toFixed(0)}% of the portfolio. That's not conviction, that's emotional hostage-taking.`,
+    );
   } else if (diversification_score < 45) {
-    lines.push(`You bought ${metrics.holdings_count} names and still found only ${metrics.unique_sectors} real ideas. Fake diversification, premium edition.`);
+    lines.push(
+      `You bought ${metrics.holdings_count} names and still found only ${metrics.unique_sectors} real ideas. Fake diversification, premium edition.`,
+    );
   } else {
-    lines.push(`Diversification exists here, which is rude because now the losses have to coordinate schedules.`);
+    lines.push(
+      `Diversification exists here, which is rude because now the losses have to coordinate schedules.`,
+    );
   }
 
   if (risk_score > 70) {
-    lines.push(`Risk score at ${risk_score}/100. The portfolio has more drama than a WhatsApp options group.`);
+    lines.push(
+      `Risk score at ${risk_score}/100. The portfolio has more drama than a WhatsApp options group.`,
+    );
   } else if (metrics.max_drawdown_pct > 18) {
-    lines.push(`A ${metrics.max_drawdown_pct.toFixed(0)}% weighted drawdown. Your patience wasn't tested, it was subpoenaed.`);
+    lines.push(
+      `A ${metrics.max_drawdown_pct.toFixed(0)}% weighted drawdown. Your patience wasn't tested, it was subpoenaed.`,
+    );
   } else {
-    lines.push(`Drawdown is under control, so at least the spreadsheet is not actively smoking.`);
+    lines.push(
+      `Drawdown is under control, so at least the spreadsheet is not actively smoking.`,
+    );
   }
 
-  if (underBenchmark) {
-    lines.push(`Nifty did better over the comparable period. You created an index fund with extra steps and worse sleep.`);
-  } else if (timing_score < 45) {
-    lines.push(`Entry timing score: ${timing_score}/100. Confidence of Buffett. Track record of a coin flip.`);
+  if (timing_score < 45) {
+    lines.push(
+      `Entry timing score: ${timing_score}/100. Confidence of Buffett. Track record of a coin flip.`,
+    );
   } else if (conviction_score < 45) {
-    lines.push(`Position sizing says you wanted alpha but packed lunch for beta.`);
+    lines.push(
+      `Position sizing says you wanted alpha but packed lunch for beta.`,
+    );
   } else if (topSector) {
-    lines.push(`${topSector.percentage.toFixed(0)}% in ${topSector.sector}. Sector thesis or just muscle memory with a brokerage login?`);
+    lines.push(
+      `${topSector.percentage.toFixed(0)}% in ${topSector.sector}. Sector thesis or just muscle memory with a brokerage login?`,
+    );
   }
 
   return {
     verdict,
-    roast_lines: lines.slice(0, 3)
+    roast_lines: lines.slice(0, 3),
   };
 };
 
-export const calculatePortfolio = async (holdingsInput: HoldingInput[]): Promise<Omit<RoastResult, "verdict" | "roast_lines" | "generated_by">> => {
+export const calculatePortfolio = async (
+  holdingsInput: HoldingInput[],
+): Promise<Omit<RoastResult, "verdict" | "roast_lines" | "generated_by">> => {
   const clean = normaliseHoldings(holdingsInput);
 
   if (clean.length === 0) {
     throw new Error("Add at least one valid holding.");
   }
 
-  const unknownSymbols = [...new Set(clean.map((h) => h.stock_symbol).filter((s) => !STOCK_LOOKUP.has(s)))];
-  const recognised = clean.filter((holding) => STOCK_LOOKUP.has(holding.stock_symbol));
-  if (recognised.length === 0) throw new Error("Add at least one recognised NSE symbol (e.g. RELIANCE, INFY, HDFCBANK).");
+  const unknownSymbols = [
+    ...new Set(
+      clean.map((h) => h.stock_symbol).filter((s) => !STOCK_LOOKUP.has(s)),
+    ),
+  ];
+  const recognised = clean.filter((holding) =>
+    STOCK_LOOKUP.has(holding.stock_symbol),
+  );
+  if (recognised.length === 0)
+    throw new Error(
+      "Add at least one recognised NSE symbol (e.g. RELIANCE, INFY, HDFCBANK).",
+    );
 
   const now = new Date();
-  const snapshots = await Promise.all(recognised.map((holding) => getMarketSnapshot(holding.stock_symbol)));
-  const historiesBySymbol = new Map(snapshots.map((snapshot) => [snapshot.symbol, snapshot.history]));
+  const snapshots = await Promise.all(
+    recognised.map((holding) => getMarketSnapshot(holding.stock_symbol)),
+  );
+  const historiesBySymbol = new Map(
+    snapshots.map((snapshot) => [snapshot.symbol, snapshot.history]),
+  );
 
   const holdings: HoldingResult[] = recognised.map((holding, index) => {
     const meta = STOCK_LOOKUP.get(holding.stock_symbol)!;
@@ -169,7 +240,9 @@ export const calculatePortfolio = async (holdingsInput: HoldingInput[]): Promise
     const holdingMonths = buyDate ? monthsBetween(buyDate, now) : null;
     const currentValue = holding.qty * snapshot.price;
     const investedValue = holding.qty * holding.avg_buy_price;
-    const holdingCagr = holdingMonths ? cagr(holding.avg_buy_price, snapshot.price, holdingMonths) : null;
+    const holdingCagr = holdingMonths
+      ? cagr(holding.avg_buy_price, snapshot.price, holdingMonths)
+      : null;
 
     return {
       ...holding,
@@ -178,20 +251,36 @@ export const calculatePortfolio = async (holdingsInput: HoldingInput[]): Promise
       current_price: pct(snapshot.price),
       invested_value: pct(investedValue),
       current_value: pct(currentValue),
-      absolute_return_pct: pct(((currentValue - investedValue) / investedValue) * 100),
+      absolute_return_pct: pct(
+        ((currentValue - investedValue) / investedValue) * 100,
+      ),
       cagr_pct: holdingCagr === null ? null : pct(holdingCagr),
       holding_months: holdingMonths,
-      market_data_source: snapshot.source
+      market_data_source: snapshot.source,
     };
   });
 
-  const currentValue = holdings.reduce((sum, holding) => sum + holding.current_value, 0);
-  const investedValue = holdings.reduce((sum, holding) => sum + holding.invested_value, 0);
-  const absoluteReturn = investedValue > 0 ? ((currentValue - investedValue) / investedValue) * 100 : 0;
+  const currentValue = holdings.reduce(
+    (sum, holding) => sum + holding.current_value,
+    0,
+  );
+  const investedValue = holdings.reduce(
+    (sum, holding) => sum + holding.invested_value,
+    0,
+  );
+  const absoluteReturn =
+    investedValue > 0
+      ? ((currentValue - investedValue) / investedValue) * 100
+      : 0;
   const cagrInputs = holdings.filter((holding) => holding.cagr_pct !== null);
   const weightedCagr =
     cagrInputs.length > 0 && currentValue > 0
-      ? cagrInputs.reduce((sum, holding) => sum + (holding.cagr_pct ?? 0) * (holding.current_value / currentValue), 0)
+      ? cagrInputs.reduce(
+          (sum, holding) =>
+            sum +
+            (holding.cagr_pct ?? 0) * (holding.current_value / currentValue),
+          0,
+        )
       : null;
 
   const weightedDrawdown = holdings.reduce((sum, holding) => {
@@ -200,20 +289,40 @@ export const calculatePortfolio = async (holdingsInput: HoldingInput[]): Promise
     return sum + maxDrawdown(history) * weight;
   }, 0);
 
-  const largestHolding = holdings.reduce((largest, holding) => Math.max(largest, holding.current_value), 0);
-  const concentration = currentValue > 0 ? (largestHolding / currentValue) * 100 : 0;
+  const largestHolding = holdings.reduce(
+    (largest, holding) => Math.max(largest, holding.current_value),
+    0,
+  );
+  const concentration =
+    currentValue > 0 ? (largestHolding / currentValue) * 100 : 0;
   const exposures = sectorExposure(holdings, currentValue);
   const uniqueSectors = exposures.length;
   const avgMonths =
     cagrInputs.length > 0
-      ? Math.round(cagrInputs.reduce((sum, holding) => sum + (holding.holding_months ?? 0), 0) / cagrInputs.length)
+      ? Math.round(
+          cagrInputs.reduce(
+            (sum, holding) => sum + (holding.holding_months ?? 0),
+            0,
+          ) / cagrInputs.length,
+        )
       : null;
-  const benchmarkCagr = calculateBenchmarkCagr(await getBenchmarkHistory(), avgMonths);
+  const benchmark = await getBenchmarkSnapshot();
+  const benchmarkCagr = calculateBenchmarkCagr(benchmark.history, avgMonths);
 
-  const diversificationScore = clamp(uniqueSectors * 18 + recognised.length * 4 - concentration * 0.8);
-  const riskScore = clamp(concentration * 1.1 + weightedDrawdown * 1.7 + (uniqueSectors <= 2 ? 18 : 0));
-  const convictionScore = clamp(82 - Math.abs(holdings.length - 6) * 7 - (concentration > 55 ? 22 : 0));
-  const timingScore = clamp(50 + absoluteReturn * 0.65 - weightedDrawdown * 0.45);
+  const diversificationScore = clamp(
+    uniqueSectors * 18 + recognised.length * 4 - concentration * 0.8,
+  );
+  const riskScore = clamp(
+    concentration * 1.1 +
+      weightedDrawdown * 1.7 +
+      (uniqueSectors <= 2 ? 18 : 0),
+  );
+  const convictionScore = clamp(
+    82 - Math.abs(holdings.length - 6) * 7 - (concentration > 55 ? 22 : 0),
+  );
+  const timingScore = clamp(
+    50 + absoluteReturn * 0.65 - weightedDrawdown * 0.45,
+  );
   const patienceScore = avgMonths === null ? null : clamp(28 + avgMonths * 2.7);
   const portfolioScore = clamp(
     44 +
@@ -222,7 +331,7 @@ export const calculatePortfolio = async (holdingsInput: HoldingInput[]): Promise
       convictionScore * 0.14 +
       timingScore * 0.18 -
       riskScore * 0.18 +
-      (patienceScore ?? 52) * 0.08
+      (patienceScore ?? 52) * 0.08,
   );
 
   return {
@@ -242,32 +351,70 @@ export const calculatePortfolio = async (holdingsInput: HoldingInput[]): Promise
       unique_sectors: uniqueSectors,
       holdings_count: holdings.length,
       benchmark_cagr_pct: benchmarkCagr === null ? null : pct(benchmarkCagr),
-      sector_exposure: exposures
+      sector_exposure: exposures,
     },
     holdings,
-    market_data_source: snapshots.some((snapshot) => snapshot.source === "fallback") ? "fallback" : "yahoo",
-    warnings: unknownSymbols.length
-      ? [`Skipped unrecognised NSE symbol${unknownSymbols.length > 1 ? "s" : ""}: ${unknownSymbols.join(", ")}.`]
-      : []
+    benchmark_data_source: benchmark.source,
+    data_checked_at: now.toISOString(),
+    metric_method: "holding_estimates",
+    market_data_source: snapshots.some(
+      (snapshot) => snapshot.source === "fallback",
+    )
+      ? "fallback"
+      : "yahoo",
+    warnings: [
+      "Risk is a heuristic. Annualized holding returns and weighted stock drawdowns are estimates, not realized portfolio performance. Stock history covers up to one year; purchase dates may cover longer periods. Nifty context uses an approximate holding period, not matched cash flows.",
+      ...(snapshots.some((snapshot) => snapshot.source === "fallback")
+        ? [
+            "Illustrative prices: one or more market quotes were unavailable. Values using fallback prices are not current valuations.",
+          ]
+        : []),
+      ...(benchmark.source === "fallback"
+        ? [
+            "The Nifty context uses an illustrative benchmark series, not current index data.",
+          ]
+        : []),
+      ...(unknownSymbols.length
+        ? [
+            `Skipped unrecognised NSE symbol${unknownSymbols.length > 1 ? "s" : ""}: ${unknownSymbols.join(", ")}.`,
+          ]
+        : []),
+    ],
   };
 };
 
-const stripJsonFences = (value: string) => value.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+const stripJsonFences = (value: string) =>
+  value
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/i, "")
+    .trim();
 
 export const generateRoast = async (
-  computed: Omit<RoastResult, "verdict" | "roast_lines" | "generated_by">
+  computed: Omit<RoastResult, "verdict" | "roast_lines" | "generated_by">,
 ): Promise<Pick<RoastResult, "verdict" | "roast_lines" | "generated_by">> => {
-  const apiKey = process.env.KMICHI_API_KEY ?? process.env.AI_API_KEY ?? process.env.OPENAI_API_KEY;
-  const model = process.env.KMICHI_MODEL ?? process.env.AI_MODEL ?? process.env.OPENAI_MODEL;
+  const apiKey =
+    process.env.KMICHI_API_KEY ??
+    process.env.AI_API_KEY ??
+    process.env.OPENAI_API_KEY;
+  const model =
+    process.env.KMICHI_MODEL ??
+    process.env.AI_MODEL ??
+    process.env.OPENAI_MODEL;
   const baseUrl =
-    process.env.KMICHI_API_KEY && !process.env.AI_API_BASE_URL && !process.env.OPENAI_BASE_URL
+    process.env.KMICHI_API_KEY &&
+    !process.env.AI_API_BASE_URL &&
+    !process.env.OPENAI_BASE_URL
       ? "https://llm.kimchi.dev/openai/v1"
-      : (process.env.AI_API_BASE_URL ?? process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1").replace(/\/$/, "");
+      : (
+          process.env.AI_API_BASE_URL ??
+          process.env.OPENAI_BASE_URL ??
+          "https://api.openai.com/v1"
+        ).replace(/\/$/, "");
 
   if (!apiKey || !model) {
     return {
       ...deterministicRoast(computed),
-      generated_by: "deterministic"
+      generated_by: "deterministic",
     };
   }
 
@@ -276,15 +423,16 @@ export const generateRoast = async (
       method: "POST",
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${apiKey}`
+        authorization: `Bearer ${apiKey}`,
       },
+      signal: AbortSignal.timeout(8000),
       body: JSON.stringify({
         model,
         messages: [
           {
             role: "system",
             content:
-              "You write savage but not cruel portfolio roasts for anonymous Indian retail investors. No personal attacks, no financial advice, no markdown. Return only valid JSON."
+              "You write witty but not cruel portfolio roasts for anonymous Indian retail investors. Metrics are heuristic holding estimates, not actual portfolio CAGR, portfolio drawdown or audited performance. Market and benchmark data may be illustrative. Never assert benchmark outperformance or underperformance, investment quality, or recommend trades. No personal attacks, no financial advice, no markdown. Return only valid JSON.",
           },
           {
             role: "user",
@@ -295,37 +443,42 @@ export const generateRoast = async (
               conviction_score: computed.conviction_score,
               timing_score: computed.timing_score,
               patience_score: computed.patience_score,
-              metrics: computed.metrics
-            })}. Tone examples: "Confidence of Buffett. Track record of a coin flip." "This is not diversification, this is buying the whole group chat."`
-          }
+              metrics: computed.metrics,
+            })}. Tone examples: "Confidence of Buffett. Track record of a coin flip." "This is not diversification, this is buying the whole group chat."`,
+          },
         ],
         temperature: 0.9,
-        response_format: { type: "json_object" }
-      })
+        response_format: { type: "json_object" },
+      }),
     });
 
     if (!response.ok) {
       throw new Error(`OpenAI roast failed: ${response.status}`);
     }
 
-    const json = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const json = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
     const outputText = json.choices?.[0]?.message?.content;
 
     if (!outputText) {
       throw new Error("OpenAI response did not include text.");
     }
 
-    const parsed = JSON.parse(stripJsonFences(outputText)) as { verdict: string; roast_lines: string[] };
+    const parsed = JSON.parse(stripJsonFences(outputText)) as {
+      verdict: string;
+      roast_lines: string[];
+    };
 
     return {
       verdict: parsed.verdict,
       roast_lines: parsed.roast_lines.slice(0, 3),
-      generated_by: "openai"
+      generated_by: "openai",
     };
   } catch {
     return {
       ...deterministicRoast(computed),
-      generated_by: "deterministic"
+      generated_by: "deterministic",
     };
   }
 };

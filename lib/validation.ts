@@ -28,7 +28,7 @@ export const RoastRequestSchema = z.object({
 export const CreatorApplicationSchema = z.object({
   creatorName: z.string().max(100).optional().default(""),
   name: z.string().max(100).optional(),
-  email: z.string().email("Valid email is required.").max(200),
+  email: z.string().trim().toLowerCase().email("Valid email is required.").max(200),
   twitter: optionalUrlField(),
   linkedin: optionalUrlField(),
   youtube: optionalUrlField(),

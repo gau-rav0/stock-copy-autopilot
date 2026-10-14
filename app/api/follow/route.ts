@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
+import { z } from "zod";
+
+const FollowSchema = z.object({ profileId: z.string().trim().min(1).max(120) });
 
 type ProfileLookup = {
   id: string;
@@ -52,11 +55,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { profileId: rawProfileId } = await request.json().catch(() => ({}));
-  
-  if (!rawProfileId) {
-    return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
-  }
+  const parsed = FollowSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "A valid profile ID is required" }, { status: 400 });
+  const rawProfileId = parsed.data.profileId;
 
   const profile = await resolveProfileId(supabase, rawProfileId);
   if (!profile) {
@@ -70,10 +71,16 @@ export async function POST(request: Request) {
     );
   }
 
+  let subscriptionId: string | null = null;
   if (Number(profile.subscription_fee_inr ?? 0) > 0) {
-    return NextResponse.json(
-      { error: "Payment confirmation is required before following this investor." },
-      { status: 402 }
+    const { data: subscription, error: subscriptionError } = await supabase.from("subscriptions")
+      .select("razorpay_subscription_id").eq("follower_user_id", user.id).eq("profile_id", profile.id)
+      .eq("status", "active").not("razorpay_subscription_id", "is", null)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (subscriptionError) return NextResponse.json({ error: "Could not check payment status. Try again." }, { status: 503 });
+    subscriptionId = subscription?.razorpay_subscription_id ?? null;
+    if (!subscriptionId) return NextResponse.json(
+      { error: "Payment confirmation is required before following this investor." }, { status: 402 }
     );
   }
 
@@ -82,7 +89,9 @@ export async function POST(request: Request) {
     .upsert({
       follower_user_id: user.id,
       profile_id: profile.id,
-    }, { onConflict: "follower_user_id,profile_id" });
+      subscribed: Boolean(subscriptionId),
+      subscription_id: subscriptionId,
+    }, { onConflict: "follower_user_id,profile_id", ignoreDuplicates: true });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -104,11 +113,9 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { profileId: rawProfileId } = await request.json().catch(() => ({}));
-  
-  if (!rawProfileId) {
-    return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
-  }
+  const parsed = FollowSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "A valid profile ID is required" }, { status: 400 });
+  const rawProfileId = parsed.data.profileId;
 
   const profile = await resolveProfileId(supabase, rawProfileId);
   if (!profile) {

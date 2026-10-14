@@ -22,10 +22,10 @@ export default function GlobalError({
         <AlertTriangle className="h-12 w-12 text-red-400" />
       </div>
       <h1 className="mb-4 text-3xl font-bold tracking-tight text-white md:text-5xl">
-        Server meltdown.
+        We couldn’t open this page.
       </h1>
       <p className="mx-auto mb-8 max-w-lg text-lg text-white/60">
-        Something unexpected went wrong. Our servers probably tripped over a cable.
+        Please try again, or return home to continue.
       </p>
       <div className="flex flex-col gap-4 sm:flex-row">
         <button onClick={() => reset()} className="primary-button px-6">

@@ -1,12 +1,12 @@
-import { MetadataRoute } from 'next'
+import { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: ['/api/'],
+      userAgent: "*",
+      allow: "/",
+      disallow: ["/api/", "/auth", "/dashboard", "/creator/", "/admin/"],
     },
-    sitemap: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://fvi-ochre.vercel.app'}/sitemap.xml`,
-  }
+    sitemap: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://fvi-ochre.vercel.app"}/sitemap.xml`,
+  };
 }

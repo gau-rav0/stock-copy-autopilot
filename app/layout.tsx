@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
+import "@fontsource-variable/inter";
 import "./globals.css";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { AuthProvider } from "@/lib/auth-context";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://fvi-ochre.vercel.app"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://fvi-ochre.vercel.app",
+  ),
   title: {
     default: "Follow Verified Investors - Investor track records with evidence",
     template: "%s | Follow Verified Investors",
   },
   description:
-    "Inspect verified investor track records, holdings history, benchmark comparisons, and read-only conviction updates. No advice, copy trading, or order execution.",
+    "Get a closer look at concentration, sector exposure and estimated risk in your NSE holdings. Preview the next chapter of investor evidence.",
+  alternates: { canonical: "/" },
   keywords: [
     "How to check if a fintwit portfolio is real",
     "Free NSE portfolio roast tool",
@@ -35,7 +39,7 @@ export const metadata: Metadata = {
     siteName: "Follow Verified Investors",
     images: [
       {
-        url: "/og-image.svg",
+        url: "/opengraph-image",
         width: 1200,
         height: 630,
         alt: "Follow Verified Investors evidence dashboard",
@@ -49,11 +53,15 @@ export const metadata: Metadata = {
     title: "Follow Verified Investors",
     description:
       "Inspect investor track records with evidence before you follow read-only updates.",
-    images: ["/og-image.svg"],
+    images: ["/opengraph-image"],
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body>
@@ -63,18 +71,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebApplication",
-              "name": "Follow Verified Investors",
-              "url": "https://fvi-ochre.vercel.app",
-              "applicationCategory": "FinanceApplication",
-              "operatingSystem": "Web",
-              "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
-              "description": "Inspect verified investor track records, holdings history, and benchmark comparisons. No copy trading or investment advice.",
+              name: "Follow Verified Investors",
+              url: "https://fvi-ochre.vercel.app",
+              applicationCategory: "FinanceApplication",
+              operatingSystem: "Web",
+              offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
+              description:
+                "Free NSE portfolio analysis with transparent estimates and a fictional investor evidence preview. No copy trading or investment advice.",
             }),
           }}
         />
         <AuthProvider>
+          <a className="skip-link" href="#main-content">
+            Skip to content
+          </a>
           <Navbar />
-          <main>{children}</main>
+          <main id="main-content">{children}</main>
           <Footer />
         </AuthProvider>
       </body>

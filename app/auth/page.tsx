@@ -3,29 +3,35 @@
 import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useSearchParams } from "next/navigation";
+import { safeAuthRedirect } from "@/lib/auth-redirect";
 
 function AuthContent() {
   const { signInWithEmail, verifyEmailOtp, user } = useAuth();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
+  const [message, setMessage] = useState<{
+    text: string;
+    type: "error" | "success";
+  } | null>(null);
   const [cooldown, setCooldown] = useState(0);
+  const [resendAt, setResendAt] = useState(0);
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
 
   useEffect(() => {
-    if (cooldown > 0) {
-      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [cooldown]);
+    if (!resendAt) return;
+    const tick = () =>
+      setCooldown(Math.max(0, Math.ceil((resendAt - Date.now()) / 1000)));
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [resendAt]);
 
   // Redirect signed-in users to ?next= or /explore
   useEffect(() => {
     if (user) {
-      const next = searchParams.get("next") || "/explore";
-      window.location.replace(decodeURIComponent(next));
+      window.location.replace(safeAuthRedirect(searchParams.get("next")));
     }
   }, [user, searchParams]);
 
@@ -36,13 +42,17 @@ function AuthContent() {
     setLoading(true);
     setMessage(null);
 
-    const next = searchParams.get("next");
-    const { error } = await signInWithEmail(email, next ?? undefined);
+    const next = safeAuthRedirect(searchParams.get("next"));
+    const { error } = await signInWithEmail(email, next);
 
     if (error) {
       if (error.toLowerCase().includes("rate limit")) {
-        setMessage({ text: "You've sent too many requests. Please wait a minute before trying again.", type: "error" });
+        setMessage({
+          text: "You've sent too many requests. Please wait a minute before trying again.",
+          type: "error",
+        });
         setCooldown(60);
+        setResendAt(Date.now() + 60_000);
       } else {
         setMessage({ text: error, type: "error" });
       }
@@ -52,6 +62,7 @@ function AuthContent() {
         type: "success",
       });
       setCooldown(60);
+      setResendAt(Date.now() + 60_000);
       setOtpSent(true);
     }
     setLoading(false);
@@ -59,29 +70,25 @@ function AuthContent() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); setMessage(null);
+    setLoading(true);
+    setMessage(null);
     const { error } = await verifyEmailOtp(email, otp.trim());
-    if (error) setMessage({ text: "That code is invalid or expired. Request a new email and try again.", type: "error" });
-    else setMessage({ text: "Signed in successfully. Redirecting…", type: "success" });
+    if (error)
+      setMessage({
+        text: "That code is invalid or expired. Request a new email and try again.",
+        type: "error",
+      });
+    else
+      setMessage({
+        text: "Signed in successfully. Redirecting…",
+        type: "success",
+      });
     setLoading(false);
   };
 
-  // Cooldown timer
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (cooldown > 0) {
-      timer = setInterval(() => {
-        setCooldown((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [cooldown]);
-
   return (
     <div className="flex min-h-[calc(100vh-80px)] items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-lg border border-ink-hairline bg-ink-elevated/75 p-6 shadow-[0_0_80px_rgba(0,157,85,.08)] backdrop-blur-xl sm:p-10">
+      <div className="w-full max-w-md rounded-lg border border-ink-hairline bg-ink-elevated/75 p-6  sm:p-10">
         <div className="text-center">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">
             Welcome back
@@ -96,12 +103,13 @@ function AuthContent() {
 
         <form onSubmit={handleSubmit} className="mt-10">
           <div className="mb-6">
-            <label htmlFor="email" className="sr-only">
+            <label htmlFor="email" className="field-label">
               Email address
             </label>
             <input
               id="email"
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -112,6 +120,7 @@ function AuthContent() {
 
           {message && (
             <div
+              role="status"
               className={`mb-6 rounded-md p-4 text-sm ${
                 message.type === "error"
                   ? "bg-loss/10 text-loss border border-loss/20"
@@ -127,14 +136,41 @@ function AuthContent() {
             disabled={loading || cooldown > 0}
             className="group relative flex w-full justify-center rounded-lg bg-brass px-3 py-3 text-sm font-semibold text-white transition hover:bg-brass-bright focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass disabled:opacity-50"
           >
-            {loading ? "Sending magic link..." : cooldown > 0 ? `Wait ${cooldown}s to send again` : "Send magic link"}
+            {loading
+              ? "Sending magic link..."
+              : cooldown > 0
+                ? `Wait ${cooldown}s to send again`
+                : "Send magic link"}
           </button>
         </form>
         {otpSent && (
-          <form onSubmit={handleVerifyOtp} className="mt-6 border-t border-ink-hairline pt-6">
-            <label htmlFor="otp" className="mb-2 block text-sm text-paper-muted">6-digit code</label>
-            <input id="otp" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))} required className="block w-full rounded-lg border border-ink-hairline bg-ink/50 p-3 text-paper tracking-[0.4em] focus:border-brass focus:outline-none" />
-            <button type="submit" disabled={loading || otp.length !== 6} className="mt-3 w-full rounded-lg border border-brass/50 px-3 py-3 text-sm font-semibold text-brass disabled:opacity-50">{loading ? "Verifying…" : "Verify code"}</button>
+          <form
+            onSubmit={handleVerifyOtp}
+            className="mt-6 border-t border-ink-hairline pt-6"
+          >
+            <label
+              htmlFor="otp"
+              className="mb-2 block text-sm text-paper-muted"
+            >
+              6-digit code
+            </label>
+            <input
+              id="otp"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+              required
+              className="block w-full rounded-lg border border-ink-hairline bg-ink/50 p-3 text-paper tracking-[0.4em] focus:border-brass focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={loading || otp.length !== 6}
+              className="mt-3 w-full rounded-lg border border-brass/50 px-3 py-3 text-sm font-semibold text-brass disabled:opacity-50"
+            >
+              {loading ? "Verifying…" : "Verify code"}
+            </button>
           </form>
         )}
       </div>
@@ -144,7 +180,13 @@ function AuthContent() {
 
 export default function AuthPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-[calc(100vh-80px)] items-center justify-center">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-[calc(100vh-80px)] items-center justify-center">
+          Loading...
+        </div>
+      }
+    >
       <AuthContent />
     </Suspense>
   );

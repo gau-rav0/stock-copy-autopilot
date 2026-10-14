@@ -1,145 +1,101 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, FileText, AlertTriangle, CheckCircle2 } from "lucide-react";
-
+import { ArrowUpRight } from "lucide-react";
 export const metadata: Metadata = {
-  title: "Verification Methodology — How FVI verifies investor track records",
-  description:
-    "Understand how Follow Verified Investors verifies investor track records using CDSL CAS statements and broker evidence. What the trust score means, and what FVI does not do.",
-  keywords: [
-    "investor verification India",
-    "CAS statement verification",
-    "how to verify investor track record India",
-    "CDSL portfolio verification",
-    "investment trust score",
-  ],
+  title: "What a review label means",
+  description: "The scope and limits of creator evidence review on FVI.",
+  alternates: { canonical: "/verification" },
 };
-
 export default function VerificationPage() {
   return (
-    <section className="mobile-safe mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
-      <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">Methodology</p>
-      <h1 className="mt-3 font-display text-3xl text-paper sm:text-4xl">What &ldquo;verified&rdquo; means on FVI</h1>
-      <p className="mt-4 max-w-2xl text-paper-muted">
-        Verification is an evidence label, not an endorsement. It explains where a published portfolio record came from, how recently it was reviewed, and what level of scrutiny was applied.
+    <section className="page-shell onboarding-layout">
+      <p className="eyebrow">The methodology</p>
+      <h1>
+        A label is a starting point.
+        <br />
+        Not a guarantee.
+      </h1>
+      <p className="onboarding-intro">
+        Evidence review explains what was inspected, when it was reviewed, and
+        what it covers. It does not endorse an investor or authenticate every
+        historical performance claim.
       </p>
-
-      {/* Verification tiers */}
-      <div className="mt-10">
-        <h2 className="font-display text-xl text-paper mb-5">Verification tiers</h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {[
-            {
-              tier: "Demo",
-              color: "border-ink-hairline",
-              description: "Fictional data seeded to demonstrate the product. Not a real investor record. Clearly labelled on every card.",
-              what: ["Shows how the platform works", "Fictional holdings and transactions", "No real person behind the data"],
-            },
-            {
-              tier: "CAS Verified",
-              color: "border-brass/40",
-              description: "A CDSL or NSDL Consolidated Account Statement was reviewed by FVI. Holdings are matched against the official demat record.",
-              what: ["Submitted CDSL/NSDL document reviewed", "Published holdings matched to the statement", "Reviewed for consistency; not an authenticity guarantee"],
-            },
-            {
-              tier: "Broker Linked",
-              color: "border-brass/40",
-              description: "Read-only broker API access is reviewed after legal and broker ToS checks. Holdings are pulled directly from broker records.",
-              what: ["Read-only broker access", "Subject to broker ToS and legal review", "Higher technical assurance"],
-            },
-          ].map(({ tier, color, description, what }) => (
-            <div key={tier} className={`rounded-lg border ${color} bg-ink-elevated/75 p-5`}>
-              <p className="font-display text-lg text-paper">{tier}</p>
-              <p className="mt-2 text-sm leading-6 text-paper-muted">{description}</p>
-              <ul className="mt-4 space-y-1.5">
-                {what.map(item => (
-                  <li key={item} className="flex items-start gap-2 text-xs text-paper-muted">
-                    <CheckCircle2 size={12} className="mt-0.5 text-brass shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
+      <div className="editorial-rows mt-10">
+        {[
+          [
+            "01",
+            "Fictional preview",
+            "Demo identities, holdings and returns illustrate the interface. They are not real verified creators, traction or recommendations. Demo records cannot be followed or purchased.",
+          ],
+          [
+            "02",
+            "Manual holdings / unverified",
+            "A creator has entered allocations without an original statement review. This is a real submitted record when published, but it does not receive a CAS verification badge.",
+          ],
+          [
+            "03",
+            "CAS reviewed",
+            "An authorised reviewer opened the original private statement, checked the account owner and the holdings intended for publication, and recorded the statement date and review notes. This is a holdings review. It is not an authenticity guarantee or an audit of investment returns.",
+          ],
+          [
+            "04",
+            "Broker linked / not enabled",
+            "Live broker authorisation remains unavailable while provider and operational checks are outstanding. Saving a broker preference does not connect an account.",
+          ],
+        ].map(([n, title, body]) => (
+          <section className="editorial-row" key={n}>
+            <span>{n}</span>
+            <div>
+              <h2>{title}</h2>
+              <p>{body}</p>
             </div>
-          ))}
-        </div>
+          </section>
+        ))}
       </div>
-
-      {/* How CAS verification works */}
-      <div className="mt-10 rounded-lg border border-ink-hairline bg-ink-elevated/75 p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <FileText size={18} className="text-brass" />
-          <h2 className="font-display text-xl text-paper">How CAS verification works</h2>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {[
-            { step: "01", title: "Creator downloads their CAS", body: "The creator downloads their Consolidated Account Statement from CDSL's myeasi portal or NSDL CAS portal using their PAN." },
-            { step: "02", title: "Statement is submitted to FVI", body: "The PDF is shared with FVI via the /connect application process. Personal financial details beyond holdings are redacted." },
-            { step: "03", title: "Holdings are matched", body: "FVI reviews the statement and matches the holdings to what will be published on the creator's profile. Any discrepancy is flagged." },
-            { step: "04", title: "Profile goes live with CAS badge", body: "Once verified, the profile is published with a CAS badge and the verification date. Updates are re-verified periodically." },
-          ].map(({ step, title, body }) => (
-            <div key={step} className="rounded-lg border border-white/[.06] bg-white/[.035] p-4">
-              <p className="font-mono text-xs text-brass">{step}</p>
-              <p className="font-medium text-paper mt-1">{title}</p>
-              <p className="mt-1 text-sm text-paper-muted">{body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Evidence artifacts */}
-      <div className="mt-8 rounded-lg border border-ink-hairline bg-ink-elevated/75 p-5">
-        <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">Evidence artifacts on every profile</p>
-        <div className="mt-4 grid gap-3 text-sm text-paper-muted sm:grid-cols-2">
-          {[
-            "Verification tier and date",
-            "Source type and last reviewed timestamp",
-            "Current holdings with allocation weights",
-            "Holdings change log and conviction alerts",
-            "Benchmark comparison against Nifty 50",
-            "Risk context: drawdown, volatility, concentration, and win rate",
-            "Trust score (0–100) calculated from evidence depth",
-            "Full transaction history including exits",
-          ].map((item) => (
-            <div key={item} className="flex items-start gap-2 rounded-lg border border-white/[.06] bg-white/[.035] p-3">
-              <CheckCircle2 size={13} className="mt-0.5 text-brass shrink-0" />
-              {item}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* What FVI does NOT do */}
-      <div className="mt-8 rounded-lg border border-loss/25 bg-loss/10 p-5">
-        <div className="flex items-center gap-3 mb-3">
-          <AlertTriangle size={18} className="text-loss" />
-          <p className="font-display text-lg text-paper">What FVI does NOT do</p>
-        </div>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {[
-            "Provide investment advice of any kind",
-            "Execute trades or orders on your behalf",
-            "Enable copy trading or automatic mirroring",
-            "Guarantee any investment returns",
-            "Act as a SEBI-registered investment adviser",
-            "Recommend specific stocks to buy or sell",
-          ].map(item => (
-            <div key={item} className="flex items-start gap-2 text-sm text-paper-muted">
-              <span className="text-loss shrink-0 mt-0.5">✗</span>
-              {item}
-            </div>
-          ))}
-        </div>
-        <p className="mt-4 text-sm leading-6 text-paper-muted">
-          Paid creator/follow features require SEBI and legal review before launch. The current product posture remains: education-only, no investment advice, no execution, no copy trading.
+      <div className="notice mt-9">
+        <strong className="text-paper">Dates matter.</strong>
+        <p>
+          Profiles show the actual evidence review date and statement-as-of date
+          where supplied. Missing dates are labelled as unavailable. A review
+          describes that point in time; later trades and performance need their
+          own evidence.
         </p>
       </div>
-
-      <div className="mt-8 flex flex-wrap gap-4">
-        <Link href="/learn" className="inline-flex items-center gap-2 text-sm text-brass hover:underline">
-          Beginner mode — learn the terms <ArrowRight size={14} />
+      <h2 className="mt-10 mb-4 text-xl">How statement review works</h2>
+      <ol className="space-y-4 text-sm leading-7 text-paper-muted">
+        <li>
+          1. The creator signs in and uploads the original PDF or text statement
+          to private storage. No automatic redaction is promised.
+        </li>
+        <li>
+          2. The parser extracts possible holdings for reviewer assistance.
+          Parsing success never grants a badge.
+        </li>
+        <li>
+          3. An authorised reviewer examines the original, checks ownership and
+          matches the rows intended for publication.
+        </li>
+        <li>
+          4. Review notes, reviewer identity and dates are recorded. Profile
+          creation and approval commit together, or roll back together if
+          something fails.
+        </li>
+      </ol>
+      <h2 className="mt-10 mb-4 text-xl">How to read the scores</h2>
+      <p className="text-sm leading-7 text-paper-muted">
+        The Trust Score combines review status, published holdings, and reported
+        performance/risk context. It is a heuristic for inspecting a record, not
+        a measure of honesty or investment suitability. Portfolio roast figures
+        are holding-level estimates and risk proxies; the tool does not rebuild
+        cash flows or your full portfolio history. Data sources and illustrative
+        fallbacks are shown with the output.
+      </p>
+      <div className="hero-actions">
+        <Link className="text-link" href="/connect">
+          Submit a creator application <ArrowUpRight size={16} />
         </Link>
-        <Link href="/explore" className="inline-flex items-center gap-2 text-sm text-brass hover:underline">
-          Explore verified investors <ArrowRight size={14} />
+        <Link className="text-link" href="/privacy">
+          Privacy & original evidence <ArrowUpRight size={16} />
         </Link>
       </div>
     </section>

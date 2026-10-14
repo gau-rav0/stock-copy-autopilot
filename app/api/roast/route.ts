@@ -72,7 +72,7 @@ export async function POST(request: Request) {
           email: payload.email,
           source: "roast_page",
         });
-        if (waitlistSignupsError) {
+        if (waitlistSignupsError && waitlistSignupsError.code !== "23505") {
           leadStored = false;
           console.error("Roast lead insert failed", {
             table: "waitlist_signups",
@@ -86,6 +86,7 @@ export async function POST(request: Request) {
           { event_type: "roast_lead", destination: "email", status: outbound.email, payload: outboundPayload },
         ]);
       } else {
+        leadStored = false;
         await dispatchOutboundEvent("roast_lead", outboundPayload);
       }
     }

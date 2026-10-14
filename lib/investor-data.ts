@@ -9,7 +9,15 @@ import {
   transactionsByProfile,
 } from "@/lib/demo-data";
 import { createClient } from "@/lib/supabase/server";
-import { GrowthPoint, Holding, InvestingStyle, Profile, Transaction, TransactionAction, VerificationTier } from "@/lib/types";
+import {
+  GrowthPoint,
+  Holding,
+  InvestingStyle,
+  Profile,
+  Transaction,
+  TransactionAction,
+  VerificationTier,
+} from "@/lib/types";
 
 type ProfileRow = {
   id: string;
@@ -29,6 +37,9 @@ type ProfileRow = {
   win_rate: number;
   sort_order: number;
   subscription_fee_inr: number;
+  evidence_reviewed_at: string | null;
+  evidence_statement_as_of: string | null;
+  evidence_updated_at: string | null;
 };
 
 type PortfolioRow = {
@@ -70,7 +81,11 @@ function toNumber(value: number | string | null | undefined) {
   return Number(value ?? 0);
 }
 
-function toProfile(row: ProfileRow, topHoldings: Holding[] = [], isDemo = false): Profile {
+function toProfile(
+  row: ProfileRow,
+  topHoldings: Holding[] = [],
+  isDemo = false,
+): Profile {
   return {
     id: row.slug,
     displayName: row.display_name,
@@ -88,11 +103,18 @@ function toProfile(row: ProfileRow, topHoldings: Holding[] = [], isDemo = false)
     volatility: toNumber(row.volatility),
     winRate: toNumber(row.win_rate),
     subscriptionFeeInr: isDemo ? 0 : toNumber(row.subscription_fee_inr),
-    topHoldings,
+    topHoldings: topHoldings.slice(0, 3),
+    holdingsCount: topHoldings.length,
+    evidenceReviewedAt: row.evidence_reviewed_at,
+    evidenceStatementAsOf: row.evidence_statement_as_of,
+    evidenceUpdatedAt: row.evidence_updated_at,
   };
 }
 
-function normalizeDemoProfile(profile: Profile, topHoldings = getDemoTopHoldings(profile.id)): Profile {
+function normalizeDemoProfile(
+  profile: Profile,
+  topHoldings = getDemoTopHoldings(profile.id),
+): Profile {
   return {
     ...profile,
     isDemo: true,
@@ -100,6 +122,7 @@ function normalizeDemoProfile(profile: Profile, topHoldings = getDemoTopHoldings
     followerCount: 0,
     subscriptionFeeInr: 0,
     topHoldings,
+    holdingsCount: holdingsByProfile[profile.id]?.length ?? topHoldings.length,
   };
 }
 
@@ -145,20 +168,32 @@ export async function getProfiles(): Promise<Profile[]> {
 
   const { data: profileRows, error } = await supabase
     .from("profiles")
-    .select("id,slug,display_name,bio,photo_url,investing_style,verified,verification_tier,follower_count,cagr,xirr,alpha,max_drawdown,volatility,win_rate,sort_order,subscription_fee_inr")
+    .select(
+      "id,slug,display_name,bio,photo_url,investing_style,verified,verification_tier,follower_count,cagr,xirr,alpha,max_drawdown,volatility,win_rate,sort_order,subscription_fee_inr,evidence_reviewed_at,evidence_statement_as_of,evidence_updated_at",
+    )
     .order("sort_order", { ascending: true });
 
   if (error || !profileRows?.length) {
     return demoProfiles.map((profile) => normalizeDemoProfile(profile));
   }
 
-  const portfolioByProfile = await getPortfolioMap(profileRows.map((profile) => profile.id));
-  const holdingsByPortfolio = await getHoldingsMap([...portfolioByProfile.values()].map((portfolio) => portfolio.id));
+  const portfolioByProfile = await getPortfolioMap(
+    profileRows.map((profile) => profile.id),
+  );
+  const holdingsByPortfolio = await getHoldingsMap(
+    [...portfolioByProfile.values()].map((portfolio) => portfolio.id),
+  );
 
   return (profileRows as ProfileRow[]).map((profile) => {
     const portfolio = portfolioByProfile.get(profile.id);
-    const topHoldings = portfolio ? holdingsByPortfolio.get(portfolio.id) ?? [] : [];
-    return toProfile(profile, topHoldings.slice(0, 3), portfolio?.is_demo ?? profile.verification_tier === "demo");
+    const topHoldings = portfolio
+      ? (holdingsByPortfolio.get(portfolio.id) ?? [])
+      : [];
+    return toProfile(
+      profile,
+      topHoldings,
+      portfolio?.is_demo ?? profile.verification_tier === "demo",
+    );
   });
 }
 
@@ -177,7 +212,13 @@ export async function getProfileDetail(slug: string) {
       : null;
   }
 
-  const { data: profile, error } = await supabase.from("profiles").select("id,slug,display_name,bio,photo_url,investing_style,verified,verification_tier,follower_count,cagr,xirr,alpha,max_drawdown,volatility,win_rate,sort_order,subscription_fee_inr").eq("slug", slug).maybeSingle();
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select(
+      "id,slug,display_name,bio,photo_url,investing_style,verified,verification_tier,follower_count,cagr,xirr,alpha,max_drawdown,volatility,win_rate,sort_order,subscription_fee_inr,evidence_reviewed_at,evidence_statement_as_of,evidence_updated_at",
+    )
+    .eq("slug", slug)
+    .maybeSingle();
   if (error || !profile) {
     const demoProfile = getDemoProfile(slug);
     return demoProfile
@@ -200,7 +241,11 @@ export async function getProfileDetail(slug: string) {
 
   if (!portfolio) {
     return {
-      profile: toProfile(profile as ProfileRow, [], (profile as ProfileRow).verification_tier === "demo"),
+      profile: toProfile(
+        profile as ProfileRow,
+        [],
+        (profile as ProfileRow).verification_tier === "demo",
+      ),
       holdings: [],
       transactions: [],
       growth: [],
@@ -208,23 +253,40 @@ export async function getProfileDetail(slug: string) {
     };
   }
 
-  const [{ data: holdings }, { data: transactions }, { data: growth }] = await Promise.all([
-    supabase.from("holdings").select("*").eq("portfolio_id", portfolio.id).order("allocation_pct", { ascending: false }),
-    supabase.from("transactions").select("*").eq("portfolio_id", portfolio.id).order("transaction_date", { ascending: false }),
-    supabase.from("portfolio_growth").select("*").eq("portfolio_id", portfolio.id).order("sort_order", { ascending: true }),
-  ]);
+  const [{ data: holdings }, { data: transactions }, { data: growth }] =
+    await Promise.all([
+      supabase
+        .from("holdings")
+        .select("*")
+        .eq("portfolio_id", portfolio.id)
+        .order("allocation_pct", { ascending: false }),
+      supabase
+        .from("transactions")
+        .select("*")
+        .eq("portfolio_id", portfolio.id)
+        .order("transaction_date", { ascending: false }),
+      supabase
+        .from("portfolio_growth")
+        .select("*")
+        .eq("portfolio_id", portfolio.id)
+        .order("sort_order", { ascending: true }),
+    ]);
 
   const mappedHoldings = ((holdings ?? []) as HoldingRow[]).map(toHolding);
-  const mappedTransactions = ((transactions ?? []) as TransactionRow[]).map(toTransaction);
+  const mappedTransactions = ((transactions ?? []) as TransactionRow[]).map(
+    toTransaction,
+  );
   const mappedGrowth = ((growth ?? []) as GrowthRow[]).map(toGrowth);
   const isDemo = Boolean((portfolio as PortfolioRow).is_demo);
 
   return {
-    profile: toProfile(profile as ProfileRow, mappedHoldings.slice(0, 3), isDemo),
+    profile: toProfile(profile as ProfileRow, mappedHoldings, isDemo),
     holdings: mappedHoldings,
     transactions: mappedTransactions,
     growth: mappedGrowth,
-    alerts: mappedTransactions.filter((transaction) => transaction.isConvictionAlert),
+    alerts: mappedTransactions.filter(
+      (transaction) => transaction.isConvictionAlert,
+    ),
   };
 }
 
@@ -234,11 +296,16 @@ export async function getHomeData() {
 
   return {
     featured: profiles.slice(0, 3),
-    replaySample: rahul?.transactions.slice(0, 3) ?? transactionsByProfile["rahul-kapoor"].slice(0, 3),
+    replaySample:
+      rahul?.transactions.slice(0, 3) ??
+      transactionsByProfile["rahul-kapoor"].slice(0, 3),
   };
 }
 
-export async function getTickerFeed(): Promise<{ items: string[]; isDemo: boolean }> {
+export async function getTickerFeed(): Promise<{
+  items: string[];
+  isDemo: boolean;
+}> {
   const supabase = await createClient();
   if (!supabase) return { items: demoTickerFeed, isDemo: true };
 
@@ -253,7 +320,9 @@ export async function getTickerFeed(): Promise<{ items: string[]; isDemo: boolea
   if (error || !data?.length) return { items: demoTickerFeed, isDemo: true };
 
   return {
-    items: data.map((item) => item.alert_text ?? `${item.ticker} allocation changed`),
+    items: data.map(
+      (item) => item.alert_text ?? `${item.ticker} allocation changed`,
+    ),
     isDemo: false,
   };
 }
@@ -269,7 +338,9 @@ async function getPortfolioMap(profileIds: string[]) {
     .in("profile_id", profileIds)
     .eq("name", "Primary");
 
-  ((data ?? []) as PortfolioRow[]).forEach((portfolio) => portfolioByProfile.set(portfolio.profile_id, portfolio));
+  ((data ?? []) as PortfolioRow[]).forEach((portfolio) =>
+    portfolioByProfile.set(portfolio.profile_id, portfolio),
+  );
   return portfolioByProfile;
 }
 
@@ -280,7 +351,9 @@ async function getHoldingsMap(portfolioIds: string[]) {
 
   const { data } = await supabase
     .from("holdings")
-    .select("portfolio_id,ticker,company_name,allocation_pct,avg_buy_price,current_price,holding_since,unrealized_return_pct")
+    .select(
+      "portfolio_id,ticker,company_name,allocation_pct,avg_buy_price,current_price,holding_since,unrealized_return_pct",
+    )
     .in("portfolio_id", portfolioIds)
     .order("allocation_pct", { ascending: false });
 

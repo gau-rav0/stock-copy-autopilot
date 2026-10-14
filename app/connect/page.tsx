@@ -1,375 +1,434 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { CheckCircle2, FileCheck2, XCircle } from "lucide-react";
-import TrustNotice from "@/components/TrustNotice";
+import { ArrowUpRight, CheckCircle2, FileText, ArrowLeft } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 import { existingApplicationMessage } from "@/lib/creator-application-status";
-
-type Step = "method" | "details" | "done";
-type Method = "cas" | "manual" | null;
-type SubmitStatus = "idle" | "success" | "existing" | "error";
-
+import { trackEvent } from "@/lib/product-events";
+type Application = {
+  exists?: boolean;
+  status?: string;
+  email?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
+  creatorName?: string;
+  hasEvidence?: boolean;
+};
+type Method = "cas" | "manual";
 export default function ConnectPage() {
-  const [step, setStep] = useState<Step>("method");
-  const [method, setMethod] = useState<Method>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [casFile, setCasFile] = useState<File | null>(null);
-  const [creatorName, setCreatorName] = useState("");
+  const { user, loading: authLoading } = useAuth();
+  const [checking, setChecking] = useState(true);
+  const [method, setMethod] = useState<Method | null>(null);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [holdingsText, setHoldingsText] = useState("");
-  const [twitter, setTwitter] = useState("");
-  const [linkedin, setLinkedin] = useState("");
-  const [youtube, setYoutube] = useState("");
-  const [broker, setBroker] = useState("");
-  const [aum, setAum] = useState("");
-  const [followers, setFollowers] = useState("");
-  const [proofUrl, setProofUrl] = useState("");
-  const [notes, setNotes] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [holdings, setHoldings] = useState("");
+  const [updating, setUpdating] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [saveNote, setSaveNote] = useState("");
-  const [submitStatus, setSubmitStatus] = useState<SubmitStatus>("idle");
-  const [checkingApplication, setCheckingApplication] = useState(true);
-  const [statusCheckNote, setStatusCheckNote] = useState("");
-
+  const [error, setError] = useState("");
+  const [statusNote, setStatusNote] = useState("");
+  const [done, setDone] = useState<"saved" | "existing" | null>(null);
+  const [application, setApplication] = useState<Application>({});
+  const [details, setDetails] = useState<Record<string, string>>({});
   useEffect(() => {
     const controller = new AbortController();
-    const checkApplication = async () => {
-      try {
-        const response = await fetch("/api/creator-applications", { cache: "no-store", signal: controller.signal });
-        if (response.status === 401) return;
-        if (!response.ok) throw new Error("Status lookup unavailable");
-        const application = await response.json();
-        if (controller.signal.aborted) return;
-        if (application.email) setEmail(application.email);
-        if (application.exists) {
-          setSaveNote(existingApplicationMessage(application.status));
-          setSubmitStatus("existing");
-          setStep("done");
+    let active = true;
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    fetch("/api/creator-applications", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        if (res.status === 401) return;
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        if (!active) return;
+        setApplication(data);
+        if (data.creatorName) setName(data.creatorName);
+        if (data.email) setEmail(data.email);
+        if (data.exists) {
+          setDone("existing");
+          trackEvent("application_existing");
         }
-      } catch {
-        if (!controller.signal.aborted) setStatusCheckNote("We could not check for an existing application. You can still submit; any application already on file will be kept.");
-      } finally {
-        if (!controller.signal.aborted) setCheckingApplication(false);
-      }
-    };
-    void checkApplication();
-    return () => controller.abort();
-  }, []);
-
-  const submitApplication = async () => {
-    if (saving) return;
-    setSaving(true);
-    setSaveNote("");
-    setSubmitStatus("idle");
-
-    try {
-      const formData = new FormData();
-      formData.set("creatorName", creatorName);
-      formData.set("name", creatorName);
-      formData.set("email", email);
-      formData.set("twitter", twitter); formData.set("linkedin", linkedin); formData.set("youtube", youtube);
-      formData.set("broker", broker); formData.set("aum", aum); formData.set("followers", followers); formData.set("proof_url", proofUrl); formData.set("notes", notes);
-      formData.set("method", method ?? "");
-      formData.set("holdingsText", holdingsText);
-      if (casFile) {
-        formData.set("casFile", casFile);
-      }
-
-      const response = await fetch("/api/creator-applications", {
-        method: "POST",
-        body: formData,
+      })
+      .catch(() => {
+        if (active)
+          setStatusNote(
+            "We couldn’t load your application status. Refresh to check it, or continue; an application already on file will be preserved.",
+          );
+      })
+      .finally(() => {
+        clearTimeout(timeout);
+        if (active) setChecking(false);
       });
-
-      const responseText = await response.text();
-      let json: { error?: string; code?: string; parsedCount?: number; stored?: boolean } = {};
-      try {
-        json = responseText ? JSON.parse(responseText) : {};
-      } catch (parseError) {
-        throw new Error("Server could not process this application. Please try again.");
-      }
-
-      if (response.status === 409 && json.code === "APPLICATION_EXISTS") {
-        setSaveNote(existingApplicationMessage());
-        setSubmitStatus("existing");
-        setStep("done");
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, []);
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (saving || !method) return;
+    setError("");
+    if (method === "cas" && !file) {
+      setError("Choose an original PDF or text statement.");
+      return;
+    }
+    if (
+      file &&
+      method === "cas" &&
+      (file.size > 4 * 1024 * 1024 ||
+        file.size === 0 ||
+        !/\.(pdf|txt)$/i.test(file.name))
+    ) {
+      setError("Use a non-empty PDF or text statement, 4 MB or smaller.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const form = new FormData();
+      form.set("creatorName", name);
+      form.set("name", name);
+      form.set(
+        "email",
+        (method === "cas" ? (user?.email ?? email) : email).trim(),
+      );
+      form.set("method", method);
+      form.set("holdingsText", holdings);
+      Object.entries(details).forEach(([key, value]) => form.set(key, value));
+      if (method === "cas" && file) form.set("casFile", file);
+      const res = await fetch("/api/creator-applications", {
+        method: updating ? "PATCH" : "POST",
+        body: form,
+        signal: AbortSignal.timeout(45000),
+      });
+      const json = await res.json();
+      if (res.status === 409 && json.code === "APPLICATION_EXISTS") {
+        setDone("existing");
+        setApplication({});
+        trackEvent("application_existing");
         return;
       }
-
-      if (!response.ok || json.stored !== true) {
-        throw new Error(json.error || "Failed to submit application");
-      }
-
-      const parseNote = json.parsedCount
-        ? `${json.parsedCount} holding${json.parsedCount === 1 ? "" : "s"} parsed for reviewer checks.`
-        : "No holdings were parsed automatically; reviewer checks are required.";
-
-      setSaveNote(`Application saved for review. ${parseNote}`);
-      setSubmitStatus("success");
-      setStep("done");
-    } catch (err: unknown) {
-      setSaveNote(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
-      setSubmitStatus("error");
-      setStep("done");
+      if (!res.ok || !json.stored)
+        throw new Error(
+          json.error || "Could not save your application. Please try again.",
+        );
+      setDone("saved");
+      trackEvent("application_success");
+    } catch (err) {
+      setError(
+        err instanceof Error && err.name !== "TimeoutError"
+          ? err.message
+          : "This upload is taking longer than expected. Please try again.",
+      );
     } finally {
       setSaving(false);
     }
-  };
-
+  }
+  function choose(next: Method) {
+    setMethod(next);
+    setError("");
+    trackEvent("creator_started");
+  }
+  const field = (key: string, label: string, type = "text") => (
+    <label key={key}>
+      <span className="field-label">{label}</span>
+      <input
+        type={type}
+        className="input-field"
+        value={details[key] || ""}
+        onChange={(e) => setDetails({ ...details, [key]: e.target.value })}
+        maxLength={key === "notes" ? 5000 : 300}
+      />
+    </label>
+  );
   return (
-    <section className="mobile-safe mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16">
-      <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">Creator onboarding</p>
-      <h1 className="mt-3 font-display text-3xl text-paper">Verify your portfolio</h1>
-      <p className="mt-3 text-paper-muted">
-        We never request trading permissions and can never place trades on your behalf. This is
-        read-only, for display purposes only.
+    <section className="page-shell onboarding-layout">
+      <p className="eyebrow">For creators / Founding cohort</p>
+      <h1>
+        Let your evidence
+        <br />
+        do the talking.
+      </h1>
+      <p className="onboarding-intro">
+        Submit your portfolio for human review. Your statement stays private;
+        you choose what to publish. We never request trading permissions.
       </p>
-
-      <div className="mt-6">
-        <TrustNotice
-          compact
-          items={[
-            "Read-only display.",
-            "No trading permission.",
-            "No broker sync until ToS and SEBI review.",
-            "You choose what to publish.",
-          ]}
-        />
-      </div>
-
-      <div className="mt-8">
-        <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.14em] text-paper-muted">
-          <span className={step === "method" ? "text-brass" : ""}>Method</span>
-          <span className={step === "details" ? "text-brass" : ""}>Details</span>
-          <span className={step === "done" ? "text-brass" : ""}>Done</span>
-        </div>
-        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-ink-hairline">
-          <div
-            className="h-full rounded-full bg-brass transition-all duration-300"
-            style={{
-              width: step === "method" ? "8%" : step === "details" ? "55%" : "100%",
-            }}
-          />
-        </div>
-      </div>
-
-      {checkingApplication ? (
-        <p role="status" className="mt-8 text-sm text-paper-muted">Checking your application status…</p>
-      ) : null}
-      {statusCheckNote && step !== "done" ? (
-        <p role="status" className="mt-6 text-sm text-paper-muted">{statusCheckNote}</p>
-      ) : null}
-
-      {step === "method" && !checkingApplication && (
-        <div className="mt-8 space-y-4">
-          <button
-            aria-label="Upload CAS statement"
-            onClick={() => {
-              setMethod("cas");
-              setStep("details");
-            }}
-            className="w-full rounded-lg border border-ink-hairline bg-ink-elevated/75 p-5 text-left shadow-[0_0_50px_rgba(0,157,85,.04)] backdrop-blur transition hover:border-brass/40 hover:shadow-[0_0_70px_rgba(0,157,85,.08)]"
-          >
-            <p className="font-display text-lg text-paper">Upload CAS statement</p>
-            <p className="mt-1 text-sm text-paper-muted">
-              Your Consolidated Account Statement from NSDL, CDSL, or your broker. We read your
-              holdings from it; nothing is executed and nothing is modified.
-            </p>
-          </button>
-          <button
-            aria-label="Enter holdings manually"
-            onClick={() => {
-              setMethod("manual");
-              setStep("details");
-            }}
-            className="w-full rounded-lg border border-ink-hairline bg-ink-elevated/75 p-5 text-left shadow-[0_0_50px_rgba(0,157,85,.04)] backdrop-blur transition hover:border-brass/40 hover:shadow-[0_0_70px_rgba(0,157,85,.08)]"
-          >
-            <p className="font-display text-lg text-paper">Enter holdings manually</p>
-            <p className="mt-1 text-sm text-paper-muted">
-              Faster to start, but your profile is shown as unverified until a CAS or
-              broker-linked check is added.
-            </p>
-          </button>
-          <p className="pt-2 text-xs text-paper-muted">
-            Broker read-only sync is on the roadmap and pending review of each broker's terms of
-            service. It is not available in this build.
+      <nav aria-label="Application progress" className="step-nav">
+        <span aria-current={!method && !done ? "step" : undefined}>
+          01 / Method
+        </span>
+        <span aria-current={method && !done ? "step" : undefined}>
+          02 / Evidence
+        </span>
+        <span aria-current={done ? "step" : undefined}>03 / Status</span>
+      </nav>
+      {checking ? (
+        <p role="status" className="notice">
+          Checking your application status…
+        </p>
+      ) : done ? (
+        <div className="done-panel" role="status">
+          <CheckCircle2 size={27} className="text-gain" />
+          <h2>
+            {done === "saved"
+              ? "Application received."
+              : "Application already on file."}
+          </h2>
+          <p>
+            {done === "saved"
+              ? "Your submission is saved for review. Parsing helps the reviewer; it does not automatically verify your profile."
+              : existingApplicationMessage(application.status)}
           </p>
-          <div className="rounded-lg border border-ink-hairline bg-ink-elevated/75 p-4 backdrop-blur">
-            <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">
-              Privacy model
-            </p>
-            <p className="mt-2 text-sm text-paper-muted">
-              CAS upload is intended for semi-manual verification, manual entry remains marked as
-              unverified, and broker sync stays disabled until legal and ToS checks are done.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {step === "details" && (
-        <div className="mt-6 space-y-3">
-          <p className="font-mono text-xs uppercase tracking-[0.16em] text-brass">Profile details (optional)</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <input value={twitter} onChange={(e) => setTwitter(e.target.value)} placeholder="Twitter / X URL" className="input-field" />
-            <input value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="LinkedIn URL" className="input-field" />
-            <input value={youtube} onChange={(e) => setYoutube(e.target.value)} placeholder="YouTube URL" className="input-field" />
-            <input value={broker} onChange={(e) => setBroker(e.target.value)} placeholder="Broker" className="input-field" />
-            <input value={aum} onChange={(e) => setAum(e.target.value)} placeholder="AUM (optional)" className="input-field" />
-            <input value={followers} onChange={(e) => setFollowers(e.target.value)} placeholder="Followers (optional)" className="input-field" />
-          </div>
-          <input value={proofUrl} onChange={(e) => setProofUrl(e.target.value)} placeholder="Proof URL (CAS or public track record)" className="input-field w-full" />
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Notes for the reviewer" className="input-field w-full" />
-        </div>
-      )}
-
-      {step === "details" && method === "cas" && (
-        <div className="mt-8">
-          <div className="mb-4 grid gap-3 sm:grid-cols-2">
-            <input
-              id="creatorName"
-              name="creatorName"
-              autoComplete="name"
-              value={creatorName}
-              onChange={(e) => setCreatorName(e.target.value)}
-              placeholder="Creator name"
-              className="input-field"
-            />
-            <input
-              type="email"
-              id="email"
-              name="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email ID"
-              className="input-field"
-            />
-          </div>
-          <label className="block rounded-lg border border-dashed border-ink-hairline bg-ink-elevated/75 p-10 text-center shadow-[0_0_60px_rgba(0,157,85,.05)] backdrop-blur transition hover:border-brass/40">
-            <input
-              type="file"
-              accept="application/pdf,text/plain,.pdf,.txt"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                setCasFile(file);
-                setFileName(file?.name ?? null);
-              }}
-            />
-            <p className="text-paper">{fileName ?? "Click to upload your CAS PDF"}</p>
-            <p className="mt-1 text-xs text-paper-muted">
-              We parse recognizable equity rows for reviewer checks. The profile stays pending
-              until evidence is manually approved.
-            </p>
-          </label>
-          <button
-            disabled={!fileName || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || saving}
-            onClick={submitApplication}
-            className="mt-6 w-full rounded-lg bg-brass px-6 py-3 text-sm font-semibold text-white shadow-[0_0_38px_rgba(0,157,85,.18)] transition hover:bg-brass-bright disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {saving ? "Saving..." : "Submit for review"}
-          </button>
-        </div>
-      )}
-
-      {step === "details" && method === "manual" && (
-        <div className="mt-8">
-          <div className="mb-4 grid gap-3 sm:grid-cols-2">
-            <input
-              id="creatorNameManual"
-              name="creatorName"
-              autoComplete="name"
-              value={creatorName}
-              onChange={(e) => setCreatorName(e.target.value)}
-              placeholder="Creator name"
-              className="input-field"
-            />
-            <input
-              type="email"
-              id="emailManual"
-              name="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email ID"
-              className="input-field"
-            />
-          </div>
-          <label className="text-sm text-paper-muted">
-            Paste holdings, one per line, e.g. <span className="font-mono">INFY, 14%</span>
-          </label>
-          <textarea
-            value={holdingsText}
-            onChange={(e) => setHoldingsText(e.target.value)}
-            rows={6}
-            placeholder={"INFY, 14%\nTCS, 13.2%\nBAJFINANCE, 12.5%"}
-            className="mt-2 w-full rounded-lg border border-ink-hairline bg-ink-elevated/75 p-4 font-mono text-sm text-paper outline-none backdrop-blur focus:border-brass/40"
-          />
-          <button
-            disabled={holdingsText.trim().length === 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || saving}
-            onClick={submitApplication}
-            className="mt-6 w-full rounded-lg bg-brass px-6 py-3 text-sm font-semibold text-white shadow-[0_0_38px_rgba(0,157,85,.18)] transition hover:bg-brass-bright disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {saving ? "Saving..." : "Submit application"}
-          </button>
-        </div>
-      )}
-
-      {step === "done" && (
-        <div role="status" aria-live="polite" className="mt-10 rounded-xl border border-ink-hairline bg-ink-elevated/75 p-8 text-center backdrop-blur-xl">
-          <div
-            className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full ${
-              submitStatus !== "error" ? "bg-brass/15" : "bg-red-500/10"
-            }`}
-          >
-            {submitStatus === "existing" ? (
-              <FileCheck2 size={24} className="text-brass" />
-            ) : submitStatus === "success" ? (
-              <CheckCircle2 size={24} className="text-brass" />
-            ) : (
-              <XCircle size={24} className="text-red-400" />
-            )}
-          </div>
-          <p className="mt-4 font-display text-xl text-paper">
-            {submitStatus === "existing" ? "Application already on file" : submitStatus === "success" ? "Application received" : "Submission failed"}
-          </p>
-          {submitStatus === "success" ? (
-            <p className="mt-2 text-sm text-paper-muted">
-              {method === "cas"
-                ? "Marked as pending CAS verification until statement evidence is reviewed."
-                : "Marked as pending manual review until CAS or broker verification is added."}
-            </p>
-          ) : null}
-          {saveNote ? (
-            <p className={`mt-3 text-sm ${submitStatus === "error" ? "text-red-300" : "text-paper-muted"}`}>
-              {saveNote}
-            </p>
-          ) : null}
-          {submitStatus === "existing" || submitStatus === "success" ? (
-            <div className="mt-5 flex flex-wrap justify-center gap-3">
-              <Link href="/dashboard" className="rounded-lg bg-brass px-5 py-2 text-sm font-semibold text-white transition hover:bg-brass-bright">
-                Open dashboard
-              </Link>
-              {submitStatus === "existing" ? (
-                <a href="mailto:gauravbihanigb@gmail.com?subject=Creator%20application%20help" className="rounded-lg border border-brass/40 px-5 py-2 text-sm font-semibold text-brass transition hover:border-brass">
-                  Contact us
-                </a>
-              ) : null}
+          {application.reviewNotes && (
+            <div className="notice mt-5">
+              <strong>Reviewer notes</strong>
+              <p>{application.reviewNotes}</p>
             </div>
-          ) : null}
-          {submitStatus === "error" ? (
-            <button
-              onClick={() => setStep("details")}
-              className="mt-5 rounded-lg border border-brass/40 px-5 py-2 text-sm font-semibold text-brass transition hover:border-brass hover:text-brass-bright"
+          )}
+          {application.reviewedAt && (
+            <p className="mt-4">
+              Reviewed{" "}
+              {new Date(application.reviewedAt).toLocaleDateString("en-IN", {
+                timeZone: "Asia/Kolkata",
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+              .
+            </p>
+          )}
+          <div className="hero-actions">
+            <Link
+              className="button-primary"
+              href={
+                application.status === "Accepted"
+                  ? "/creator/dashboard"
+                  : user
+                    ? "/dashboard"
+                    : "/auth?next=%2Fconnect"
+              }
             >
-              Try again
-            </button>
-          ) : null}
-          <p className="mt-4 text-xs text-paper-muted">
-            We can never trade or place orders on your behalf. Read access only, and only what you
-            choose to publish.
+              {application.status === "Accepted"
+                ? "Open creator dashboard"
+                : user
+                  ? "Open my account"
+                  : "Sign in to check status"}
+              <ArrowUpRight size={16} />
+            </Link>
+            <a
+              className="text-link"
+              href="mailto:gauravbihanigb@gmail.com?subject=Creator%20application%20help"
+            >
+              Contact the reviewer
+            </a>
+          </div>
+          {user &&
+            ["Pending", "Need Proof"].includes(application.status || "") && (
+              <button
+                className="button-secondary mt-5"
+                onClick={() => {
+                  setDone(null);
+                  setMethod("cas");
+                  setUpdating(true);
+                }}
+              >
+                Update private statement
+              </button>
+            )}
+          <p className="form-help mt-5">
+            Use your application email for review questions or updated proof. An
+            additional upload does not replace an existing submission.
           </p>
         </div>
+      ) : (
+        <>
+          {statusNote && (
+            <p className="notice mb-5" role="status">
+              {statusNote}
+            </p>
+          )}
+          {!method ? (
+            <>
+              <button className="method-card" onClick={() => choose("cas")}>
+                <strong className="flex items-center gap-3">
+                  <FileText size={20} className="text-gain" />
+                  Submit a statement
+                </strong>
+                <p>
+                  A CDSL/NSDL CAS or broker statement. Sign in before sharing
+                  financial evidence. PDF or plain text, up to 4 MB.
+                </p>
+              </button>
+              <button className="method-card" onClick={() => choose("manual")}>
+                <strong>Start with manual holdings</strong>
+                <p>
+                  Enter allocations to begin. A manual submission stays
+                  unverified until original evidence is reviewed.
+                </p>
+              </button>
+              <p className="form-help mt-6">
+                Broker sync is not enabled.{" "}
+                <Link
+                  href="/verification"
+                  className="underline underline-offset-4"
+                >
+                  Read the review methodology.
+                </Link>
+              </p>
+            </>
+          ) : (
+            <>
+              <button
+                className="text-link mb-5"
+                onClick={() => {
+                  setMethod(null);
+                  setError("");
+                }}
+              >
+                <ArrowLeft size={15} />
+                Change method
+              </button>
+              {method === "cas" && !user && !authLoading ? (
+                <div className="done-panel">
+                  <h2>Sign in before sharing a statement.</h2>
+                  <p>
+                    We bind the evidence to your account and keep the original
+                    in private storage for the reviewer.
+                  </p>
+                  <Link
+                    href="/auth?next=%2Fconnect"
+                    className="button-primary mt-6"
+                  >
+                    Continue with email <ArrowUpRight size={16} />
+                  </Link>
+                </div>
+              ) : authLoading ? (
+                <p role="status">Checking your account…</p>
+              ) : (
+                <form onSubmit={submit} className="creator-form">
+                  <div className="form-grid">
+                    <label>
+                      <span className="field-label">Creator name</span>
+                      <input
+                        autoComplete="name"
+                        required
+                        maxLength={100}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="input-field"
+                      />
+                    </label>
+                    <label>
+                      <span className="field-label">Application email</span>
+                      <input
+                        type="email"
+                        autoComplete="email"
+                        required
+                        readOnly={method === "cas" && Boolean(user)}
+                        maxLength={200}
+                        value={
+                          email || (method === "cas" ? (user?.email ?? "") : "")
+                        }
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="input-field"
+                      />
+                    </label>
+                    <div className="full-width">
+                      {method === "cas" ? (
+                        <div className="upload-area">
+                          <label>
+                            <span className="field-label">
+                              Original statement / PDF or text · 4 MB maximum
+                            </span>
+                            <input
+                              type="file"
+                              required
+                              accept=".pdf,.txt,application/pdf,text/plain"
+                              onChange={(e) => {
+                                setFile(e.target.files?.[0] ?? null);
+                                setError("");
+                              }}
+                            />
+                          </label>
+                          <p className="form-help mt-4">
+                            Upload a redacted copy if appropriate; FVI does not
+                            automatically redact the original. Keep the
+                            holdings, account owner and statement date readable.
+                            Do not include passwords.
+                          </p>
+                        </div>
+                      ) : (
+                        <label>
+                          <span className="field-label">
+                            Holdings / one allocation per line
+                          </span>
+                          <textarea
+                            required
+                            className="input-field"
+                            rows={6}
+                            maxLength={50000}
+                            value={holdings}
+                            onChange={(e) => setHoldings(e.target.value)}
+                            placeholder={"INFY, 14%\nHDFCBANK, 22%"}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                  <details className="optional-details">
+                    <summary>
+                      Profile links & reviewer context / optional
+                    </summary>
+                    <div className="form-grid">
+                      {field("twitter", "X / Twitter URL", "url")}
+                      {field("linkedin", "LinkedIn URL", "url")}
+                      {field("youtube", "YouTube URL", "url")}
+                      {field("broker", "Broker")}
+                      <label className="full-width">
+                        <span className="field-label">
+                          Notes for the reviewer
+                        </span>
+                        <textarea
+                          className="input-field"
+                          value={details.notes || ""}
+                          maxLength={5000}
+                          onChange={(e) =>
+                            setDetails({ ...details, notes: e.target.value })
+                          }
+                        />
+                      </label>
+                    </div>
+                  </details>
+                  {error && (
+                    <p role="alert" className="notice notice-error mb-5">
+                      {error}
+                    </p>
+                  )}
+                  <button
+                    className="button-primary"
+                    type="submit"
+                    disabled={saving}
+                  >
+                    {saving ? "Saving your application…" : "Submit for review"}
+                    <ArrowUpRight size={16} />
+                  </button>
+                  <p className="form-help mt-5">
+                    Original documents are private. Parsed holdings and review
+                    details are stored for this application.{" "}
+                    <Link
+                      href="/privacy"
+                      className="underline underline-offset-4"
+                    >
+                      Privacy & deletion
+                    </Link>
+                  </p>
+                </form>
+              )}
+            </>
+          )}
+        </>
       )}
     </section>
   );
